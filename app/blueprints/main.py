@@ -502,6 +502,23 @@ def search_technicians():
     service = request.args.get("service", "").strip().lower()
     locality = request.args.get("locality", "").strip().lower()
     approx_date = request.args.get("approx_date", "").strip()
+    price_min = request.args.get("price_min", "").strip()
+    price_max = request.args.get("price_max", "").strip()
+    min_rating_str = request.args.get("min_rating", "").strip()
+    avail_day = request.args.get("avail_day", "").strip().lower()
+
+    try:
+        price_min_val = float(price_min) if price_min else None
+    except ValueError:
+        price_min_val = None
+    try:
+        price_max_val = float(price_max) if price_max else None
+    except ValueError:
+        price_max_val = None
+    try:
+        min_rating_val = float(min_rating_str) if min_rating_str else None
+    except ValueError:
+        min_rating_val = None
 
     tech_profiles = (
         TechnicianProfile.query.join(User, User.id == TechnicianProfile.user_id)
@@ -531,8 +548,30 @@ def search_technicians():
         if service and service not in specialties:
             continue
         if locality:
-            # Partial match: "suba" matches "suba - suba urbano"
             if not any(locality in loc for loc in localities):
+                continue
+
+        # Filtro por precio base
+        if price_min_val is not None or price_max_val is not None:
+            raw_price = profile.bio_base_price
+            if not raw_price:
+                continue
+            try:
+                price_num = float("".join(c for c in str(raw_price) if c.isdigit()))
+            except (ValueError, TypeError):
+                continue
+            if price_min_val is not None and price_num < price_min_val:
+                continue
+            if price_max_val is not None and price_num > price_max_val:
+                continue
+
+        # Filtro por día disponible (campo availability_days del bio JSON)
+        if avail_day:
+            bio = profile._bio
+            days = bio.get("availability_days", [])
+            if isinstance(days, str):
+                days = [days]
+            if not any(avail_day in d.lower() for d in days):
                 continue
 
         if parsed_date:
@@ -564,10 +603,26 @@ def search_technicians():
     ) if tech_ids else []
     rating_map = {row[0]: {"avg": round(row[1], 1), "count": row[2]} for row in rating_rows}
 
+    # Filtro por calificación mínima (post-loop, una vez que tenemos rating_map)
+    if min_rating_val is not None:
+        filtered = [
+            pr for pr in filtered
+            if rating_map.get(pr.user_id, {}).get("avg", 0) >= min_rating_val
+        ]
+
+    filters = {
+        "service": service,
+        "locality": locality,
+        "approx_date": approx_date,
+        "price_min": price_min,
+        "price_max": price_max,
+        "min_rating": min_rating_str,
+        "avail_day": avail_day,
+    }
     return render_template(
         "main/search.html",
         technicians=filtered,
-        filters={"service": service, "locality": locality, "approx_date": approx_date},
+        filters=filters,
         available_map=available_map,
         rating_map=rating_map,
     )

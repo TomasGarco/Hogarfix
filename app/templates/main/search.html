@@ -8,6 +8,7 @@
     <i class="bi bi-search me-2" style="color:var(--hf-cyan)"></i>Buscar técnicos
   </h1>
   <form method="get" class="row g-2 align-items-end">
+    {# ── Fila 1: filtros básicos ─────────────────────── #}
     <div class="col-md-4">
       <label class="form-label small fw-semibold text-secondary mb-1">Servicio</label>
       <select name="service" class="form-select form-select-sm">
@@ -28,7 +29,52 @@
              value="{{ filters.approx_date }}">
     </div>
     <div class="col-md-1 d-grid">
-      <button class="btn btn-sm hf-btn-primary">Filtrar</button>
+      <button class="btn btn-sm hf-btn-primary">Buscar</button>
+    </div>
+
+    {# ── Toggle filtros avanzados ─────────────────────── #}
+    {% set _adv_active = filters.price_min or filters.price_max or filters.min_rating or filters.avail_day %}
+    <div class="col-12 mt-1">
+      <a class="small text-secondary text-decoration-none d-inline-flex align-items-center gap-1"
+         data-bs-toggle="collapse" href="#advFilters" role="button"
+         aria-expanded="{{ 'true' if _adv_active else 'false' }}">
+        <i class="bi bi-sliders"></i> Filtros avanzados
+        <i class="bi bi-chevron-down" style="font-size:.65rem"></i>
+      </a>
+    </div>
+
+    {# ── Fila 2: filtros avanzados (colapsable) ───────── #}
+    <div class="col-12 collapse {{ 'show' if _adv_active }}" id="advFilters">
+      <div class="row g-2 pt-1 border-top mt-1">
+        <div class="col-sm-3">
+          <label class="form-label small fw-semibold text-secondary mb-1">Precio mín. (COP)</label>
+          <input type="number" name="price_min" class="form-control form-control-sm"
+                 value="{{ filters.price_min }}" placeholder="Ej: 30000" min="0" step="5000">
+        </div>
+        <div class="col-sm-3">
+          <label class="form-label small fw-semibold text-secondary mb-1">Precio máx. (COP)</label>
+          <input type="number" name="price_max" class="form-control form-control-sm"
+                 value="{{ filters.price_max }}" placeholder="Ej: 200000" min="0" step="5000">
+        </div>
+        <div class="col-sm-3">
+          <label class="form-label small fw-semibold text-secondary mb-1">Calificación mín.</label>
+          <select name="min_rating" class="form-select form-select-sm">
+            <option value="">Cualquiera</option>
+            <option value="4" {% if filters.min_rating == '4' %}selected{% endif %}>4+ &#9733;</option>
+            <option value="3" {% if filters.min_rating == '3' %}selected{% endif %}>3+ &#9733;</option>
+            <option value="2" {% if filters.min_rating == '2' %}selected{% endif %}>2+ &#9733;</option>
+          </select>
+        </div>
+        <div class="col-sm-3">
+          <label class="form-label small fw-semibold text-secondary mb-1">Disponible el día</label>
+          <select name="avail_day" class="form-select form-select-sm">
+            <option value="">Cualquier día</option>
+            {% for day in ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'] %}
+              <option value="{{ day }}" {% if filters.avail_day == day %}selected{% endif %}>{{ day|title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
     </div>
   </form>
 </div>
