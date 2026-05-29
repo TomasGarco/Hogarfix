@@ -679,6 +679,58 @@ def activate_subscription():
     return redirect(url_for("technician.my_subscription"))
 
 
+@technician_bp.route("/ingresos")
+@login_required
+@role_required("tecnico")
+def income():
+    from collections import defaultdict
+    from datetime import date as _date
+
+    profile = current_user.technician_profile
+
+    # Precio base del bio JSON
+    raw_price = profile.bio_base_price if profile else ""
+    try:
+        base_price = float("".join(c for c in str(raw_price) if c.isdigit()))
+        base_price = base_price if base_price > 0 else None
+    except (ValueError, TypeError):
+        base_price = None
+
+    # Reservas completadas
+    completadas = (
+        Booking.query
+        .filter_by(technician_id=current_user.id, status="completado")
+        .order_by(Booking.booking_date.desc())
+        .all()
+    )
+
+    # Agrupar por mes (clave "YYYY-MM")
+    monthly = defaultdict(list)
+    for b in completadas:
+        monthly[b.booking_date.strftime("%Y-%m")].append(b)
+    monthly_sorted = sorted(monthly.items(), reverse=True)
+
+    this_month = _date.today().strftime("%Y-%m")
+    mes_count = len(monthly.get(this_month, []))
+    total_count = len(completadas)
+
+    mes_estimado = (base_price * mes_count) if base_price else None
+    total_estimado = (base_price * total_count) if base_price else None
+
+    return render_template(
+        "technician/income.html",
+        completadas=completadas,
+        monthly_sorted=monthly_sorted,
+        base_price=base_price,
+        base_charge_type=(profile.bio_charge_type if profile else ""),
+        total_estimado=total_estimado,
+        total_count=total_count,
+        mes_count=mes_count,
+        mes_estimado=mes_estimado,
+        this_month=this_month,
+    )
+
+
 @technician_bp.route("/suscripcion/cancelar", methods=["POST"])
 @login_required
 @role_required("tecnico")

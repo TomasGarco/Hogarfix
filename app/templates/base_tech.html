@@ -61,6 +61,12 @@
         {% endif %}
         <span class="hf-ts-label" data-i18n="nav.tech.notifications">Notificaciones</span>
       </a>
+      <a href="{{ url_for('technician.income') }}"
+         class="hf-ts-item {% if request.endpoint == 'technician.income' %}active{% endif %}"
+         data-hf-tip="Mis ingresos">
+        <i class="bi bi-cash-stack"></i>
+        <span class="hf-ts-label">Mis ingresos</span>
+      </a>
       <a href="{{ url_for('technician.my_subscription') }}"
          class="hf-ts-item {% if request.endpoint in ('technician.my_subscription','technician.subscription_plans','technician.activate_subscription','technician.cancel_subscription') %}active{% endif %}"
          data-hf-tip="Suscripción">
