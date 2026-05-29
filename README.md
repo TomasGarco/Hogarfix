@@ -12,6 +12,34 @@
 
 ---
 
+## Capturas de pantalla
+
+> Las capturas se guardan en la carpeta `screenshots/` en la raíz del proyecto.
+
+### Página principal
+
+![Página principal de HogarFix](screenshots/01-home.png)
+
+---
+
+### Inicio de sesión
+
+![Pantalla de inicio de sesión](screenshots/02-login.png)
+
+---
+
+### Registro de usuario
+
+![Formulario de registro](screenshots/03-registro.png)
+
+---
+
+### Panel del cliente
+
+![Panel del cliente — Mi panel](screenshots/04-dashboard-cliente.png)
+
+---
+
 ## Tabla de contenidos
 
 - [Stack](#stack)
@@ -25,6 +53,7 @@
 - [Configuración de servicios externos](#configuración-de-servicios-externos)
 - [Solución de problemas](#solución-de-problemas)
 - [Roadmap — qué falta para producción](#roadmap--qué-falta-para-producción)
+- [Manual de usuario](#manual-de-usuario)
 
 ---
 
@@ -560,3 +589,273 @@ git log --oneline
 - **Dominio objetivo (producción):** hogarfix.co *(no activo en este MVP)*
 - **Base de datos local:** `hogarfix_db` en `localhost:3306`
 - **Puerto Flask:** `5000` → `http://localhost:5000`
+
+---
+
+## Manual de usuario
+
+> Guía de uso de HogarFix para los tres tipos de usuario: **cliente**, **técnico** y **administrador**.
+
+---
+
+### Conceptos básicos
+
+| Término | Qué significa en HogarFix |
+|---|---|
+| **Cliente** | Usuario que busca y contrata técnicos para un servicio en su hogar |
+| **Técnico** | Profesional independiente que ofrece servicios (plomería, electricidad, etc.) y acepta reservas |
+| **Admin** | Administrador de la plataforma. Modera usuarios, verifica técnicos y gestiona el sistema |
+| **Reserva** | Solicitud de servicio que un cliente hace a un técnico para una fecha y hora específica |
+| **OTP** | Contraseña de un solo uso enviada al correo para verificar el inicio de sesión (2FA) |
+| **Fixi** | Chatbot de IA integrado en la plataforma. Responde preguntas sobre servicios y uso de la app |
+| **Suscripción** | Plan mensual del técnico (Básico / Profesional / Elite) que define su visibilidad en la plataforma |
+| **Verificación de identidad** | Proceso donde el técnico sube su cédula y una selfie para validar que es quien dice ser |
+| **Comprobante de pago** | Foto del recibo o captura de pantalla de la transferencia que el cliente sube tras pagar |
+| **Evidencia** | Fotos que el técnico sube al completar el trabajo (antes y después, materiales usados) |
+| **Contrato PDF** | Documento legal generado automáticamente al confirmar una reserva, con datos del servicio y firma digital |
+| **Badge de notificación** | Número rojo que aparece en el ícono de campana indicando notificaciones sin leer |
+| **Dashboard** | Pantalla principal de cada usuario después de iniciar sesión. Resumen de actividad y accesos rápidos |
+
+---
+
+### Rol: Cliente
+
+#### Cómo registrarse
+
+1. Ir a `http://localhost:5000` → clic en **Registrarse**.
+2. Completar el formulario: nombre, correo electrónico, teléfono y contraseña.
+   - La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un símbolo.
+3. Si está activado el OTP (2FA): revisar el correo y escribir el código de 6 dígitos que llega.
+4. Listo — el sistema redirige al dashboard del cliente.
+
+#### Cómo iniciar sesión con Google o Microsoft
+
+- En la pantalla de login, clic en **Continuar con Google** o **Continuar con Microsoft**.
+- No es necesario crear contraseña — el sistema usa la cuenta existente del proveedor.
+
+#### Cómo buscar un técnico
+
+1. Desde el dashboard o el menú, ir a **Buscar técnicos**.
+2. Seleccionar el tipo de servicio (electricidad, plomería, etc.) y la localidad.
+3. La lista muestra técnicos disponibles con foto, nombre, calificación y precio base.
+4. Clic en un técnico para ver su perfil completo: portafolio de fotos, reseñas, disponibilidad.
+
+#### Cómo hacer una reserva
+
+1. En el perfil del técnico, clic en **Reservar servicio**.
+2. Seleccionar la fecha y hora de entre los horarios disponibles del técnico.
+3. Completar la dirección del servicio y una descripción del problema.
+4. Elegir el método de pago (efectivo, Nequi, Daviplata, transferencia o PSE).
+5. Clic en **Confirmar reserva** — el técnico recibe la solicitud.
+
+**Estados de una reserva:**
+| Estado | Qué significa |
+|---|---|
+| `Pendiente` | El cliente la creó, el técnico aún no ha respondido |
+| `Confirmada` | El técnico aceptó. El servicio está agendado |
+| `Completada` | El técnico terminó el trabajo y subió las fotos de evidencia |
+| `Cancelada` | El cliente o el técnico cancelaron la reserva |
+
+#### Cómo pagar y subir comprobante
+
+1. Después de que el técnico complete el servicio, ir al detalle de la reserva.
+2. Realizar el pago por el método acordado (fuera de la app en este MVP).
+3. Clic en **Subir comprobante** → seleccionar la foto del recibo o captura de la transferencia.
+4. El sistema registra el pago. El técnico puede ver el comprobante.
+
+#### Cómo dejar una reseña
+
+1. Cuando la reserva esté en estado `Completada`, aparece el botón **Dejar reseña**.
+2. Seleccionar una calificación del 1 al 5 estrellas y escribir un comentario.
+3. La reseña queda visible en el perfil público del técnico.
+
+#### Cómo recuperar la contraseña
+
+1. En la pantalla de login, clic en **¿Olvidaste tu contraseña?**
+2. Ingresar el correo registrado → llega un enlace por email (válido por 1 hora).
+3. Clic en el enlace → ingresar y confirmar la nueva contraseña.
+
+#### Gestión de perfil y configuración
+
+- **Perfil:** cambiar nombre, teléfono y foto de perfil.
+- **Seguridad:** cerrar sesiones activas en otros dispositivos.
+- **Notificaciones:** ver el historial de notificaciones (nuevas reservas, cambios de estado, etc.).
+- **Configuración:** cambiar idioma (español/inglés) y preferencias de la app.
+
+---
+
+### Rol: Técnico
+
+#### Cómo registrarse como técnico
+
+El registro del técnico es en dos etapas:
+
+**Etapa 1 — Formulario React (onboarding):**
+1. Ir a `http://localhost:5000` → **Registrarse como técnico**.
+2. El formulario guía paso a paso:
+   - Datos personales (nombre, correo, teléfono, documento de identidad)
+   - Tipo de documento y número de cédula
+   - Dirección y localidades donde trabaja
+   - Especialidades (electricidad, plomería, pintura, etc.)
+   - Precio base por hora y tipo de cobro (fijo / por hora)
+   - Días y horarios disponibles
+   - Fotos de la cédula (frontal y trasera) + selfie para verificación de identidad
+   - Firma digital (dibujada con el mouse o dedo en pantalla táctil)
+   - Descripción de servicios y fotos de trabajos anteriores (portafolio)
+3. Enviar el formulario → el sistema crea la cuenta y la pone en estado `pendiente` de verificación.
+
+**Etapa 2 — Admin aprueba la verificación:**
+- Un administrador revisa los documentos y cambia el estado a `aprobado` o `verificado`.
+- El técnico recibe una notificación cuando cambia su estado.
+
+#### Cómo iniciar sesión y ver el dashboard
+
+- Login igual que el cliente (email/contraseña o Google/Microsoft).
+- El dashboard del técnico muestra:
+  - **Calendario-agenda:** mini-calendario con los días que tiene reservas marcados. Al hacer clic en un día se ven las reservas de ese día.
+  - **Estadísticas:** total de reservas completadas, calificación promedio, ingresos del mes.
+  - **Accesos rápidos:** confirmar reservas pendientes, gestionar disponibilidad, ver notificaciones.
+
+#### Cómo gestionar la disponibilidad
+
+1. Ir al menú → **Disponibilidad**.
+2. Seleccionar los días de la semana en que trabaja y el horario (hora inicio → hora fin).
+3. Guardar — los clientes solo podrán reservar en los horarios marcados como disponibles.
+
+#### Cómo confirmar o rechazar una reserva
+
+1. Cuando llega una reserva nueva, aparece el badge (número rojo) en el ícono de campana.
+2. Ir a **Mis reservas** o al dashboard → ver la reserva en estado `Pendiente`.
+3. Clic en **Confirmar** o **Rechazar**.
+   - Al confirmar: el cliente recibe una notificación y la reserva queda agendada.
+   - Al rechazar: la reserva se cancela y el cliente es notificado.
+
+#### Cómo completar una reserva
+
+1. Después de realizar el servicio, ir al detalle de la reserva.
+2. Clic en **Completar servicio**.
+3. Subir fotos de evidencia (mínimo 1, máximo las configuradas): trabajo terminado, materiales usados, estado final.
+4. El sistema cambia el estado a `Completada`. El cliente puede ahora pagar y dejar reseña.
+
+#### Cómo descargar el contrato PDF
+
+- En el detalle de cualquier reserva confirmada, clic en **Descargar contrato**.
+- El PDF se genera automáticamente con: datos del cliente, datos del técnico, fecha, hora, servicio, dirección y firma digital.
+
+#### Suscripciones (planes)
+
+| Plan | Qué incluye |
+|---|---|
+| **Básico** | Perfil visible, recibe reservas, sin prioridad en búsqueda |
+| **Profesional** | Posición prioritaria en resultados de búsqueda, badge "Verificado Pro" |
+| **Elite** | Máxima visibilidad, badge "Elite", hasta 5 fotos de portafolio adicionales |
+
+- Ir a **Mi suscripción** para ver el plan actual y cambiar.
+- En este MVP el cobro es sandbox (no se hace cargo real).
+
+#### Galería de trabajos anteriores
+
+- Ir a **Mi perfil** → sección **Portafolio**.
+- Subir fotos de trabajos realizados. Aparecen en el perfil público cuando los clientes buscan técnicos.
+
+---
+
+### Rol: Administrador
+
+#### Cómo acceder al panel de administración
+
+1. Ir a `http://localhost:5000/auth/admin-access`.
+2. Ingresar el código secreto de acceso (variable `ADMIN_LOGIN_CODE` del `.env`).
+3. Luego hacer login normal con la cuenta admin.
+4. El sistema redirige al dashboard de administración en `/admin/`.
+
+> **Nota:** Para crear una cuenta admin se necesita el `ADMIN_REGISTER_CODE` del `.env`. No es posible registrar admins desde el formulario público.
+
+#### Dashboard de administración
+
+Muestra los KPIs globales de la plataforma:
+- Total de usuarios (clientes + técnicos)
+- Total de reservas y su distribución por estado
+- Técnicos pendientes de verificación
+- Reseñas recientes
+
+#### Gestión de usuarios
+
+- **Lista de usuarios:** buscar por nombre/correo, filtrar por rol (cliente/técnico/admin) o estado (activo/inactivo).
+- **Detalle de usuario:** ver todos los datos, cambiar nombre/correo/teléfono, activar o desactivar la cuenta, eliminar el usuario.
+
+#### Gestión de técnicos y verificación
+
+- **Lista de técnicos:** ver todos los técnicos registrados con su estado de verificación.
+- **Detalle de técnico:** ver los documentos subidos (cédula frontal, trasera, selfie), datos bio, suscripción actual.
+- **Cambiar estado de verificación:**
+  | Estado | Significado |
+  |---|---|
+  | `pending` | El técnico se registró pero el admin no ha revisado los documentos |
+  | `basic_verified` | Se verificaron datos básicos (email, teléfono) |
+  | `approved` | El admin aprobó el perfil — el técnico puede operar |
+  | `fully_verified` | Verificación completa con documentos y antecedentes |
+  | `rejected` | Los documentos no son válidos o el técnico no cumple requisitos |
+- **Suspender técnico:** desactiva la cuenta temporalmente sin eliminarla.
+
+#### Gestión de reservas y reseñas
+
+- Ver todas las reservas de la plataforma, filtrar por estado.
+- Ver todas las reseñas. Opción de moderar (eliminar) reseñas que violen los términos.
+
+#### Anuncios modales
+
+Los anuncios son mensajes que aparecen automáticamente al entrar a la plataforma (modal emergente).
+
+- **Crear anuncio:** título, cuerpo del mensaje (HTML permitido), tipo (informativo / alerta / promoción), fechas de vigencia.
+- **Activar/desactivar:** solo los anuncios activos se muestran a los usuarios.
+- **Los usuarios pueden:** cerrar el modal y marcar "No mostrar hoy" (se guarda en localStorage y no vuelve a aparecer ese día).
+
+---
+
+### El chatbot Fixi
+
+Fixi es el asistente virtual de HogarFix. Aparece como un ícono flotante en la esquina inferior derecha de todas las páginas.
+
+**Cómo usarlo:**
+1. Clic en el ícono de chat (burbuja azul).
+2. Escribir la pregunta en el cuadro de texto.
+3. Fixi responde en tiempo real usando IA (Groq/LLaMA) o respuestas FAQ si no hay conexión a la API.
+
+**Qué puede responder Fixi:**
+- Cómo funciona la plataforma (reservas, pagos, reseñas)
+- Información sobre servicios disponibles
+- Preguntas frecuentes sobre técnicos, precios y disponibilidad
+- Guía de uso de la app
+
+**Fixi no puede:**
+- Ver datos de tu cuenta específica
+- Hacer reservas ni pagos
+- Contactar técnicos directamente
+
+---
+
+### Notificaciones
+
+El sistema de notificaciones funciona así:
+
+- El **badge** (número rojo) en el ícono de campana indica notificaciones sin leer.
+- Al hacer clic en la campana se ve el historial completo de notificaciones.
+- Las notificaciones se generan automáticamente por eventos como:
+  - Nueva reserva recibida (técnico)
+  - Reserva confirmada (cliente)
+  - Reserva completada (cliente)
+  - Cambio de estado de verificación (técnico)
+  - Nueva reseña recibida (técnico)
+
+> **Limitación MVP:** el badge solo se actualiza al recargar la página. Las notificaciones en tiempo real (WebSocket push) están en el roadmap.
+
+---
+
+### Seguridad para usuarios
+
+- **Contraseña segura:** mínimo 8 caracteres, mayúsculas, números y símbolos.
+- **OTP (2FA):** código de 6 dígitos enviado al correo en cada inicio de sesión (si está activado).
+- **Alerta de login:** si inicias sesión desde un dispositivo o IP diferente, recibes un email de alerta.
+- **Sesiones activas:** en Configuración puedes ver todos los dispositivos con sesión activa y cerrar los que no reconoces.
+- **Recuperar contraseña:** el enlace de recuperación expira en 1 hora por seguridad.
