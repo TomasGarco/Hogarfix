@@ -1,0 +1,87 @@
+{% extends 'base_client.html' %}
+{% block page_title %}Pagar reserva #{{ booking.id }}{% endblock %}
+{% block client_content %}
+
+<div class="mb-3">
+  <a href="{{ url_for('main.client_dashboard') }}" class="hf-back-link">
+    <i class="bi bi-arrow-left me-1"></i>Volver al panel
+  </a>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+
+    {# ── Info de la reserva ── #}
+    <div class="hf-card rounded-4 p-4 mb-4">
+      <h1 class="h5 fw-bold mb-3">
+        <i class="bi bi-credit-card me-2 text-primary"></i>Pagar reserva #{{ booking.id }}
+      </h1>
+      <dl class="row mb-0" style="font-size:.875rem">
+        <dt class="col-5 text-secondary">Servicio</dt>
+        <dd class="col-7 fw-semibold text-capitalize">{{ booking.service_type }}</dd>
+        <dt class="col-5 text-secondary">Fecha</dt>
+        <dd class="col-7">{{ booking.booking_date.strftime('%d/%m/%Y') }} {{ booking.booking_time.strftime('%H:%M') }}</dd>
+        <dt class="col-5 text-secondary">Localidad</dt>
+        <dd class="col-7 text-capitalize">{{ booking.locality }}</dd>
+        <dt class="col-5 text-secondary">Método de pago</dt>
+        <dd class="col-7 text-capitalize">{{ booking.payment_method }}</dd>
+        <dt class="col-5 text-secondary fw-bold">Total a pagar</dt>
+        <dd class="col-7 fw-bold" style="color:var(--hf-primary);font-size:1.05rem">
+          ${{ "{:,.0f}".format(amount_cents // 100).replace(',','.') }} COP
+        </dd>
+      </dl>
+    </div>
+
+    {# ── Widget Wompi ── #}
+    <div class="hf-card rounded-4 p-4 text-center">
+      <p class="small text-secondary mb-3">
+        <i class="bi bi-shield-lock me-1 text-success"></i>
+        Pago seguro procesado por <strong>Wompi by Bancolombia</strong>
+      </p>
+
+      {% if public_key and public_key != 'pub_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' %}
+        {# Widget real de Wompi #}
+        <script
+          src="https://checkout.wompi.co/widget.js"
+          data-render="button"
+          data-public-key="{{ public_key }}"
+          data-currency="COP"
+          data-amount-in-cents="{{ amount_cents }}"
+          data-reference="{{ reference }}"
+          data-signature:integrity="{{ integrity }}"
+          data-redirect-url="{{ redirect_url }}"
+          data-customer-data:email="{{ current_user.email }}"
+          data-customer-data:full-name="{{ current_user.full_name or current_user.email }}">
+        </script>
+      {% else %}
+        {# Modo sandbox / llaves no configuradas #}
+        <div class="rounded-3 p-4 mb-3" style="background:#fef9c3;border:1.5px solid #fbbf24">
+          <i class="bi bi-exclamation-triangle-fill d-block fs-3 mb-2" style="color:#d97706"></i>
+          <p class="fw-bold mb-1" style="color:#92400e">Modo sandbox — llaves no configuradas</p>
+          <p class="small mb-0" style="color:#92400e">
+            Para activar pagos reales, configura tus llaves de Wompi en el archivo <code>.env</code>.<br>
+            Obtén tus llaves en
+            <a href="https://dashboard.wompi.co" target="_blank" rel="noopener">dashboard.wompi.co</a>.
+          </p>
+        </div>
+        <div class="rounded-3 p-3 mb-3" style="background:#f0fdf4;border:1px solid #86efac;font-size:.82rem;text-align:left">
+          <p class="fw-semibold mb-1" style="color:#065f46">Datos de prueba:</p>
+          <p class="mb-1"><strong>Referencia:</strong> {{ reference }}</p>
+          <p class="mb-1"><strong>Monto:</strong> ${{ "{:,.0f}".format(amount_cents // 100).replace(',','.') }} COP</p>
+          <p class="mb-0"><strong>Integrity hash:</strong> <code style="font-size:.72rem">{{ integrity[:20] }}…</code></p>
+        </div>
+        <a href="{{ url_for('main.client_dashboard') }}" class="btn hf-btn-action">
+          Volver al panel (sandbox)
+        </a>
+      {% endif %}
+
+      <p class="small text-secondary mt-3 mb-0" style="font-size:.75rem">
+        <i class="bi bi-lock-fill me-1"></i>
+        Tus datos de pago son procesados directamente por Wompi. HogarFix no almacena datos bancarios.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+{% endblock client_content %}

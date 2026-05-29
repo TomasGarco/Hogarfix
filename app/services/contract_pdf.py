@@ -364,7 +364,7 @@ def generar_contrato_pdf(user, profile) -> bytes:
     # Intentar SVG primero, luego PNG
     _img_dir = os.path.join(os.path.dirname(__file__), "..", "static", "img")
     firma_rep_svg = os.path.normpath(os.path.join(_img_dir, "firma-representante.svg"))
-    firma_rep_png = os.path.normpath(os.path.join(_img_dir, "firma-representante-legal.png"))
+    firma_rep_png = os.path.normpath(os.path.join(_img_dir, "Firma R Legal.png"))
 
     firma_dibujada = False
     for _firma_path in (firma_rep_svg, firma_rep_png):

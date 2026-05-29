@@ -1,8 +1,10 @@
+import hashlib
+import hmac
 import json as _json
 import os
 from datetime import datetime
 
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, send_from_directory, url_for
+from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for
 from flask_login import current_user, login_required
 
 from app.extensions import db
@@ -12,6 +14,29 @@ from app.utils import create_notification, role_required, save_upload
 
 
 booking_bp = Blueprint("booking", __name__, url_prefix="/reservas")
+
+# ── Métodos de pago que van por Wompi ────────────────────────────────────────
+_WOMPI_METHODS = {"nequi", "daviplata", "pse", "transferencia"}
+
+
+def _wompi_integrity(reference: str, amount_cents: int, currency: str = "COP") -> str:
+    """SHA256(reference + amountInCents + currency + integritySecret)"""
+    secret = current_app.config.get("WOMPI_INTEGRITY_SECRET", "")
+    raw = f"{reference}{amount_cents}{currency}{secret}"
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _booking_amount_cents(booking: Booking) -> int:
+    """Extrae el precio base del técnico y lo convierte a centavos."""
+    profile = TechnicianProfile.query.filter_by(user_id=booking.technician_id).first()
+    if not profile:
+        return 1000000  # $10.000 COP mínimo (1 000 000 centavos)
+    raw = profile._bio.get("base_price", 0)
+    try:
+        pesos = int("".join(c for c in str(raw) if c.isdigit()) or 0)
+    except (ValueError, TypeError):
+        pesos = 0
+    return max(pesos * 100, 1000000)  # mínimo $10.000 COP
 
 
 @booking_bp.route("/crear/<int:technician_id>", methods=["GET", "POST"])
@@ -110,6 +135,9 @@ def create_booking(technician_id):
             current_app.logger.error("[booking] Error enviando email al tecnico %s: %s", technician.email, exc)
 
         flash("Reserva creada correctamente.", "success")
+        # Si el método requiere pago digital → ir a Wompi
+        if payment_method in _WOMPI_METHODS:
+            return redirect(url_for("booking.payment_page", booking_id=booking.id))
         return redirect(url_for("main.client_dashboard"))
 
     return render_template(
@@ -388,3 +416,156 @@ def booking_chat(booking_id):
     )
     base_tpl = "base_tech.html" if u.role == "tecnico" else "base_client.html"
     return render_template("booking/chat.html", booking=booking, messages=messages, base_tpl=base_tpl)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# WOMPI — Integración de pagos digitales
+# ══════════════════════════════════════════════════════════════════════════════
+
+@booking_bp.route("/<int:booking_id>/pagar")
+@login_required
+@role_required("cliente")
+def payment_page(booking_id):
+    """Página con el widget de Wompi para pagar una reserva."""
+    booking = Booking.query.get_or_404(booking_id)
+    if booking.client_id != current_user.id:
+        abort(403)
+    if booking.wompi_status == "APPROVED":
+        flash("Este pago ya fue procesado correctamente.", "info")
+        return redirect(url_for("main.client_dashboard"))
+    if booking.payment_method not in _WOMPI_METHODS:
+        abort(400)
+
+    amount_cents = _booking_amount_cents(booking)
+    reference = f"HGF-{booking.id}"
+    integrity = _wompi_integrity(reference, amount_cents)
+    public_key = current_app.config.get("WOMPI_PUBLIC_KEY", "")
+    redirect_url = url_for("booking.payment_return", booking_id=booking.id, _external=True)
+
+    # Guardar el monto en la reserva para verificación posterior
+    booking.wompi_amount_cents = amount_cents
+    db.session.commit()
+
+    return render_template(
+        "booking/payment.html",
+        booking=booking,
+        public_key=public_key,
+        amount_cents=amount_cents,
+        reference=reference,
+        integrity=integrity,
+        redirect_url=redirect_url,
+    )
+
+
+@booking_bp.route("/<int:booking_id>/pago-exitoso")
+@login_required
+@role_required("cliente")
+def payment_return(booking_id):
+    """
+    Wompi redirige aquí tras el pago.
+    id=<transaction_id> viene en el query string de Wompi.
+    """
+    booking = Booking.query.get_or_404(booking_id)
+    if booking.client_id != current_user.id:
+        abort(403)
+
+    transaction_id = request.args.get("id", "")
+    return render_template(
+        "booking/payment_success.html",
+        booking=booking,
+        transaction_id=transaction_id,
+    )
+
+
+@booking_bp.route("/wompi/evento", methods=["POST"])
+def wompi_webhook():
+    """
+    Webhook de Wompi: recibe eventos de transacciones.
+    Verifica la firma HMAC y actualiza el estado del pago.
+    """
+    payload = request.get_data()
+    try:
+        data = _json.loads(payload)
+    except (_json.JSONDecodeError, Exception):
+        return jsonify({"error": "invalid json"}), 400
+
+    # ── Verificar firma de integridad ────────────────────────────────────
+    events_secret = current_app.config.get("WOMPI_EVENTS_SECRET", "")
+    sig_block = data.get("signature", {})
+    checksum = sig_block.get("checksum", "")
+    props = sig_block.get("properties", [])
+    timestamp = str(data.get("timestamp", ""))
+
+    # Wompi: concatenar los valores de las propiedades en el orden dado + timestamp
+    def _get_nested(obj, path: str):
+        for key in path.split("."):
+            if not isinstance(obj, dict):
+                return ""
+            obj = obj.get(key, "")
+        return str(obj)
+
+    concat = "".join(_get_nested(data, p) for p in props) + timestamp + events_secret
+    expected = hashlib.sha256(concat.encode()).hexdigest()
+    if not hmac.compare_digest(expected, checksum):
+        current_app.logger.warning("[wompi] Firma de webhook inválida. Rechazado.")
+        return jsonify({"error": "invalid signature"}), 401
+
+    # ── Procesar evento ──────────────────────────────────────────────────
+    event = data.get("event", "")
+    if event != "transaction.updated":
+        return jsonify({"ok": True}), 200
+
+    txn = data.get("data", {}).get("transaction", {})
+    status = txn.get("status", "")
+    txn_id = txn.get("id", "")
+    reference = txn.get("reference", "")  # "HGF-<booking_id>"
+
+    if not reference.startswith("HGF-"):
+        return jsonify({"ok": True}), 200
+
+    try:
+        booking_id = int(reference.split("-")[1])
+    except (IndexError, ValueError):
+        return jsonify({"ok": True}), 200
+
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        return jsonify({"ok": True}), 200
+
+    booking.wompi_transaction_id = txn_id
+    booking.wompi_status = status
+
+    if status == "APPROVED":
+        # Usar el ID de transacción como "comprobante" en el campo payment_proof
+        booking.payment_proof = txn_id
+        booking.wompi_amount_cents = txn.get("amount_in_cents")
+        db.session.commit()
+
+        # Notificar al cliente
+        try:
+            create_notification(
+                booking.client_id,
+                "payment_confirmed",
+                "Pago confirmado",
+                f"Tu pago para el servicio de {booking.service_type.title()} fue confirmado por Wompi.",
+                url_for("main.client_dashboard"),
+            )
+        except Exception:
+            pass
+
+    elif status in ("DECLINED", "VOIDED", "ERROR"):
+        db.session.commit()
+        try:
+            create_notification(
+                booking.client_id,
+                "payment_failed",
+                "Pago no procesado",
+                f"El pago de tu reserva de {booking.service_type.title()} no pudo completarse ({status}). Intenta de nuevo.",
+                url_for("booking.payment_page", booking_id=booking.id),
+            )
+        except Exception:
+            pass
+    else:
+        db.session.commit()
+
+    return jsonify({"ok": True}), 200

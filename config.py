@@ -58,6 +58,13 @@ class Config:
     MAIL_SMTP_USE_SSL_FALLBACK = os.environ.get("MAIL_SMTP_USE_SSL_FALLBACK", "false").lower() == "true"
     MAIL_FROM = os.environ.get("MAIL_FROM", MAIL_USERNAME or "no-reply@hogarfix.co")
     MAIL_TIMEOUT = int(os.environ.get("MAIL_TIMEOUT", 8))
+
+    # Wompi (pasarela de pagos colombiana)
+    WOMPI_PUBLIC_KEY   = os.environ.get("WOMPI_PUBLIC_KEY", "")
+    WOMPI_PRIVATE_KEY  = os.environ.get("WOMPI_PRIVATE_KEY", "")
+    WOMPI_EVENTS_SECRET = os.environ.get("WOMPI_EVENTS_SECRET", "")
+    WOMPI_INTEGRITY_SECRET = os.environ.get("WOMPI_INTEGRITY_SECRET", "")
+    WOMPI_SANDBOX      = os.environ.get("WOMPI_SANDBOX", "true").lower() == "true"
     MAIL_FILE_PATH = os.environ.get("MAIL_FILE_PATH", os.path.join("app", "mail_outbox.log"))
     MAIL_API_TOKEN = os.environ.get("MAIL_API_TOKEN", "")
     MAIL_API_URL = os.environ.get("MAIL_API_URL", "https://api.mailersend.com/v1/email")

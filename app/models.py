@@ -151,6 +151,9 @@ class Booking(db.Model):
     payment_method = db.Column(db.String(30), nullable=False, default="efectivo")
     payment_proof = db.Column(db.String(255), nullable=True)
     cash_confirmed_at = db.Column(db.DateTime, nullable=True)
+    wompi_transaction_id = db.Column(db.String(100), nullable=True)
+    wompi_status = db.Column(db.String(30), nullable=True)  # APPROVED / DECLINED / VOIDED / ERROR
+    wompi_amount_cents = db.Column(db.Integer, nullable=True)
     evidence_photos = db.Column(db.Text, default="[]")
     completion_note = db.Column(db.Text, default="")
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
