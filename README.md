@@ -14,25 +14,25 @@
 
 ### Página principal
 
-![Página principal de HogarFix](screenshots/01-home.png)
+![Página principal de HogarFix](screenshots/Pagina%20%20Principal.png)
 
 ---
 
 ### Inicio de sesión
 
-![Pantalla de inicio de sesión](screenshots/02-login.png)
+![Pantalla de inicio de sesión](screenshots/Inicio%20de%20sesion.png)
 
 ---
 
 ### Registro de usuario
 
-![Formulario de registro](screenshots/03-registro.png)
+![Formulario de registro](screenshots/Registo%20cliente.png)
 
 ---
 
 ### Panel del cliente
 
-![Panel del cliente — Mi panel](screenshots/04-dashboard-cliente.png)
+![Panel del cliente — Mi panel](screenshots/Panel%20de%20usuario.png)
 
 ---
 
