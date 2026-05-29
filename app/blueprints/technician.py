@@ -116,7 +116,25 @@ def dashboard():
     non_cancelled = counters["pendiente"] + counters["confirmado"] + counters["completado"]
     completion_rate = round((counters["confirmado"] + counters["completado"]) / non_cancelled * 100) if non_cancelled else 0
 
-    return render_template(
+    # ── Auditóría ───────────────────────────────────────────────────────────────
+    from collections import Counter as _Counter
+
+    service_counter = _Counter(b.service_type for b in bookings if b.service_type)
+    top_service = service_counter.most_common(1)[0][0].title() if service_counter else None
+
+    # Últimos clientes únicos (por primera aparición en historial descendente)
+    seen_clients: dict = {}
+    for b in bookings:
+        if b.client_id and b.client_id not in seen_clients:
+            seen_clients[b.client_id] = b
+    recent_clients = list(seen_clients.values())[:5]
+
+    # Ingresos estimados: precio base del perfil × reservas completadas
+    bio_price_raw = profile._bio.get("base_price", 0) if profile else 0
+    try:
+        earnings_est = int("".join(c for c in str(bio_price_raw) if c.isdigit()) or 0) * counters["completado"]
+    except (ValueError, TypeError):
+        earnings_est = 0
         "technician/dashboard.html",
         bookings=bookings,
         counters=counters,
@@ -129,6 +147,9 @@ def dashboard():
         total_techs=total_techs,
         completion_rate=completion_rate,
         my_reviews=my_reviews,
+        top_service=top_service,
+        recent_clients=recent_clients,
+        earnings_est=earnings_est,
     )
 
 

@@ -280,7 +280,7 @@
               </button>
             </form>
           {% elif b.status == 'confirmado' %}
-            <div class="mb-3">
+            <div class="mb-2">
               <button type="button" class="btn btn-sm w-100"
                       style="background:#fff5f5;color:#991b1b;border:1px solid #fca5a5;"
                       data-bs-toggle="modal"
@@ -290,6 +290,15 @@
                 <i class="bi bi-x-circle me-1"></i>Cancelar reserva
               </button>
             </div>
+          {% endif %}
+
+          {# ── Chat con el técnico ── #}
+          {% if b.status in ['pendiente', 'confirmado'] %}
+            <a href="{{ url_for('booking.booking_chat', booking_id=b.id) }}"
+               class="btn btn-sm w-100 mb-3"
+               style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-weight:600;">
+              <i class="bi bi-chat-dots me-1"></i>Chat con el técnico
+            </a>
           {% endif %}
 
           {# ── Confirmación de efectivo ── #}

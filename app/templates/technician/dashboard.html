@@ -280,6 +280,77 @@
 
 </div>
 
+{# ══ AUDITORÍA Y MÉTRICAS ══════════════════════════════════════════════ #}
+<div class="row g-3 mb-4" data-aos="fade-up" data-aos-delay="120">
+
+  {# Ingresos estimados #}
+  <div class="col-md-4">
+    <article class="hf-rank-card rounded-4 p-4 h-100 text-center" style="background:linear-gradient(160deg,#fff 0%,#f0fdf9 100%)">
+      <p class="hf-dash-overline mb-2">Ingresos estimados</p>
+      {% if earnings_est %}
+        <div class="hf-rank-value mb-1" style="color:#059669;font-size:1.55rem">
+          ${{ "{:,.0f}".format(earnings_est).replace(',','.') }}
+        </div>
+        <p class="small text-secondary mb-0">{{ counters.completado }} servicio{{ 's' if counters.completado != 1 }} × precio base</p>
+      {% else %}
+        <div class="hf-rank-value mb-2" style="color:#9ca3af">$—</div>
+        <p class="small text-secondary mb-0">Completa servicios para ver tu estimado</p>
+      {% endif %}
+      <p class="small text-secondary mt-1" style="font-size:.7rem">* Estimado según tu precio base actual</p>
+    </article>
+  </div>
+
+  {# Servicio estrella #}
+  <div class="col-md-4">
+    <article class="hf-rank-card rounded-4 p-4 h-100 text-center" style="background:linear-gradient(160deg,#fff 0%,#fefce8 100%)">
+      <p class="hf-dash-overline mb-2">Tu servicio más solicitado</p>
+      {% if top_service %}
+        <div class="hf-rank-value mb-1" style="color:#d97706;font-size:1.25rem">{{ top_service }}</div>
+        <p class="small text-secondary mb-0">La especialidad con más reservas</p>
+      {% else %}
+        <div class="hf-rank-value mb-2" style="color:#9ca3af">—</div>
+        <p class="small text-secondary mb-0">Aún sin reservas registradas</p>
+      {% endif %}
+    </article>
+  </div>
+
+  {# Clientes recientes #}
+  <div class="col-md-4">
+    <article class="hf-rank-card rounded-4 p-4 h-100" style="background:linear-gradient(160deg,#fff 0%,#f0f4ff 100%)">
+      <p class="hf-dash-overline mb-3">Clientes recientes</p>
+      {% if recent_clients %}
+        <ul class="list-unstyled mb-0">
+          {% for rb in recent_clients %}
+            {% set _rc = rb.client %}
+            {% set _rcname = (_rc.full_name or _rc.email.split('@')[0]) if _rc else 'Cliente' %}
+            <li class="d-flex align-items-center gap-2 mb-2">
+              <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                   style="width:30px;height:30px;background:#e0e7ff;color:#3730a3;font-size:.78rem">
+                {{ _rcname[:1].upper() }}
+              </div>
+              <div style="min-width:0">
+                <p class="small fw-semibold mb-0 text-truncate" style="color:#0a2540">{{ _rcname.split()[0] }}</p>
+                <p class="mb-0" style="font-size:.68rem;color:#9ca3af">{{ rb.service_type|title }} · {{ rb.booking_date.strftime('%d/%m') }}</p>
+              </div>
+              <span class="badge ms-auto rounded-pill
+                {% if rb.status == 'completado' %}text-bg-success
+                {% elif rb.status == 'confirmado' %}text-bg-primary
+                {% elif rb.status == 'pendiente' %}text-bg-warning
+                {% else %}text-bg-secondary{% endif %}"
+                style="font-size:.6rem">
+                {{ rb.status }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-center text-secondary small mt-3">Aún sin clientes registrados.</p>
+      {% endif %}
+    </article>
+  </div>
+
+</div>
+
 {# ══ MIS RESEÑAS ══════════════════════════════════════════════════════ #}
 {% if my_reviews %}
 <div class="hf-card rounded-4 p-4 mb-4" data-aos="fade-up" data-aos-delay="110">
@@ -456,6 +527,14 @@
         <span class="badge" style="background:#fef9c3;color:#854d0e;font-size:.78rem;padding:.4rem .8rem;border-radius:99px;">
           <i class="bi bi-exclamation-triangle-fill me-1"></i>Comprobante pendiente
         </span>
+        {% endif %}
+        {% if b.status in ['pendiente', 'confirmado'] %}
+        <a href="{{ url_for('booking.booking_chat', booking_id=b.id) }}"
+           class="btn btn-sm rounded-pill ms-auto"
+           style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;"
+           title="Chat con el cliente">
+          <i class="bi bi-chat-dots"></i> Chat
+        </a>
         {% endif %}
       </div>
     </article>
