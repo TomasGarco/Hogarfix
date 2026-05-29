@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="mb-4">
+  <a href="{{ url_for('admin.dashboard') }}" class="hf-back-link"><i class="bi bi-arrow-left me-1"></i>Panel admin</a>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Reportes</h1>
+    <p class="text-secondary mb-0 small">Estadísticas y exportación de datos de la plataforma.</p>
+  </div>
+  <a href="{{ url_for('admin.export_report') }}" class="btn hf-btn-action">
+    <i class="bi bi-download me-1"></i>Exportar CSV
+  </a>
+</div>
+
+{# ── KPIs globales ── #}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-2">
+    <div class="hf-dash-kpi hf-dash-kpi-cyan rounded-4 p-3 h-100 text-center">
+      <p class="small text-secondary mb-1">Usuarios totales</p>
+      <p class="h3 m-0">{{ total_users }}</p>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2">
+    <div class="hf-dash-kpi hf-dash-kpi-blue rounded-4 p-3 h-100 text-center">
+      <p class="small text-secondary mb-1">Clientes</p>
+      <p class="h3 m-0">{{ total_clients }}</p>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2">
+    <div class="hf-dash-kpi hf-dash-kpi-orange rounded-4 p-3 h-100 text-center">
+      <p class="small text-secondary mb-1">Técnicos</p>
+      <p class="h3 m-0">{{ total_techs }}</p>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2">
+    <div class="hf-dash-kpi hf-dash-kpi-dark rounded-4 p-3 h-100 text-center">
+      <p class="small text-secondary mb-1">Verificados</p>
+      <p class="h3 m-0">{{ verified_techs }}</p>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2">
+    <div class="hf-dash-kpi rounded-4 p-3 h-100 text-center" style="background:#f0fdf4">
+      <p class="small text-secondary mb-1">Pendientes verif.</p>
+      <p class="h3 m-0 text-warning">{{ pending_techs }}</p>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2">
+    <div class="hf-dash-kpi rounded-4 p-3 h-100 text-center" style="background:#eff6ff">
+      <p class="small text-secondary mb-1">Reservas totales</p>
+      <p class="h3 m-0 text-primary">{{ total_bookings }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  {# ── Gráfica: registros por mes ── #}
+  <div class="col-lg-8">
+    <div class="hf-card rounded-4 p-4 h-100">
+      <h2 class="h6 fw-bold mb-3">Actividad mensual (últimos 12 meses)</h2>
+      <canvas id="chartActividad" height="100"></canvas>
+    </div>
+  </div>
+
+  {# ── Gráfica: reservas por estado (dona) ── #}
+  <div class="col-lg-4">
+    <div class="hf-card rounded-4 p-4 h-100">
+      <h2 class="h6 fw-bold mb-3">Reservas por estado</h2>
+      <canvas id="chartEstados" height="180"></canvas>
+      <ul class="list-unstyled mt-3 small mb-0">
+        <li><span class="badge" style="background:#f59e0b">&nbsp;</span> Pendiente: {{ bookings_by_status.pendiente }}</li>
+        <li><span class="badge" style="background:#3b82f6">&nbsp;</span> Confirmado: {{ bookings_by_status.confirmado }}</li>
+        <li><span class="badge" style="background:#10b981">&nbsp;</span> Completado: {{ bookings_by_status.completado }}</li>
+        <li><span class="badge" style="background:#6b7280">&nbsp;</span> Cancelado: {{ bookings_by_status.cancelado }}</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var months = {{ months | tojson }};
+  var usersByMonth  = months.map(function(m){ return {{ users_by_month | tojson }}[m] || 0; });
+  var bookingsByMonth = months.map(function(m){ return {{ bookings_by_month | tojson }}[m] || 0; });
+
+  var labels = months.map(function(m) {
+    var parts = m.split('-');
+    var names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return names[parseInt(parts[1], 10) - 1] + ' ' + parts[0].slice(2);
+  });
+
+  new Chart(document.getElementById('chartActividad'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Usuarios registrados',
+          data: usersByMonth,
+          backgroundColor: 'rgba(79,70,229,.75)',
+          borderRadius: 6,
+        },
+        {
+          label: 'Reservas creadas',
+          data: bookingsByMonth,
+          backgroundColor: 'rgba(16,185,129,.75)',
+          borderRadius: 6,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+
+  var est = {{ bookings_by_status | tojson }};
+  new Chart(document.getElementById('chartEstados'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Pendiente', 'Confirmado', 'Completado', 'Cancelado'],
+      datasets: [{
+        data: [est.pendiente, est.confirmado, est.completado, est.cancelado],
+        backgroundColor: ['#f59e0b','#3b82f6','#10b981','#6b7280'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: { legend: { display: false } }
+    }
+  });
+})();
+</script>
+
+{% endblock %}

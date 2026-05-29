@@ -6,7 +6,7 @@ from flask import Blueprint, abort, current_app, flash, redirect, render_templat
 from flask_login import current_user, login_required
 
 from app.extensions import db
-from app.models import Availability, Booking, Review, TechnicianProfile, User
+from app.models import Availability, Booking, BookingMessage, Review, TechnicianProfile, User
 from app.services.email import send_new_booking_to_technician
 from app.utils import create_notification, role_required, save_upload
 
@@ -370,3 +370,21 @@ def confirm_cash_payment(booking_id):
 
     flash("Cobro en efectivo confirmado correctamente.", "success")
     return redirect(url_for("technician.dashboard"))
+
+
+@booking_bp.route("/<int:booking_id>/chat")
+@login_required
+def booking_chat(booking_id):
+    """Chat directo entre cliente y técnico dentro de una reserva."""
+    booking = Booking.query.get_or_404(booking_id)
+    u = current_user
+    if u.id not in (booking.client_id, booking.technician_id) and u.role != "admin":
+        abort(403)
+    messages = (
+        BookingMessage.query
+        .filter_by(booking_id=booking_id)
+        .order_by(BookingMessage.created_at)
+        .all()
+    )
+    base_tpl = "base_tech.html" if u.role == "tecnico" else "base_client.html"
+    return render_template("booking/chat.html", booking=booking, messages=messages, base_tpl=base_tpl)

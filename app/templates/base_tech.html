@@ -57,7 +57,7 @@
          data-hf-tip="Notificaciones">
         <i class="bi bi-bell-fill"></i>
         {% if g_unread_notif > 0 %}
-          <span class="hf-ts-badge">{{ g_unread_notif if g_unread_notif < 100 else '99+' }}</span>
+          <span class="hf-ts-badge" data-hf-tech-notif-badge>{{ g_unread_notif if g_unread_notif < 100 else '99+' }}</span>
         {% endif %}
         <span class="hf-ts-label" data-i18n="nav.tech.notifications">Notificaciones</span>
       </a>

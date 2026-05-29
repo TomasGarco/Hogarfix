@@ -1,7 +1,10 @@
+import csv
+import io
 import re
+from collections import defaultdict
 from datetime import datetime, timedelta
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import func
 
@@ -537,3 +540,133 @@ def delete_review(review_id):
     db.session.commit()
     flash("Reseña eliminada.", "warning")
     return redirect(url_for("admin.resenas_list"))
+
+
+# ═══════════════════════════════════════════════════════════════════
+# REPORTES Y EXPORTACIÓN
+# ═══════════════════════════════════════════════════════════════════
+
+@admin_bp.route("/reportes")
+@login_required
+@role_required("admin")
+def reports():
+    twelve_ago = datetime.utcnow() - timedelta(days=365)
+
+    users_by_month = defaultdict(int)
+    for u in User.query.filter(User.created_at >= twelve_ago).all():
+        users_by_month[u.created_at.strftime("%Y-%m")] += 1
+
+    bookings_by_month = defaultdict(int)
+    for b in Booking.query.filter(Booking.created_at >= twelve_ago).all():
+        bookings_by_month[b.created_at.strftime("%Y-%m")] += 1
+
+    months = sorted(set(list(users_by_month.keys()) + list(bookings_by_month.keys())))
+
+    bookings_by_status = {
+        "pendiente": Booking.query.filter_by(status="pendiente").count(),
+        "confirmado": Booking.query.filter_by(status="confirmado").count(),
+        "completado": Booking.query.filter_by(status="completado").count(),
+        "cancelado": Booking.query.filter_by(status="cancelado").count(),
+    }
+
+    total_users = User.query.count()
+    total_techs = User.query.filter_by(role="tecnico").count()
+    total_clients = User.query.filter_by(role="cliente").count()
+    total_bookings = Booking.query.count()
+    verified_techs = TechnicianProfile.query.filter(
+        TechnicianProfile.verification_status.in_(["approved", "fully_verified"])
+    ).count()
+    pending_techs = TechnicianProfile.query.filter_by(verification_status="pending").count()
+
+    return render_template(
+        "admin/reports.html",
+        months=months,
+        users_by_month=users_by_month,
+        bookings_by_month=bookings_by_month,
+        bookings_by_status=bookings_by_status,
+        total_users=total_users,
+        total_techs=total_techs,
+        total_clients=total_clients,
+        total_bookings=total_bookings,
+        verified_techs=verified_techs,
+        pending_techs=pending_techs,
+    )
+
+
+@admin_bp.route("/reportes/exportar")
+@login_required
+@role_required("admin")
+def export_report():
+    bookings = Booking.query.order_by(Booking.created_at.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Fecha creacion", "Cliente", "Tecnico", "Servicio",
+                     "Localidad", "Fecha servicio", "Estado", "Metodo pago"])
+    for b in bookings:
+        client_name = (b.client.full_name or b.client.email) if b.client else ""
+        tech_name = ""
+        if b.technician and b.technician.technician_profile:
+            tech_name = b.technician.technician_profile.full_name
+        elif b.technician:
+            tech_name = b.technician.email
+        writer.writerow([
+            b.id,
+            b.created_at.strftime("%Y-%m-%d %H:%M"),
+            client_name,
+            tech_name,
+            b.service_type,
+            b.locality,
+            str(b.booking_date),
+            b.status,
+            b.payment_method,
+        ])
+    csv_bytes = output.getvalue().encode("utf-8-sig")  # BOM para compatibilidad Excel
+    return Response(
+        csv_bytes,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=reservas_hogarfix.csv"},
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════
+# GESTIÓN DE COMPROBANTES DE PAGO
+# ═══════════════════════════════════════════════════════════════════
+
+@admin_bp.route("/comprobantes")
+@login_required
+@role_required("admin")
+def payment_proofs():
+    bookings_with_proof = (
+        Booking.query
+        .filter(Booking.payment_proof.isnot(None))
+        .order_by(Booking.updated_at.desc())
+        .all()
+    )
+    cash_pending = (
+        Booking.query
+        .filter_by(payment_method="efectivo", status="completado")
+        .filter(Booking.cash_confirmed_at.is_(None))
+        .order_by(Booking.updated_at.desc())
+        .all()
+    )
+    return render_template(
+        "admin/comprobantes.html",
+        bookings_with_proof=bookings_with_proof,
+        cash_pending=cash_pending,
+    )
+
+
+@admin_bp.route("/comprobante/<int:booking_id>/verificar", methods=["POST"])
+@login_required
+@role_required("admin")
+def verify_payment(booking_id):
+    """El admin marca un comprobante de pago como verificado (confirma pago efectivo)."""
+    booking = Booking.query.get_or_404(booking_id)
+    if booking.payment_method == "efectivo" and not booking.cash_confirmed_at:
+        booking.cash_confirmed_at = datetime.utcnow()
+        db.session.commit()
+        flash(f"Pago en efectivo de la reserva #{booking.id} confirmado.", "success")
+    else:
+        flash(f"Comprobante de reserva #{booking.id} marcado como verificado.", "success")
+        db.session.commit()
+    return redirect(url_for("admin.payment_proofs"))

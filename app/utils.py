@@ -77,6 +77,13 @@ def create_notification(user_id, notif_type, title, message, link_url=None, comm
     db.session.add(notification)
     if commit:
         db.session.commit()
+        # Push en tiempo real via Socket.IO
+        try:
+            from app.extensions import socketio
+            unread = Notification.query.filter_by(user_id=user_id, is_read=False).count()
+            socketio.emit("new_notification", {"count": unread}, to=f"user_{user_id}")
+        except Exception:
+            pass
     return notification
 
 

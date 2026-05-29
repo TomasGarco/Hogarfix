@@ -1,0 +1,162 @@
+{% extends base_tpl %}
+
+{% macro chat_body() %}
+
+<div class="mb-3">
+  <a href="{{ url_for('main.client_dashboard') if current_user.role == 'cliente' else url_for('technician.dashboard') }}"
+     class="hf-back-link"><i class="bi bi-arrow-left me-1"></i>Volver al panel</a>
+</div>
+
+<div class="row g-4">
+  {# ── Sidebar info de la reserva ── #}
+  <div class="col-lg-4">
+    <div class="hf-card rounded-4 p-4">
+      <h2 class="h6 fw-bold mb-3"><i class="bi bi-calendar-check me-2 text-primary"></i>Reserva #{{ booking.id }}</h2>
+      <dl class="mb-0" style="font-size:.875rem">
+        <dt class="text-secondary">Servicio</dt>
+        <dd class="mb-2 fw-semibold text-capitalize">{{ booking.service_type }}</dd>
+        <dt class="text-secondary">Fecha y hora</dt>
+        <dd class="mb-2">{{ booking.booking_date.strftime('%d/%m/%Y') }} — {{ booking.booking_time.strftime('%H:%M') }}</dd>
+        <dt class="text-secondary">Localidad</dt>
+        <dd class="mb-2 text-capitalize">{{ booking.locality }}</dd>
+        <dt class="text-secondary">Estado</dt>
+        <dd class="mb-2">
+          <span class="badge rounded-pill
+            {% if booking.status == 'pendiente' %}bg-warning text-dark
+            {% elif booking.status == 'confirmado' %}bg-primary
+            {% elif booking.status == 'completado' %}bg-success
+            {% else %}bg-secondary{% endif %}">
+            {{ booking.status | title }}
+          </span>
+        </dd>
+        <dt class="text-secondary">
+          {% if current_user.role == 'cliente' %}Técnico{% else %}Cliente{% endif %}
+        </dt>
+        <dd class="mb-0 fw-semibold">
+          {% if current_user.role == 'cliente' %}
+            {{ booking.technician.technician_profile.full_name if booking.technician and booking.technician.technician_profile else (booking.technician.email if booking.technician else '—') }}
+          {% else %}
+            {{ booking.client.full_name or booking.client.email if booking.client else '—' }}
+          {% endif %}
+        </dd>
+      </dl>
+    </div>
+  </div>
+
+  {# ── Panel del chat ── #}
+  <div class="col-lg-8">
+    <div class="hf-card rounded-4 p-0 d-flex flex-column" style="min-height:520px">
+
+      <div class="d-flex align-items-center gap-2 px-4 py-3 border-bottom">
+        <i class="bi bi-chat-dots-fill text-primary fs-5"></i>
+        <h2 class="h6 m-0 fw-bold">Chat de la reserva</h2>
+        <span class="badge bg-light text-secondary ms-auto" style="font-size:.7rem">
+          Solo visible para cliente y técnico
+        </span>
+      </div>
+
+      <div class="flex-grow-1 overflow-auto p-3 p-lg-4" id="hf-chat-messages"
+           style="max-height:400px; display:flex; flex-direction:column; gap:.5rem">
+        {% if not messages %}
+          <p class="text-center text-secondary small my-auto">
+            <i class="bi bi-chat-square-text d-block fs-2 mb-2"></i>
+            Aún no hay mensajes. ¡Escribe el primero!
+          </p>
+        {% endif %}
+        {% for msg in messages %}
+          <div class="d-flex {% if msg.sender_id == current_user.id %}justify-content-end{% endif %}">
+            <div class="hf-chat-bubble {% if msg.sender_id == current_user.id %}hf-chat-bubble--me{% else %}hf-chat-bubble--other{% endif %}">
+              {% if msg.sender_id != current_user.id %}
+                <span class="hf-chat-sender">{{ msg.sender.full_name or msg.sender.email.split('@')[0] }}</span>
+              {% endif %}
+              <p class="mb-0">{{ msg.content }}</p>
+              <span class="hf-chat-time">{{ msg.created_at.strftime('%H:%M') }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="border-top px-3 py-2">
+        <form id="hf-chat-form" class="d-flex gap-2" autocomplete="off">
+          <input type="text" id="hf-chat-input" class="form-control form-control-sm rounded-pill"
+                 placeholder="Escribe un mensaje..." maxlength="2000"
+                 {% if booking.status == 'cancelado' %}disabled{% endif %}>
+          <button class="btn hf-btn-action btn-sm rounded-pill px-3" type="submit"
+                  {% if booking.status == 'cancelado' %}disabled{% endif %}>
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </form>
+        {% if booking.status == 'cancelado' %}
+          <p class="small text-secondary text-center mt-1 mb-0">Chat cerrado — reserva cancelada.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.hf-chat-bubble { max-width:75%; padding:.5rem .8rem; border-radius:1rem; font-size:.875rem; line-height:1.45; }
+.hf-chat-bubble--me { background:var(--hf-primary,#4F46E5); color:#fff; border-bottom-right-radius:.25rem; }
+.hf-chat-bubble--other { background:#f1f3f5; color:#1a1a2e; border-bottom-left-radius:.25rem; }
+.hf-chat-sender { display:block; font-size:.72rem; font-weight:600; opacity:.7; margin-bottom:.15rem; }
+.hf-chat-time { display:block; font-size:.68rem; opacity:.6; text-align:right; margin-top:.15rem; }
+</style>
+
+<script>
+(function () {
+  var bookingId = {{ booking.id }};
+  var myId = {{ current_user.id }};
+  var socket = io();
+  socket.emit('join_booking_chat', { booking_id: bookingId });
+
+  var container = document.getElementById('hf-chat-messages');
+  var form = document.getElementById('hf-chat-form');
+  var input = document.getElementById('hf-chat-input');
+
+  function scrollBottom() { container.scrollTop = container.scrollHeight; }
+  scrollBottom();
+
+  function addBubble(data, isMine) {
+    var empty = container.querySelector('p.text-center');
+    if (empty) empty.remove();
+    var wrap = document.createElement('div');
+    wrap.className = 'd-flex ' + (isMine ? 'justify-content-end' : '');
+    var bubble = document.createElement('div');
+    bubble.className = 'hf-chat-bubble ' + (isMine ? 'hf-chat-bubble--me' : 'hf-chat-bubble--other');
+    if (!isMine) {
+      var sender = document.createElement('span');
+      sender.className = 'hf-chat-sender';
+      sender.textContent = data.sender_name;
+      bubble.appendChild(sender);
+    }
+    var text = document.createElement('p');
+    text.className = 'mb-0';
+    text.textContent = data.content;
+    bubble.appendChild(text);
+    var time = document.createElement('span');
+    time.className = 'hf-chat-time';
+    time.textContent = data.created_at;
+    bubble.appendChild(time);
+    wrap.appendChild(bubble);
+    container.appendChild(wrap);
+    scrollBottom();
+  }
+
+  socket.on('booking_chat_message', function (data) {
+    addBubble(data, data.sender_id === myId);
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var msg = input.value.trim();
+    if (!msg) return;
+    socket.emit('booking_chat_message', { booking_id: bookingId, content: msg });
+    input.value = '';
+    input.focus();
+  });
+})();
+</script>
+{% endmacro %}
+
+{% block client_content %}{{ chat_body() }}{% endblock %}
+{% block tech_content %}{{ chat_body() }}{% endblock %}

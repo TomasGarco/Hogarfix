@@ -167,6 +167,13 @@ class Booking(db.Model):
     client = db.relationship("User", foreign_keys=[client_id], back_populates="client_bookings")
     technician = db.relationship("User", foreign_keys=[technician_id], back_populates="technician_bookings")
     review = db.relationship("Review", back_populates="booking", uselist=False, cascade="all, delete-orphan")
+    messages = db.relationship(
+        "BookingMessage",
+        foreign_keys="[BookingMessage.booking_id]",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+        order_by="BookingMessage.created_at",
+    )
 
 
 class Availability(db.Model):
@@ -290,3 +297,17 @@ class Announcement(db.Model):
         if self.fecha_fin and self.fecha_fin < now:
             return False
         return True
+
+
+class BookingMessage(db.Model):
+    """Mensajes directos entre cliente y técnico dentro de una reserva."""
+    __tablename__ = "booking_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey("reservas.id", ondelete="CASCADE"), nullable=False, index=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+
+    sender = db.relationship("User", foreign_keys=[sender_id])

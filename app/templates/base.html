@@ -369,6 +369,22 @@
         window.setInterval(refreshNotifications, 30000);
       }
 
+      // ── Socket.IO push notifications (actualiza badge sin recargar la página) ──
+      {% if current_user.is_authenticated %}
+      (function () {
+        var _hfPush = io();
+        _hfPush.on('new_notification', function (data) {
+          if (typeof data.count !== 'number') return;
+          // Badge cliente (navbar)
+          var _b = document.querySelector('[data-hf-notification-badge]');
+          if (_b) { _b.textContent = String(data.count); _b.hidden = data.count < 1; }
+          // Badge técnico (sidebar)
+          var _tb = document.querySelector('[data-hf-tech-notif-badge]');
+          if (_tb) { _tb.textContent = data.count < 100 ? String(data.count) : '99+'; _tb.hidden = data.count < 1; }
+        });
+      })();
+      {% endif %}
+
     });
   </script>
   {% block scripts %}{% endblock %}

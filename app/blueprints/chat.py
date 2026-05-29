@@ -194,6 +194,54 @@ def _get_response(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 def register_socketio_events(socketio):
+    from flask_socketio import join_room
+    from flask_login import current_user as _cu
+
+    @socketio.on("connect")
+    def handle_connect():
+        """Al conectar, el usuario entra a su sala personal para recibir push notif."""
+        if _cu.is_authenticated:
+            join_room(f"user_{_cu.id}")
+
+    @socketio.on("join_booking_chat")
+    def handle_join_booking(data):
+        """El cliente o técnico entra a la sala del chat de una reserva."""
+        from app.models import Booking
+        booking_id = int((data or {}).get("booking_id", 0))
+        if not booking_id or not _cu.is_authenticated:
+            return
+        booking = Booking.query.get(booking_id)
+        if booking and _cu.id in (booking.client_id, booking.technician_id):
+            join_room(f"booking_{booking_id}")
+
+    @socketio.on("booking_chat_message")
+    def handle_booking_message(data):
+        """Persiste un mensaje de chat y lo retransmite a la sala de la reserva."""
+        from app.extensions import db
+        from app.models import Booking, BookingMessage
+        booking_id = int((data or {}).get("booking_id", 0))
+        content = ((data or {}).get("content") or "").strip()
+        if not booking_id or not content or not _cu.is_authenticated:
+            return
+        booking = Booking.query.get(booking_id)
+        if not booking or _cu.id not in (booking.client_id, booking.technician_id):
+            return
+        msg = BookingMessage(
+            booking_id=booking_id,
+            sender_id=_cu.id,
+            content=content[:2000],
+        )
+        db.session.add(msg)
+        db.session.commit()
+        sender_name = _cu.full_name or _cu.email.split("@")[0]
+        emit("booking_chat_message", {
+            "id": msg.id,
+            "sender_id": _cu.id,
+            "sender_name": sender_name,
+            "content": msg.content,
+            "created_at": msg.created_at.strftime("%H:%M"),
+        }, room=f"booking_{booking_id}")
+
     @socketio.on("fixi_message")
     def handle_fixi_message(data):
         msg = (data or {}).get("message", "").strip() if isinstance(data, dict) else ""

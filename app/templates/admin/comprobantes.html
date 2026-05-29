@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="mb-4">
+  <a href="{{ url_for('admin.dashboard') }}" class="hf-back-link"><i class="bi bi-arrow-left me-1"></i>Panel admin</a>
+</div>
+
+<h1 class="h3 fw-bold mb-1"><i class="bi bi-receipt me-2 text-primary"></i>Comprobantes de pago</h1>
+<p class="text-secondary mb-4 small">Comprobantes subidos por clientes y pagos en efectivo completados.</p>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show rounded-3" role="alert">
+      {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+{% endwith %}
+
+{# ── Comprobantes de transferencia / tarjeta ── #}
+<div class="hf-card rounded-4 p-4 mb-4">
+  <h2 class="h6 fw-bold mb-3">
+    <i class="bi bi-credit-card me-2 text-primary"></i>
+    Comprobantes subidos ({{ bookings_with_proof | length }})
+  </h2>
+
+  {% if bookings_with_proof %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" style="font-size:.875rem">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Cliente</th>
+          <th>Técnico</th>
+          <th>Servicio</th>
+          <th>Método</th>
+          <th>Estado</th>
+          <th>Comprobante</th>
+          <th>Actualizado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings_with_proof %}
+        <tr>
+          <td class="fw-semibold">{{ b.id }}</td>
+          <td>{{ b.client.full_name or b.client.email if b.client else '—' }}</td>
+          <td>
+            {% if b.technician and b.technician.technician_profile %}
+              {{ b.technician.technician_profile.full_name }}
+            {% elif b.technician %}
+              {{ b.technician.email }}
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-capitalize">{{ b.service_type }}</td>
+          <td>
+            <span class="badge rounded-pill bg-light text-dark">
+              <i class="bi bi-wallet2 me-1"></i>{{ b.payment_method | title }}
+            </span>
+          </td>
+          <td>
+            <span class="badge rounded-pill
+              {% if b.status == 'pendiente' %}bg-warning text-dark
+              {% elif b.status == 'confirmado' %}bg-primary
+              {% elif b.status == 'completado' %}bg-success
+              {% else %}bg-secondary{% endif %}">
+              {{ b.status | title }}
+            </span>
+          </td>
+          <td>
+            <a href="{{ url_for('static', filename='uploads/evidence/' ~ b.payment_proof) }}"
+               target="_blank" rel="noopener"
+               class="btn btn-sm btn-outline-primary rounded-pill">
+              <i class="bi bi-eye me-1"></i>Ver
+            </a>
+          </td>
+          <td class="text-secondary">
+            {{ b.updated_at.strftime('%d/%m/%Y') if b.updated_at else '—' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="text-center text-secondary py-4 mb-0">
+      <i class="bi bi-inbox d-block fs-2 mb-2"></i>
+      No hay comprobantes subidos todavía.
+    </p>
+  {% endif %}
+</div>
+
+{# ── Pagos en efectivo sin confirmar ── #}
+<div class="hf-card rounded-4 p-4">
+  <h2 class="h6 fw-bold mb-3">
+    <i class="bi bi-cash-coin me-2 text-warning"></i>
+    Pagos en efectivo pendientes de verificación ({{ cash_pending | length }})
+  </h2>
+
+  {% if cash_pending %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" style="font-size:.875rem">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Cliente</th>
+          <th>Técnico</th>
+          <th>Servicio</th>
+          <th>Localidad</th>
+          <th>Fecha servicio</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in cash_pending %}
+        <tr>
+          <td class="fw-semibold">{{ b.id }}</td>
+          <td>{{ b.client.full_name or b.client.email if b.client else '—' }}</td>
+          <td>
+            {% if b.technician and b.technician.technician_profile %}
+              {{ b.technician.technician_profile.full_name }}
+            {% elif b.technician %}
+              {{ b.technician.email }}
+            {% else %}—{% endif %}
+          </td>
+          <td class="text-capitalize">{{ b.service_type }}</td>
+          <td class="text-capitalize">{{ b.locality }}</td>
+          <td>{{ b.booking_date.strftime('%d/%m/%Y') }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.verify_payment', booking_id=b.id) }}"
+                  onsubmit="return confirm('¿Confirmar pago en efectivo de la reserva #{{ b.id }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+              <button class="btn btn-sm btn-success rounded-pill">
+                <i class="bi bi-check-lg me-1"></i>Confirmar
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="text-center text-secondary py-4 mb-0">
+      <i class="bi bi-check-circle d-block fs-2 mb-2 text-success"></i>
+      No hay pagos en efectivo pendientes de verificación.
+    </p>
+  {% endif %}
+</div>
+
+{% endblock %}
