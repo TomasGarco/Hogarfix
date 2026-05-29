@@ -629,7 +629,6 @@ def search_technicians():
 
 
 @main_bp.route("/tecnico/<int:user_id>")
-@login_required
 def technician_public_profile(user_id):
     from flask import abort
     tech_user = User.query.filter_by(id=user_id, role="tecnico").first_or_404()

@@ -1,6 +1,6 @@
-{% extends 'base_client.html' %}
-{% block page_title %}{{ profile.full_name }}{% endblock %}
-{% block client_content %}
+{% extends 'base.html' %}
+{% block page_title %}{{ profile.full_name }} — HogarFix{% endblock %}
+{% block content %}
 
 {# ── Hero ─────────────────────────────────────────────────────────── #}
 <div class="hf-card rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
@@ -107,10 +107,20 @@
       </div>
 
       {# CTA #}
-      <a href="{{ url_for('booking.create_booking', technician_id=tech_user.id) }}"
-         class="btn hf-btn-primary">
-        <i class="bi bi-calendar-check me-2"></i>Reservar ahora
-      </a>
+      {% if current_user.is_authenticated and current_user.role == 'cliente' %}
+        <a href="{{ url_for('booking.create_booking', technician_id=tech_user.id) }}"
+           class="btn hf-btn-primary">
+          <i class="bi bi-calendar-check me-2"></i>Reservar ahora
+        </a>
+      {% elif not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.login', next=request.path) }}"
+           class="btn hf-btn-primary">
+          <i class="bi bi-person-check me-2"></i>Inicia sesion para reservar
+        </a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary ms-2">
+          <i class="bi bi-person-plus me-1"></i>Registrarse gratis
+        </a>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -184,14 +194,25 @@
 
 {# ── CTA final ───────────────────────────────────────────────────── #}
 <div class="text-center pb-2">
-  <a href="{{ url_for('booking.create_booking', technician_id=tech_user.id) }}"
-     class="btn hf-btn-primary btn-lg px-5">
-    <i class="bi bi-calendar-check me-2"></i>Reservar con {{ profile.full_name.split()[0] }}
-  </a>
-  <p class="small text-muted mt-2 mb-0">
-    <i class="bi bi-arrow-left me-1"></i>
-    <a href="{{ url_for('main.search_technicians') }}" class="text-decoration-none text-secondary">Volver a la búsqueda</a>
-  </p>
+  {% if current_user.is_authenticated and current_user.role == 'cliente' %}
+    <a href="{{ url_for('booking.create_booking', technician_id=tech_user.id) }}"
+       class="btn hf-btn-primary btn-lg px-5">
+      <i class="bi bi-calendar-check me-2"></i>Reservar con {{ profile.full_name.split()[0] }}
+    </a>
+    <p class="small text-muted mt-2 mb-0">
+      <i class="bi bi-arrow-left me-1"></i>
+      <a href="{{ url_for('main.search_technicians') }}" class="text-decoration-none text-secondary">Volver a la busqueda</a>
+    </p>
+  {% else %}
+    <a href="{{ url_for('auth.login', next=request.path) }}"
+       class="btn hf-btn-primary btn-lg px-5">
+      <i class="bi bi-person-check me-2"></i>Inicia sesion para reservar
+    </a>
+    <p class="small text-muted mt-2 mb-0">
+      ¿No tienes cuenta?
+      <a href="{{ url_for('auth.register') }}" class="text-decoration-none" style="color:var(--hf-cyan)">Registrate gratis</a>
+    </p>
+  {% endif %}
 </div>
 
 {% endblock %}
