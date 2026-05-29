@@ -135,6 +135,8 @@ def dashboard():
         earnings_est = int("".join(c for c in str(bio_price_raw) if c.isdigit()) or 0) * counters["completado"]
     except (ValueError, TypeError):
         earnings_est = 0
+
+    return render_template(
         "technician/dashboard.html",
         bookings=bookings,
         counters=counters,
