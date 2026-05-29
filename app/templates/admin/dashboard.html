@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hf-dash-hero hf-dash-hero-admin rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="hf-panel-initials">{{ admin_initials }}</div>
+      <div>
+        <p class="hf-dash-overline mb-1">Centro de control</p>
+        <h1 class="h3 mb-1">Panel Admin</h1>
+        <p class="mb-0 hf-dash-subline">Hola {{ admin_name }}. Supervisa usuarios, tecnicos y seguridad de la plataforma.</p>
+      </div>
+    </div>
+    <div class="d-flex flex-column align-items-end gap-3">
+      <div class="text-end">
+        <p class="mb-0 fw-bold" id="hf-adm-time" style="font-size:1.45rem;letter-spacing:.01em;color:#0a2540">--:-- --</p>
+        <p class="mb-0" id="hf-adm-date" style="font-size:.78rem;color:rgba(10,37,64,.55)">---</p>
+        <p class="mb-0" style="font-size:.68rem;color:rgba(10,37,64,.38);letter-spacing:.05em">COLOMBIA &middot; UTC&minus;5</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2 justify-content-end">
+        <a class="btn hf-btn-action" href="{{ url_for('admin.users_list', role='cliente', age='all') }}">
+          <i class="bi bi-people me-1"></i>Usuarios
+        </a>
+        <a class="btn hf-btn-outline" href="{{ url_for('admin.reservas_list') }}">
+          <i class="bi bi-calendar-check me-1"></i>Reservas
+        </a>
+        <a class="btn hf-btn-outline" href="{{ url_for('admin.resenas_list') }}">
+          <i class="bi bi-star me-1"></i>Reseñas
+        </a>
+        <a class="btn hf-btn-outline" href="{{ url_for('admin.announcements') }}">
+          <i class="bi bi-megaphone-fill me-1"></i>Anuncios
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="row g-3 mb-4" data-aos="fade-up" data-aos-delay="70">
+  <div class="col-sm-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-cyan rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Usuarios totales</p>
+      <p class="h3 m-0">{{ users|length }}</p>
+    </article>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-blue rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Tecnicos registrados</p>
+      <p class="h3 m-0">{{ technicians|length }}</p>
+    </article>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-orange rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Pendientes verificacion</p>
+      <p class="h3 m-0">{{ profiles|selectattr('verification_status', 'equalto', 'pending')|list|length }}</p>
+    </article>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-dark rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Logs recientes</p>
+      <p class="h3 m-0">{{ logs|length }}</p>
+    </article>
+  </div>
+</section>
+
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="hf-card rounded-4 p-3 p-lg-4 h-100" data-aos="fade-up" data-aos-delay="120">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h2 class="h5 m-0">Tecnicos y verificacion</h2>
+        <span class="small text-secondary">{{ profiles|length }} perfiles tecnicos</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle hf-admin-table">
+          <thead>
+            <tr>
+              <th>Tecnico</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Suscripción</th>
+              <th>Actualizar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in profiles %}
+              <tr>
+                <td>
+                  <strong>{{ p.full_name }}</strong><br>
+                  <span class="small text-secondary">{{ p.user.email }}</span><br>
+                  <a href="{{ url_for('admin.tech_detail', profile_id=p.id) }}" class="btn btn-sm hf-btn-outline mt-1" style="font-size:.7rem">Ver detalle</a>
+                </td>
+                <td><span class="hf-status-chip hf-status-pendiente">{{ p.technician_type }}</span></td>
+                <td><span class="hf-admin-status">{{ p.verification_status }}</span></td>
+                <td>
+                  {% if p.subscription_status == 'active' %}
+                    <span class="badge text-bg-success">Activa — {{ p.subscription_days_left }}d</span>
+                  {% elif p.subscription_status == 'trial' %}
+                    <span class="badge text-bg-info">Trial — {{ p.subscription_days_left }}d</span>
+                  {% elif p.subscription_status == 'expired' %}
+                    <span class="badge text-bg-danger">Vencida</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Sin suscripción</span>
+                  {% endif %}
+                  <form method="post" action="{{ url_for('admin.manage_subscription', profile_id=p.id) }}" class="d-flex gap-1 mt-1 flex-wrap">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button name="action" value="30" class="btn btn-sm hf-btn-outline" style="font-size:.7rem;padding:.15rem .4rem">+30d</button>
+                    <button name="action" value="90" class="btn btn-sm hf-btn-outline" style="font-size:.7rem;padding:.15rem .4rem">+90d</button>
+                    <button name="action" value="365" class="btn btn-sm hf-btn-outline" style="font-size:.7rem;padding:.15rem .4rem">+1año</button>
+                    <button name="action" value="expire" class="btn btn-sm btn-outline-danger" style="font-size:.7rem;padding:.15rem .4rem">Vencer</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="post" action="{{ url_for('admin.update_verification', profile_id=p.id) }}" class="d-flex gap-2 flex-wrap">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="verification_status" class="form-select form-select-sm" style="max-width:140px">
+                      <option value="pending" {% if p.verification_status=='pending' %}selected{% endif %}>Pendiente</option>
+                      <option value="basic_verified" {% if p.verification_status=='basic_verified' %}selected{% endif %}>Basica</option>
+                      <option value="approved" {% if p.verification_status=='approved' %}selected{% endif %}>Aprobado</option>
+                      <option value="fully_verified" {% if p.verification_status=='fully_verified' %}selected{% endif %}>Completa</option>
+                      <option value="rejected" {% if p.verification_status=='rejected' %}selected{% endif %}>Rechazado</option>
+                    </select>
+                    <button class="btn btn-sm hf-btn-primary">Guardar</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4">No hay perfiles tecnicos.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="hf-card rounded-4 p-3 p-lg-4 mb-3" data-aos="fade-up" data-aos-delay="140">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h6 m-0">Resumen de usuarios</h2>
+        <a class="btn btn-sm hf-btn-outline" href="{{ url_for('admin.users_list', role='cliente', age='all') }}">Ver todos</a>
+      </div>
+      <div class="small d-grid gap-1">
+        <div class="d-flex justify-content-between border-bottom pb-1">
+          <span>Clientes nuevos (7 dias)</span>
+          <span class="badge text-bg-light">{{ new_clients|length }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom pb-1">
+          <span>Clientes antiguos</span>
+          <span class="badge text-bg-light">{{ old_clients|length }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom pb-1">
+          <span>Tecnicos nuevos (7 dias)</span>
+          <span class="badge text-bg-light">{{ new_technicians|length }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom pb-1">
+          <span>Tecnicos antiguos</span>
+          <span class="badge text-bg-light">{{ old_technicians|length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hf-card rounded-4 p-3 p-lg-4 mb-3" data-aos="fade-up" data-aos-delay="170">
+      <h2 class="h6 mb-2">Ultimos registros</h2>
+      <div class="small d-grid gap-2">
+        {% for u in users[:8] %}
+          <div class="border-bottom pb-2">
+            <div class="d-flex justify-content-between">
+              <strong>{{ u.email }}</strong>
+              <span class="badge text-bg-secondary">{{ u.role }}</span>
+            </div>
+            <div class="mt-1 d-flex gap-2">
+              <form method="post" action="{{ url_for('admin.toggle_user_active', user_id=u.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" type="submit">
+                  {% if u.is_active %}Desactivar{% else %}Activar{% endif %}
+                </button>
+              </form>
+              <form method="post" action="{{ url_for('admin.delete_user', user_id=u.id) }}" onsubmit="return confirm('Seguro que deseas eliminar este usuario?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+              </form>
+            </div>
+          </div>
+        {% else %}
+          <p>Sin usuarios.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="hf-card rounded-4 p-3 p-lg-4" data-aos="fade-up" data-aos-delay="200">
+      <h2 class="h6 mb-2">Ultimos logs de login</h2>
+      <div class="small d-grid gap-2">
+        {% for l in logs %}
+          <div class="border-bottom pb-1">
+            <strong>User #{{ l.user_id }}</strong>
+            <div>{{ l.login_at }} | {{ l.ip_address }}</div>
+          </div>
+        {% else %}
+          <p>Sin logs.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  function tick(){
+    var t=document.getElementById('hf-adm-time'), d=document.getElementById('hf-adm-date');
+    if(!t) return;
+    var now=new Date();
+    t.textContent=now.toLocaleTimeString('es-CO',{timeZone:'America/Bogota',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+    d.textContent=now.toLocaleDateString('es-CO',{timeZone:'America/Bogota',weekday:'long',day:'numeric',month:'long'});
+  }
+  tick(); setInterval(tick,1000);
+})();
+</script>
+{% endblock %}

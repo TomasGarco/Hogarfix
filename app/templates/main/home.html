@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if current_user.is_authenticated and current_user.role == 'cliente' %}
+  {% set search_action = url_for('main.search_technicians') %}
+{% else %}
+  {% set search_action = url_for('auth.login') %}
+{% endif %}
+
+<!-- ═══════ HERO ═══════ -->
+<section class="row align-items-center g-4" style="margin-bottom:4rem;" id="hf-hero-section">
+  <div class="col-lg-7">
+    <div class="hf-hero p-4 p-lg-5 rounded-4" id="hf-hero-card">
+      <p class="text-uppercase small fw-bold mb-2 hero-label" style="letter-spacing:.12em;color:#00d4ff;">Servicios del hogar sin caos</p>
+      <h1 class="display-6 fw-bold mb-3 hero-title">Encuentra tecnicos<br>confiables <span class="hf-highlight">en minutos.</span></h1>
+      <p class="text-white-50 mb-4 hero-sub">Agenda rapido, revisa verificacion y recibe soporte real en Bogota.</p>
+
+      <form method="get" action="{{ search_action }}" class="row g-2 hf-hero-search hero-form">
+        <div class="col-md-5">
+          <select name="service" class="form-select" required>
+            <option value="">Que necesitas?</option>
+            {% for s in services_catalog %}
+              <option value="{{ s }}">{{ s|title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input type="text" name="locality" class="form-control" placeholder="Ubicacion" required>
+        </div>
+        <div class="col-md-3 d-grid">
+          <button class="btn hf-btn-action">Buscar</button>
+        </div>
+      </form>
+
+      <div class="d-flex flex-wrap gap-2 mt-3 hero-pills">
+        <span class="hf-trust-pill"><i class="bi bi-shield-check"></i> Tecnicos verificados</span>
+        <span class="hf-trust-pill"><i class="bi bi-rocket-takeoff"></i> Sin comision en lanzamiento</span>
+        <span class="hf-trust-pill"><i class="bi bi-geo-alt"></i> Bogota</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <article class="hf-card rounded-4 p-4 h-100" id="hf-steps-card">
+      <h2 class="h5 mb-3">Reserva en 3 pasos</h2>
+      <div class="d-grid gap-2">
+        <div class="hf-mini-chip step-chip"><span class="hf-step-number me-2">1</span> Elige servicio y zona.</div>
+        <div class="hf-mini-chip step-chip"><span class="hf-step-number me-2">2</span> Selecciona tecnico con disponibilidad.</div>
+        <div class="hf-mini-chip step-chip"><span class="hf-step-number me-2">3</span> Confirma y recibe seguimiento.</div>
+      </div>
+      <div id="ingreso" class="mt-3 p-3 rounded-3" style="background:linear-gradient(135deg,#f0f8ff 0%,#e8f4fd 100%);border:1px solid #c8e0f5;">
+        <p class="small fw-bold mb-1" style="color:#0a2540;">¿Primera vez aquí?</p>
+        <p class="small text-secondary mb-2" style="font-size:.78rem;">Crea tu cuenta gratis y empieza hoy.</p>
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('auth.register', account_type='cliente') }}" class="btn btn-sm hf-btn-primary rounded-3">
+            <i class="bi bi-person-plus me-1"></i>Soy cliente
+          </a>
+          <a href="{{ url_for('auth.register', account_type='tecnico') }}" class="btn btn-sm btn-outline-secondary rounded-3" style="border-color:#c8dff0;">
+            <i class="bi bi-tools me-1"></i>Soy técnico
+          </a>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ═══════ SERVICIOS ═══════ -->
+<section id="services" class="mb-6" style="margin-bottom:4rem;">
+  <div class="mb-4" id="services-header">
+    <h2 class="h3 fw-bold m-0 sr-title">Servicios principales</h2>
+    <p class="text-secondary small mt-1 mb-0">Tecnicos disponibles en tu zona, listos para hoy.</p>
+  </div>
+  <div class="row g-4" id="services-grid">
+    <div class="col-sm-6 col-lg-4 srv-card">
+      <a href="{% if current_user.is_authenticated and current_user.role == 'cliente' %}{{ url_for('main.search_technicians', service='plomeria') }}{% else %}{{ url_for('auth.login') }}{% endif %}" class="text-decoration-none text-reset d-block h-100">
+      <article class="hf-service-card rounded-4 p-4 h-100">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-service-icon"><i class="bi bi-droplet-half"></i></span><h3 class="h6 m-0">Plomeria</h3></div>
+        <p class="small mb-0 text-secondary">Fugas, griferia, sanitarios y reparaciones urgentes.</p>
+      </article>
+      </a>
+    </div>
+    <div class="col-sm-6 col-lg-4 srv-card">
+      <a href="{% if current_user.is_authenticated and current_user.role == 'cliente' %}{{ url_for('main.search_technicians', service='electricidad') }}{% else %}{{ url_for('auth.login') }}{% endif %}" class="text-decoration-none text-reset d-block h-100">
+      <article class="hf-service-card rounded-4 p-4 h-100">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-service-icon"><i class="bi bi-lightning-charge"></i></span><h3 class="h6 m-0">Electricidad</h3></div>
+        <p class="small mb-0 text-secondary">Instalaciones, tableros, cableado y puntos de energia.</p>
+      </article>
+      </a>
+    </div>
+    <div class="col-sm-6 col-lg-4 srv-card">
+      <a href="{% if current_user.is_authenticated and current_user.role == 'cliente' %}{{ url_for('main.search_technicians', service='cerrajeria') }}{% else %}{{ url_for('auth.login') }}{% endif %}" class="text-decoration-none text-reset d-block h-100">
+      <article class="hf-service-card rounded-4 p-4 h-100">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-service-icon"><i class="bi bi-key"></i></span><h3 class="h6 m-0">Cerrajeria</h3></div>
+        <p class="small mb-0 text-secondary">Aperturas, cambios de cerradura y seguridad de acceso.</p>
+      </article>
+      </a>
+    </div>
+    <div class="col-sm-6 col-lg-4 srv-card">
+      <a href="{% if current_user.is_authenticated and current_user.role == 'cliente' %}{{ url_for('main.search_technicians', service='pintura') }}{% else %}{{ url_for('auth.login') }}{% endif %}" class="text-decoration-none text-reset d-block h-100">
+      <article class="hf-service-card rounded-4 p-4 h-100">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-service-icon"><i class="bi bi-brush"></i></span><h3 class="h6 m-0">Pintura</h3></div>
+        <p class="small mb-0 text-secondary">Acabados interiores y exteriores para hogar y negocio.</p>
+      </article>
+      </a>
+    </div>
+    <div class="col-sm-6 col-lg-4 srv-card">
+      <a href="{% if current_user.is_authenticated and current_user.role == 'cliente' %}{{ url_for('main.search_technicians', service='fumigacion') }}{% else %}{{ url_for('auth.login') }}{% endif %}" class="text-decoration-none text-reset d-block h-100">
+      <article class="hf-service-card rounded-4 p-4 h-100">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-service-icon"><i class="bi bi-bug"></i></span><h3 class="h6 m-0">Fumigacion</h3></div>
+        <p class="small mb-0 text-secondary">Control de plagas residencial y comercial.</p>
+      </article>
+      </a>
+    </div>
+    <div class="col-sm-6 col-lg-4 srv-card">
+      <a href="{% if current_user.is_authenticated and current_user.role == 'cliente' %}{{ url_for('main.search_technicians', service='carpinteria') }}{% else %}{{ url_for('auth.login') }}{% endif %}" class="text-decoration-none text-reset d-block h-100">
+      <article class="hf-service-card rounded-4 p-4 h-100">
+        <div class="d-flex align-items-center gap-3 mb-3"><span class="hf-service-icon"><i class="bi bi-hammer"></i></span><h3 class="h6 m-0">Carpinteria</h3></div>
+        <p class="small mb-0 text-secondary">Puertas, muebles y ajustes a medida.</p>
+      </article>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ GALERIA ═══════ -->
+<section class="mb-6" style="margin-bottom:4rem;" id="gallery-section">
+  <div class="mb-4" id="gallery-header">
+    <h2 class="h3 fw-bold m-0 sr-title">Trabajos reales</h2>
+    <p class="text-secondary small mt-1 mb-0">Calidad visible antes de reservar.</p>
+  </div>
+  <div class="row g-3" id="gallery-grid">
+    <div class="col-md-6 col-xl-3 gal-card">
+      <article class="hf-image-card rounded-4 overflow-hidden">
+        <!-- Referencia Unsplash – uso demostrativo UI -->
+        <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80" alt="plomeria" class="img-fluid w-100" loading="lazy" decoding="async">
+      </article>
+    </div>
+    <div class="col-md-6 col-xl-3 gal-card">
+      <article class="hf-image-card rounded-4 overflow-hidden">
+        <!-- Referencia Unsplash – uso demostrativo UI -->
+        <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=900&q=80" alt="electricidad" class="img-fluid w-100" loading="lazy" decoding="async">
+      </article>
+    </div>
+    <div class="col-md-6 col-xl-3 gal-card">
+      <article class="hf-image-card rounded-4 overflow-hidden">
+        <!-- Referencia Unsplash – uso demostrativo UI -->
+        <img src="https://images.unsplash.com/photo-1618220048045-10a6dbdf83e0?auto=format&fit=crop&w=900&q=80" alt="carpinteria" class="img-fluid w-100" loading="lazy" decoding="async">
+      </article>
+    </div>
+    <div class="col-md-6 col-xl-3 gal-card">
+      <article class="hf-image-card rounded-4 overflow-hidden">
+        <!-- Referencia Unsplash – uso demostrativo UI -->
+        <img src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=900&q=80" alt="pintura" class="img-fluid w-100" loading="lazy" decoding="async">
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ COMO FUNCIONA ═══════ -->
+<section id="how-it-works" class="mb-6" style="margin-bottom:4rem;">
+  <article class="hf-card rounded-4 p-5 p-lg-5">
+    <h2 class="h3 fw-bold mb-2 sr-title text-center">Como funciona</h2>
+    <p class="text-center text-secondary small mb-4">Simple, rapido y sin complicaciones.</p>
+    <div class="row g-3" id="hiw-grid">
+      <div class="col-md-4 hiw-step">
+        <div class="hf-step-box text-center p-4">
+          <span class="hf-step-number mx-auto mb-3" style="width:44px;height:44px;font-size:1.1rem;">1</span>
+          <h3 class="h6 mb-2">Solicita</h3>
+          <p class="small mb-0">Define servicio, zona y fecha.</p>
+        </div>
+      </div>
+      <div class="col-md-4 hiw-step">
+        <div class="hf-step-box text-center p-4">
+          <span class="hf-step-number mx-auto mb-3" style="width:44px;height:44px;font-size:1.1rem;">2</span>
+          <h3 class="h6 mb-2">Confirma</h3>
+          <p class="small mb-0">Elige tecnico y horario disponible.</p>
+        </div>
+      </div>
+      <div class="col-md-4 hiw-step">
+        <div class="hf-step-box text-center p-4">
+          <span class="hf-step-number mx-auto mb-3" style="width:44px;height:44px;font-size:1.1rem;">3</span>
+          <h3 class="h6 mb-2">Califica</h3>
+          <p class="small mb-0">Evalua el resultado y ayuda a otros.</p>
+        </div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<!-- ═══════ TECNICOS ═══════ -->
+{% if technicians %}
+<section class="mb-6" style="margin-bottom:4rem;" id="technicians-section">
+  <h2 class="h3 fw-bold mb-2 sr-title">Tecnicos destacados</h2>
+  <p class="text-secondary small mb-4">Los mejor valorados de nuestra comunidad.</p>
+  <div class="row g-3" id="tech-grid">
+    {% for t in technicians %}
+      <div class="col-md-6 col-xl-4 tech-card">
+        <article class="hf-card h-100 p-3 rounded-4">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            {% if t.profile_photo %}
+              <img src="{{ url_for('static', filename=t.profile_photo) }}" class="hf-avatar" alt="foto tecnico">
+            {% else %}
+              <div class="hf-avatar d-flex align-items-center justify-content-center fw-bold">{{ t.full_name[:1] }}</div>
+            {% endif %}
+            <div>
+              <h3 class="h6 m-0">{{ t.full_name }}</h3>
+              <p class="small text-secondary m-0">{{ t.technician_type }}</p>
+            </div>
+          </div>
+          <p class="small mb-0">{{ t.specialties or 'Sin especialidades definidas.' }}</p>
+        </article>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- ═══════ MOBILE CTA ═══════ -->
+<div class="hf-mobile-cta d-lg-none">
+  <a href="{{ url_for('auth.register', account_type='cliente') }}" class="btn hf-btn-action w-100">Entrar como cliente</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script>
+/* ─────────────────────────────────────────────
+   GSAP ScrollTrigger – HogarFix landing
+───────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.gsap || !window.ScrollTrigger) {
+    return;
+  }
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+  heroTl
+    .from('.hero-label',  { opacity: 0, y: 18, duration: 0.5 })
+    .from('.hero-title',  { opacity: 0, y: 28, duration: 0.65 }, '-=0.2')
+    .from('.hero-sub',    { opacity: 0, y: 16, duration: 0.5  }, '-=0.3')
+    .from('.hero-form',   { opacity: 0, y: 20, duration: 0.55 }, '-=0.25')
+    .from('.hero-pills .hf-trust-pill', { opacity: 0, scale: 0.85, stagger: 0.12, duration: 0.4 }, '-=0.2')
+    .from('#hf-steps-card', { opacity: 0, x: 40, duration: 0.7 }, '-=0.6')
+    .from('.step-chip',   { opacity: 0, x: 20, stagger: 0.15, duration: 0.4 }, '-=0.4');
+
+  gsap.from('.srv-card', {
+    scrollTrigger: { trigger: '#services-grid', start: 'top 82%' },
+    opacity: 0,
+    y: 40,
+    scale: 0.94,
+    stagger: 0.1,
+    duration: 0.55,
+    ease: 'power2.out'
+  });
+
+  gsap.from('#services-header .sr-title', {
+    scrollTrigger: { trigger: '#services-header', start: 'top 88%' },
+    opacity: 0,
+    y: 20,
+    duration: 0.5,
+    ease: 'power2.out'
+  });
+
+  gsap.from('.gal-card', {
+    scrollTrigger: { trigger: '#gallery-grid', start: 'top 80%' },
+    opacity: 0,
+    scale: 0.88,
+    y: 30,
+    stagger: 0.12,
+    duration: 0.6,
+    ease: 'back.out(1.3)'
+  });
+
+  gsap.from('.hiw-step', {
+    scrollTrigger: { trigger: '#hiw-grid', start: 'top 82%' },
+    opacity: 0,
+    y: 50,
+    stagger: 0.2,
+    duration: 0.65,
+    ease: 'power3.out'
+  });
+
+  gsap.utils.toArray('.sr-title').forEach(function (el) {
+    gsap.from(el, {
+      scrollTrigger: { trigger: el, start: 'top 88%' },
+      opacity: 0,
+      x: -22,
+      duration: 0.55,
+      ease: 'power2.out'
+    });
+  });
+
+  if (document.querySelector('.tech-card')) {
+    gsap.from('.tech-card', {
+      scrollTrigger: { trigger: '#tech-grid', start: 'top 82%' },
+      opacity: 0,
+      y: 35,
+      stagger: 0.12,
+      duration: 0.55,
+      ease: 'power2.out'
+    });
+  }
+
+  gsap.to('#hf-hero-card', {
+    scrollTrigger: {
+      trigger: '#hf-hero-section',
+      start: 'top top',
+      end: 'bottom top',
+      scrub: 1.5
+    },
+    y: -30,
+    ease: 'none'
+  });
+
+  document.querySelectorAll('.hf-service-icon').forEach(function (icon) {
+    icon.addEventListener('mouseenter', function () {
+      gsap.fromTo(icon, { rotation: -8 }, { rotation: 8, duration: 0.15, yoyo: true, repeat: 3, ease: 'power1.inOut' });
+    });
+  });
+});
+</script>
+{% endblock %}

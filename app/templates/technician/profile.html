@@ -1,0 +1,245 @@
+{% extends 'base_tech.html' %}
+{% block page_title %}Mi perfil{% endblock %}
+
+{% block tech_content %}
+{% set DAYS_LIST = ["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"] %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="hf-card rounded-4 p-4">
+      <h1 class="h4 mb-3">Perfil tecnico</h1>
+      <form method="post" enctype="multipart/form-data" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- DATOS PERSONALES -->
+        <div class="col-12"><p class="fw-semibold text-secondary small mb-0" style="letter-spacing:.04em;">DATOS PERSONALES</p><hr class="mt-1 mb-0"></div>
+        <div class="col-md-6">
+          <label class="form-label">Nombre completo</label>
+          <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Tipo tecnico</label>
+          <select name="technician_type" class="form-select">
+            {% for t in tech_types %}
+              <option value="{{ t }}" {% if profile.technician_type == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Tipo de documento</label>
+          <select name="bio_document_type" class="form-select">
+            {% for dt in [("cc","Cedula de ciudadania"),("ce","Cedula extranjeria"),("pasaporte","Pasaporte"),("nit","NIT")] %}
+              <option value="{{ dt[0] }}" {% if bio_document_type == dt[0] %}selected{% endif %}>{{ dt[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Número de documento</label>
+          <input type="text" name="bio_document_number" class="form-control"
+                 placeholder="{{ bio_document_number }}" autocomplete="off"
+                 title="Deja vacío para conservar el número actual">
+          <div class="form-text text-muted">Solo ingresa un valor si deseas actualizarlo.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Anos de experiencia</label>
+          <input type="number" name="bio_years_experience" class="form-control" min="0" max="50" value="{{ bio_years_experience }}" placeholder="Ej: 5">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Direccion de trabajo</label>
+          <input type="text" name="bio_address" class="form-control" value="{{ bio_address }}" placeholder="Ej: Cra 15 # 80-23, Suba">
+        </div>
+
+        <!-- DESCRIPCION -->
+        <div class="col-12"><p class="fw-semibold text-secondary small mb-0 mt-2" style="letter-spacing:.04em;">SOBRE TI</p><hr class="mt-1 mb-0"></div>
+        <div class="col-12">
+          <label class="form-label">Descripcion personal <span class="text-secondary fw-normal" style="font-size:.82rem;">(cuenta a los clientes quien eres y que haces)</span></label>
+          <textarea name="bio_description" class="form-control" rows="3" placeholder="Ej: Soy tecnico con 5 anos de experiencia en plomeria y electricidad. Trabajo con puntualidad y garantia en todos mis servicios.">{{ bio_description }}</textarea>
+        </div>
+
+        <!-- SERVICIOS -->
+        <div class="col-12"><p class="fw-semibold text-secondary small mb-0 mt-2" style="letter-spacing:.04em;">SERVICIOS Y PRECIOS</p><hr class="mt-1 mb-0"></div>
+        <div class="col-12">
+          <label class="form-label">Especialidades</label>
+          <div class="d-flex flex-wrap gap-3">
+            {% set selected = profile.specialties.split(',') if profile.specialties else [] %}
+            {% for s in services_catalog %}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="specialties" value="{{ s }}" id="svc_{{ s }}" {% if s in selected %}checked{% endif %}>
+                <label class="form-check-label" for="svc_{{ s }}">{{ s|title }}</label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Modalidad de cobro</label>
+          <select name="bio_charge_type" class="form-select">
+            {% for ct in [("servicio","Por servicio"),("hora","Por hora"),("proyecto","Por proyecto")] %}
+              <option value="{{ ct[0] }}" {% if bio_charge_type == ct[0] %}selected{% endif %}>{{ ct[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Precio base (COP)</label>
+          <input type="number" name="bio_base_price" class="form-control" min="0" value="{{ bio_base_price }}" placeholder="Ej: 80000">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Rango de precios</label>
+          <input type="text" name="price_range" class="form-control" value="{{ profile.price_range }}" placeholder="80.000 - 180.000 COP">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Localidades (separadas por coma)</label>
+          <input type="text" name="localities" class="form-control" value="{{ profile.localities }}" placeholder="suba, chapinero, soacha">
+        </div>
+
+        <!-- DISPONIBILIDAD -->
+        <div class="col-12"><p class="fw-semibold text-secondary small mb-0 mt-2" style="letter-spacing:.04em;">DISPONIBILIDAD</p><hr class="mt-1 mb-0"></div>
+        <div class="col-12">
+          <label class="form-label">Dias disponibles</label>
+          <div class="d-flex flex-wrap gap-3">
+            {% for day in DAYS_LIST %}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="bio_availability_days" value="{{ day }}" id="day_{{ day }}" {% if day in bio_availability_days %}checked{% endif %}>
+                <label class="form-check-label" for="day_{{ day }}">{{ day }}</label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Hora inicio</label>
+          <input type="time" name="bio_availability_start" class="form-control" value="{{ bio_availability_start }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Hora fin</label>
+          <input type="time" name="bio_availability_end" class="form-control" value="{{ bio_availability_end }}">
+        </div>
+
+        <!-- FOTOS -->
+        <div class="col-12"><p class="fw-semibold text-secondary small mb-0 mt-2" style="letter-spacing:.04em;">FOTOS Y DOCUMENTOS</p><hr class="mt-1 mb-0"></div>
+        <div class="col-md-6">
+          <label class="form-label">Foto de perfil</label>
+          <input type="file" name="profile_photo" id="profilePhotoInput" class="form-control" accept="image/*">
+          <div id="profilePhotoPreview" class="mt-2 d-none">
+            <img id="profilePhotoImg" src="" alt="Vista previa" class="rounded-circle" style="width:80px;height:80px;object-fit:cover;border:3px solid #d8e8f8;">
+            <p class="small text-secondary mt-1 mb-0">Vista previa — guarda para aplicar</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Fotos de trabajos</label>
+          <input type="file" name="work_photos" class="form-control" accept="image/*" multiple>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Cedula frente</label>
+          <input type="file" name="verification_id_front" class="form-control" accept="image/*">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Cedula reverso</label>
+          <input type="file" name="verification_id_back" class="form-control" accept="image/*">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Selfie verificacion</label>
+          <input type="file" name="verification_selfie" class="form-control" accept="image/*">
+        </div>
+
+        <div class="col-12">
+          <button class="btn hf-btn-action">Guardar perfil</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="hf-card rounded-4 p-3 mb-3">
+      <h2 class="h6 mb-2">Foto de perfil</h2>
+      {% set avatar = current_user.avatar_url or (profile.profile_photo if profile.profile_photo else '') %}
+      {% if avatar %}
+        <div class="text-center mb-2">
+          <img id="sidebarAvatar" src="{{ url_for('static', filename=avatar) }}" alt="Foto de perfil" class="rounded-circle" style="width:90px;height:90px;object-fit:cover;border:3px solid #d8e8f8;">
+        </div>
+      {% else %}
+        <div class="text-center mb-2">
+          <img id="sidebarAvatar" src="" alt="" class="rounded-circle d-none" style="width:90px;height:90px;object-fit:cover;border:3px solid #d8e8f8;">
+          <p id="noAvatarText" class="small text-secondary">No has subido una foto aun.</p>
+        </div>
+      {% endif %}
+      <p class="small text-secondary mb-0">Selecciona una foto en el formulario y presiona <strong>Guardar perfil</strong>.</p>
+    </div>
+    <div class="hf-card rounded-4 p-3 mb-3">
+      <h2 class="h6">Estado verificacion</h2>
+      <p class="badge text-bg-light">{{ profile.verification_status }}</p>
+    </div>
+    <div class="hf-card rounded-4 p-3 mb-3">
+      <h2 class="h6 mb-2">Contrato de servicio</h2>
+      <p class="small text-secondary mb-2">Descarga tu contrato oficial como técnico registrado en HogarFix.</p>
+      <a href="{{ url_for('technician.descargar_contrato') }}" class="btn hf-btn-outline btn-sm w-100" target="_blank">
+        <i class="bi bi-file-earmark-pdf me-1"></i>Descargar Contrato PDF
+      </a>
+    </div>
+    <div class="hf-card rounded-4 p-3 mb-3">
+      <h2 class="h6">Galeria</h2>
+      <div class="row g-2">
+        {% for photo in work_photos %}
+          <div class="col-6"><img class="img-fluid rounded" src="{{ url_for('static', filename=photo) }}" alt="trabajo"></div>
+        {% else %}
+          <p class="small text-secondary">No has subido fotos aun.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="hf-card rounded-4 p-3">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <i class="bi bi-gear-fill" style="color:#FF6B00"></i>
+        <h2 class="h6 mb-0">Seguridad y preferencias</h2>
+      </div>
+      <p class="small text-secondary mb-3">Cambia tu contraseña, gestiona sesiones y configura notificaciones.</p>
+      <a href="{{ url_for('technician.tech_settings') }}" class="btn hf-btn-outline btn-sm w-100">
+        <i class="bi bi-arrow-right me-1"></i>Ir a Configuración
+      </a>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  const input = document.getElementById('profilePhotoInput');
+  const preview = document.getElementById('profilePhotoPreview');
+  const img = document.getElementById('profilePhotoImg');
+  const sidebar = document.getElementById('sidebarAvatar');
+  const noAvatarText = document.getElementById('noAvatarText');
+  if(!input) return;
+  input.addEventListener('change', function(){
+    const file = this.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e){
+      // Preview debajo del input
+      img.src = e.target.result;
+      preview.classList.remove('d-none');
+      // Preview en sidebar
+      if(sidebar){
+        sidebar.src = e.target.result;
+        sidebar.classList.remove('d-none');
+      }
+      if(noAvatarText) noAvatarText.classList.add('d-none');
+    };
+    reader.readAsDataURL(file);
+  });
+})();
+
+/* ── Tiempo relativo en sesiones ── */
+(function () {
+  function timeAgo(isoDate) {
+    var diff = Math.floor((Date.now() - new Date(isoDate)) / 1000);
+    if (diff < 60)    return 'Activo ahora';
+    if (diff < 3600)  return 'hace ' + Math.floor(diff / 60) + ' min';
+    if (diff < 86400) return 'hace ' + Math.floor(diff / 3600) + ' h';
+    return 'hace ' + Math.floor(diff / 86400) + ' días';
+  }
+  function updateAll() {
+    document.querySelectorAll('.hf-timeago').forEach(function (el) {
+      if (el.dataset.ts) el.textContent = timeAgo(el.dataset.ts);
+    });
+  }
+  updateAll();
+  setInterval(updateAll, 60000);
+})();
+</script>
+{% endblock %}

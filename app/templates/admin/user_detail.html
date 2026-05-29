@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{# HERO #}
+<section class="hf-dash-hero hf-dash-hero-admin rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+      {% if user.avatar_url %}
+        <img src="{{ user.avatar_url }}" class="hf-panel-avatar"
+             alt="{{ user.full_name or user.email }}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="hf-panel-initials" style="display:none">{{ ((user.full_name or user.email)[:2])|upper }}</div>
+      {% else %}
+        <div class="hf-panel-initials">{{ ((user.full_name or user.email)[:2])|upper }}</div>
+      {% endif %}
+      <div>
+        <p class="hf-dash-overline mb-1">
+          <a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none" style="color:inherit">Admin</a>
+          &rsaquo; <a href="{{ url_for('admin.users_list', role=user.role, age='all') }}" class="text-decoration-none" style="color:inherit">Usuarios</a>
+          &rsaquo; Detalle
+        </p>
+        <h1 class="h3 mb-1">{{ user.full_name or user.email }}</h1>
+        <p class="mb-0 hf-dash-subline">
+          <span class="badge text-bg-secondary me-1">{{ user.role }}</span>
+          {% if user.is_active %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-danger">Inactivo</span>{% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="text-end">
+      <p class="mb-0 fw-bold" id="hf-adm-time" style="font-size:1.4rem;color:#0a2540">--:-- --</p>
+      <p class="mb-0 small" id="hf-adm-date" style="color:#4d6781;font-size:.78rem">---</p>
+      <p class="mb-0" style="font-size:.68rem;color:#8aabb8;letter-spacing:.05em">COLOMBIA &middot; UTC&minus;5</p>
+    </div>
+  </div>
+</section>
+
+{# KPIs #}
+{% set pendientes  = bookings|selectattr('status','equalto','pendiente')|list|length %}
+{% set completados = bookings|selectattr('status','equalto','completado')|list|length %}
+{% set cancelados  = bookings|selectattr('status','equalto','cancelado')|list|length %}
+<section class="row g-3 mb-4" data-aos="fade-up" data-aos-delay="60">
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-blue rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Total reservas</p>
+      <p class="h3 m-0">{{ bookings|length }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-orange rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Pendientes</p>
+      <p class="h3 m-0">{{ pendientes }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-green rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Completadas</p>
+      <p class="h3 m-0">{{ completados }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-dark rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Canceladas</p>
+      <p class="h3 m-0">{{ cancelados }}</p>
+    </article>
+  </div>
+</section>
+
+<div class="row g-3">
+
+  {# ── Col izquierda: edición + foto ── #}
+  <div class="col-lg-6">
+
+    <div class="hf-card rounded-4 p-4 mb-3" data-aos="fade-up" data-aos-delay="80">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-person-gear text-primary"></i> Editar datos
+      </h2>
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Nombre completo</label>
+          <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Correo electrónico</label>
+          <input type="email" name="email" class="form-control" value="{{ user.email }}">
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-8">
+            <label class="form-label small fw-semibold">Teléfono</label>
+            <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}">
+          </div>
+          <div class="col-4">
+            <label class="form-label small fw-semibold">Rol</label>
+            <select name="role" class="form-select">
+              <option value="cliente" {% if user.role=='cliente' %}selected{% endif %}>Cliente</option>
+              <option value="tecnico" {% if user.role=='tecnico' %}selected{% endif %}>Técnico</option>
+              <option value="admin"   {% if user.role=='admin'   %}selected{% endif %}>Admin</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Localidad</label>
+          <input type="text" name="locality" class="form-control" value="{{ user.locality or '' }}">
+        </div>
+        <button class="btn btn-primary w-100">
+          <i class="bi bi-floppy me-1"></i>Guardar cambios
+        </button>
+      </form>
+    </div>
+
+    {# Foto / avatar del usuario #}
+    {% if user.avatar_url %}
+    <div class="hf-card rounded-4 p-4 text-center" data-aos="fade-up" data-aos-delay="90">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-person-circle text-primary"></i> Foto de perfil
+      </h2>
+      <img src="{{ user.avatar_url }}"
+           class="rounded-3 img-fluid shadow-sm"
+           style="max-height:200px;object-fit:cover;border:2px solid #e8f4fd"
+           alt="{{ user.full_name or user.email }}"
+           onerror="this.parentElement.style.display='none'">
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── Col derecha: info cuenta + moderación ── #}
+  <div class="col-lg-6">
+
+    <div class="hf-card rounded-4 p-4 mb-3" data-aos="fade-up" data-aos-delay="100">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-info-circle text-primary"></i> Información de la cuenta
+      </h2>
+      <dl class="row small mb-0">
+        <dt class="col-6 text-secondary">ID</dt>
+        <dd class="col-6">#{{ user.id }}</dd>
+        <dt class="col-6 text-secondary">Registrado</dt>
+        <dd class="col-6">{{ user.created_at.strftime('%d/%m/%Y %H:%M') if user.created_at else '&mdash;' }}</dd>
+        <dt class="col-6 text-secondary">Dirección</dt>
+        <dd class="col-6">{{ user.address or '&mdash;' }}</dd>
+        <dt class="col-6 text-secondary">Barrio</dt>
+        <dd class="col-6">{{ user.barrio or '&mdash;' }}</dd>
+        <dt class="col-6 text-secondary">Teléfono verificado</dt>
+        <dd class="col-6">{% if user.phone_verified %}<span class="text-success fw-semibold">Sí</span>{% else %}<span class="text-danger">No</span>{% endif %}</dd>
+        <dt class="col-6 text-secondary">2FA activo</dt>
+        <dd class="col-6">{% if user.two_factor_enabled %}<span class="text-success fw-semibold">Sí</span>{% else %}<span class="text-secondary">No</span>{% endif %}</dd>
+        <dt class="col-6 text-secondary">Términos aceptados</dt>
+        <dd class="col-6">{% if user.accepted_terms %}<span class="text-success fw-semibold">Sí</span>{% else %}<span class="text-danger">No</span>{% endif %}</dd>
+        <dt class="col-6 text-secondary">Método de pago</dt>
+        <dd class="col-6">{{ user.preferred_payment_method or '&mdash;' }}</dd>
+        <dt class="col-6 text-secondary">Login social</dt>
+        <dd class="col-6">{{ user.oauth_provider or '&mdash;' }}</dd>
+      </dl>
+    </div>
+
+    <div class="hf-card rounded-4 p-4" data-aos="fade-up" data-aos-delay="120">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-shield-exclamation text-warning"></i> Acciones de moderación
+      </h2>
+      <div class="d-grid gap-2">
+        <form method="post" action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn w-100 {% if user.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+            <i class="bi bi-{% if user.is_active %}pause-circle{% else %}play-circle{% endif %} me-1"></i>
+            {% if user.is_active %}Desactivar cuenta{% else %}Activar cuenta{% endif %}
+          </button>
+        </form>
+        {% if user.role == 'tecnico' and user.technician_profile %}
+        <a href="{{ url_for('admin.tech_detail', profile_id=user.technician_profile.id) }}" class="btn hf-btn-outline">
+          <i class="bi bi-tools me-1"></i>Ver perfil técnico
+        </a>
+        {% endif %}
+        {% if user.id != current_user.id %}
+        <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+              onsubmit="return confirm('¿Eliminar a {{ user.email }}? Esta acción no se puede deshacer.');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-outline-danger w-100">
+            <i class="bi bi-trash me-1"></i>Eliminar usuario permanentemente
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# Historial reservas #}
+  <div class="col-12" data-aos="fade-up" data-aos-delay="140">
+    <div class="hf-card rounded-4 p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h6 m-0 d-flex align-items-center gap-2">
+          <i class="bi bi-calendar3 text-primary"></i> Últimas reservas
+        </h2>
+        <a href="{{ url_for('admin.reservas_list') }}" class="btn btn-sm hf-btn-outline">Ver todas</a>
+      </div>
+      {% if bookings %}
+      <div class="table-responsive">
+        <table class="table hf-admin-table align-middle table-sm">
+          <thead>
+            <tr><th>#</th><th>Servicio</th><th>Fecha</th><th>Estado</th><th>Pago</th><th>Rol</th></tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+            <tr>
+              <td class="text-secondary">#{{ b.id }}</td>
+              <td>{{ b.service_type }}</td>
+              <td class="small">{{ b.booking_date.strftime('%d/%m/%Y') if b.booking_date else '&mdash;' }}</td>
+              <td><span class="hf-status-chip hf-status-{{ b.status }}">{{ b.status }}</span></td>
+              <td class="small">{{ b.payment_method }}</td>
+              <td>
+                {% if b.client_id == user.id %}
+                  <span class="badge text-bg-info">Cliente</span>
+                {% else %}
+                  <span class="badge text-bg-warning text-dark">Técnico</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-secondary small mb-0">Sin reservas registradas.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  function tick(){
+    var t=document.getElementById('hf-adm-time'), d=document.getElementById('hf-adm-date');
+    if(!t) return;
+    var now=new Date();
+    t.textContent=now.toLocaleTimeString('es-CO',{timeZone:'America/Bogota',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+    d.textContent=now.toLocaleDateString('es-CO',{timeZone:'America/Bogota',weekday:'long',day:'numeric',month:'long'});
+  }
+  tick(); setInterval(tick,1000);
+})();
+</script>
+{% endblock %}

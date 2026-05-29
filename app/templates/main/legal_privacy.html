@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hf-card hf-legal-card rounded-4 p-4 p-lg-5" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+      <p class="hf-dash-overline mb-1">Legal</p>
+      <h1 class="h3 mb-0">Politica de privacidad</h1>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn hf-btn-outline btn-sm" id="btnPdfPrivacidad" type="button">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF
+      </button>
+      <a class="btn hf-btn-action btn-sm" href="{{ url_for('main.politicas') }}#privacidad">
+        <i class="bi bi-arrow-right-circle me-1"></i> Ver politicas completas
+      </a>
+    </div>
+  </div>
+  <p class="text-secondary">HogarFix trata tus datos para permitir reservas, mejorar la seguridad de la cuenta, enviar notificaciones y mantener el historial de tus servicios.</p>
+  <div class="d-grid gap-3 mt-4">
+    <div>
+      <h2 class="h5">Datos que almacenamos</h2>
+      <p class="mb-0 text-secondary">Nombre, correo, telefono, direccion, actividad de inicio de sesion, reservas, resenas y preferencias de cuenta.</p>
+    </div>
+    <div>
+      <h2 class="h5">Finalidad</h2>
+      <p class="mb-0 text-secondary">Los datos se usan para autenticacion, operacion del marketplace, prevencion de fraude, soporte y personalizacion de la experiencia.</p>
+    </div>
+    <div>
+      <h2 class="h5">Control del usuario</h2>
+      <p class="mb-0 text-secondary">Desde tu perfil puedes editar datos personales, preferencias de notificaciones y medidas de seguridad de la cuenta.</p>
+    </div>
+    <div>
+      <h2 class="h5">Tus derechos</h2>
+      <p class="mb-0 text-secondary">Tienes derecho a acceder, rectificar, eliminar y portar tus datos. Para ejercerlos escribe a privacidad@hogarfix.co.</p>
+    </div>
+    <div>
+      <h2 class="h5">Tiempo de almacenamiento</h2>
+      <p class="mb-0 text-secondary">Datos de cuenta activa: mientras la cuenta este activa. Historial de reservas: 5 anos. Logs de acceso: 90 dias.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+document.getElementById('btnPdfPrivacidad').addEventListener('click', function () {
+  var btn = this; btn.disabled = true;
+  async function buildPDF(logo) {
+    try {
+      var { jsPDF } = window.jspdf;
+      var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      var pageW = doc.internal.pageSize.getWidth();
+      var margin = 18;
+      var usableW = pageW - margin * 2;
+      var y = 0;
+      function footer() {
+        var h = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8); doc.setTextColor(140,140,140);
+        doc.text('© HogarFix 2026 - Todos los derechos reservados', pageW/2, h-8, {align:'center'});
+      }
+      doc.setFillColor(10,37,64);
+      doc.rect(0,0,pageW,50,'F');
+      if (logo) { doc.addImage(logo,'PNG',margin,7,52,18); }
+      else { doc.setFontSize(22); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.text('HogarFix',margin,20); }
+      doc.setFontSize(12); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
+      doc.text('Politica de Privacidad', margin, 34);
+      doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(0,212,255);
+      doc.text('Generado: ' + new Date().toLocaleDateString('es-CO'), margin, 43);
+      y = 58; footer();
+    var sections = [
+      ['Datos que almacenamos','Nombre, correo, telefono, direccion, actividad de inicio de sesion, reservas, resenas y preferencias de cuenta.'],
+      ['Finalidad','Los datos se usan para autenticacion, operacion del marketplace, prevencion de fraude, soporte y personalizacion de la experiencia.'],
+      ['Control del usuario','Desde tu perfil puedes editar datos personales, preferencias de notificaciones y medidas de seguridad de la cuenta.'],
+      ['Tus derechos','Tienes derecho a acceder, rectificar, eliminar y portar tus datos. Para ejercerlos escribe a privacidad@hogarfix.co.'],
+      ['Tiempo de almacenamiento','Datos de cuenta activa: mientras la cuenta este activa. Historial de reservas: 5 anos. Logs de acceso: 90 dias.'],
+    ];
+    sections.forEach(function(s) {
+      if (y > 265) { doc.addPage(); y = 18; footer(); }
+      doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(10,37,64);
+      doc.text(s[0], margin, y); y += 6;
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+      var lines = doc.splitTextToSize(s[1], usableW);
+      lines.forEach(function(l){ if(y>265){doc.addPage();y=18;footer();} doc.text(l, margin, y); y+=5; });
+      y += 5;
+    });
+      var filename = 'HogarFix-Privacidad.pdf';
+      if (window.showSaveFilePicker) {
+        try {
+          var blob = doc.output('blob');
+          var fh = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Documento PDF', accept: { 'application/pdf': ['.pdf'] } }] });
+          var writable = await fh.createWritable(); await writable.write(blob); await writable.close();
+        } catch(saveErr) { if (saveErr.name !== 'AbortError') doc.save(filename); }
+      } else { doc.save(filename); }
+    } catch(e) { alert('No fue posible generar el PDF.'); }
+    btn.disabled = false;
+  }
+  var img = new Image(); img.crossOrigin='anonymous';
+  img.onload = function(){ var c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext('2d').drawImage(img,0,0); buildPDF(c.toDataURL('image/png')); };
+  img.onerror = function(){ buildPDF(null); };
+  img.src = "{{ url_for('static', filename='img/logo-hogarfix.png') }}";
+});
+</script>
+{% endblock %}

@@ -1,0 +1,348 @@
+{% extends 'base_client.html' %}
+{% block page_title %}Mi cuenta{% endblock %}
+{% block client_content %}
+{% set avatar_src = current_user.avatar_url %}
+<section class="hf-dash-hero hf-dash-hero-client rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+      <p class="hf-dash-overline mb-1">Centro de cuenta</p>
+      <h1 class="h3 mb-2">Perfil del cliente</h1>
+      <p class="mb-0 hf-dash-subline">Administra tu cuenta, revisa tus servicios, controla tu seguridad y sigue la actividad importante desde un solo lugar.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ url_for('main.search_technicians') }}" class="btn hf-btn-action">Buscar tecnico</a>
+      <a href="{{ url_for('main.client_dashboard') }}" class="btn hf-btn-outline">Ir a mi panel</a>
+    </div>
+  </div>
+</section>
+
+<section class="row g-3 mb-4" data-aos="fade-up" data-aos-delay="70">
+  <div class="col-lg-4">
+    <article class="hf-account-photo-card rounded-4 p-4 h-100">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="hf-account-avatar">
+          {% if avatar_src %}
+            <img src="{{ url_for('static', filename=avatar_src) if not avatar_src.startswith('http') else avatar_src }}" alt="{{ current_user.full_name or current_user.email }}">
+          {% else %}
+            {{ (current_user.full_name or current_user.email)[0]|upper }}
+          {% endif %}
+        </div>
+        <div>
+          <h2 class="h5 mb-1">{{ current_user.full_name or 'Cliente HogarFix' }}</h2>
+          <p class="small text-secondary mb-1">{{ current_user.email }}</p>
+          {% if masked_phone %}<p class="small mb-1 fw-semibold" style="color:#0a2540;">{{ masked_phone }}</p>{% endif %}
+          <span class="badge text-bg-light border">{{ 'Telefono verificado' if current_user.phone_verified else 'Telefono pendiente' }}</span>
+        </div>
+      </div>
+      <div class="row g-2">
+        <div class="col-6">
+          <div class="hf-account-stat">
+            <span class="small text-secondary">Telefono</span>
+            <strong>{{ masked_phone }}</strong>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="hf-account-stat">
+            <span class="small text-secondary">Notificaciones</span>
+            <strong>{{ unread_count }} nuevas</strong>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="hf-account-stat">
+            <span class="small text-secondary">Servicios</span>
+            <strong>{{ counters.total }}</strong>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="hf-account-stat">
+            <span class="small text-secondary">Seguridad</span>
+            <strong>{{ '2FA activa' if current_user.two_factor_enabled else '2FA desactivada' }}</strong>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+  <div class="col-lg-8">
+    <div class="row g-3">
+      <div class="col-sm-6 col-xl-3">
+        <article class="hf-dash-kpi hf-dash-kpi-dark rounded-4 p-3 h-100">
+          <p class="small text-secondary mb-1">Total reservas</p>
+          <p class="h3 m-0">{{ counters.total }}</p>
+        </article>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <article class="hf-dash-kpi hf-dash-kpi-orange rounded-4 p-3 h-100">
+          <p class="small text-secondary mb-1">Pendientes</p>
+          <p class="h3 m-0">{{ counters.pendiente }}</p>
+        </article>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <article class="hf-dash-kpi hf-dash-kpi-cyan rounded-4 p-3 h-100">
+          <p class="small text-secondary mb-1">Confirmadas</p>
+          <p class="h3 m-0">{{ counters.confirmado }}</p>
+        </article>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <article class="hf-dash-kpi hf-dash-kpi-blue rounded-4 p-3 h-100">
+          <p class="small text-secondary mb-1">Canceladas</p>
+          <p class="h3 m-0">{{ counters.cancelado }}</p>
+        </article>
+      </div>
+      <div class="col-12">
+        <article class="hf-card rounded-4 p-3 p-lg-4 h-100">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+              <h2 class="h5 mb-1">Acciones principales</h2>
+              <p class="small text-secondary mb-0">Accede rapido a lo que mas usa un cliente dentro de HogarFix.</p>
+            </div>
+            <span class="badge text-bg-light border">Cuenta {{ 'activa' if current_user.is_active else 'inactiva' }}</span>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="btn hf-btn-outline pe-none">Perfil</span>
+            <span class="btn hf-btn-outline pe-none">Mis servicios</span>
+            <span class="btn hf-btn-outline pe-none">Notificaciones</span>
+            <span class="btn hf-btn-outline pe-none">Configuracion</span>
+            <span class="btn hf-btn-outline pe-none">Seguridad</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="row g-3">
+  <div class="col-xl-8">
+    <section class="hf-card rounded-4 p-3 p-lg-4 hf-account-section" id="perfil" data-aos="fade-up" data-aos-delay="90">
+      <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
+        <div>
+          <h2 class="h5 mb-1">Perfil</h2>
+          <p class="small text-secondary mb-0">Foto editable, datos de contacto, direccion guardada y estado de verificacion.</p>
+        </div>
+        <span class="badge text-bg-light border">Cliente</span>
+      </div>
+      <form method="post" enctype="multipart/form-data" class="row g-3" id="editar-perfil">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="form_type" value="profile">
+        <div class="col-md-6" id="hf-avatar-wrap" style="display:none">
+          <label class="form-label">Foto de perfil</label>
+          <input type="file" name="avatar_file" class="form-control" accept=".png,.jpg,.jpeg,.webp">
+          <div class="form-text">Formatos: PNG, JPG, WEBP. Peso maximo 5 MB.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Nombre</label>
+          <input type="text" name="full_name" class="form-control hf-field-locked" value="{{ current_user.full_name or '' }}" readonly required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Indicativo</label>
+          <select name="phone_country" id="hf-phone-country" class="form-select hf-field-locked" disabled>
+            {% set code = current_user.phone_country or '+57' %}
+            <option value="+57" {% if code == '+57' %}selected{% endif %}>+57</option>
+            <option value="+1" {% if code == '+1' %}selected{% endif %}>+1</option>
+            <option value="+34" {% if code == '+34' %}selected{% endif %}>+34</option>
+            <option value="+52" {% if code == '+52' %}selected{% endif %}>+52</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Telefono</label>
+          <input type="hidden" name="phone" value="{{ current_user.phone or '' }}">
+          <input type="tel" class="form-control hf-field-locked" value="{{ masked_phone or '' }}" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Estado del telefono</label>
+          <input type="text" class="form-control" value="{{ 'Verificado' if current_user.phone_verified else 'Pendiente de verificacion' }}" disabled>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Localidad</label>
+          <input type="text" name="locality" class="form-control hf-field-locked" value="{{ current_user.locality or '' }}" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Barrio</label>
+          <input type="text" name="barrio" class="form-control hf-field-locked" value="{{ current_user.barrio or '' }}" readonly>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Direccion guardada</label>
+          <input type="text" name="address" class="form-control hf-field-locked" value="{{ current_user.address or '' }}" readonly>
+        </div>
+        <div class="col-12 d-flex flex-wrap gap-2" id="hf-perfil-btns">
+          <button type="button" id="btn-editar-perfil" class="btn hf-btn-outline">&#9998; Editar perfil</button>
+          <button type="submit" id="btn-guardar-perfil" class="btn hf-btn-action d-none">Guardar cambios</button>
+          <button type="button" id="btn-cancelar-perfil" class="btn btn-outline-secondary d-none">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="hf-card rounded-4 p-3 p-lg-4 hf-account-section mt-3" id="historial" data-aos="fade-up" data-aos-delay="110">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+          <h2 class="h5 mb-1">Mis servicios</h2>
+          <p class="small text-secondary mb-0">Historial de servicios realizados, estados y acceso rapido para repetir una reserva.</p>
+        </div>
+        <a href="{{ url_for('main.search_technicians') }}" class="btn hf-btn-primary">Nuevo servicio</a>
+      </div>
+      {% if bookings %}
+        <div class="hf-account-list">
+          {% for booking in bookings %}
+            <article class="hf-account-list-item">
+              <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                <div>
+                  <p class="small text-secondary mb-1">Reserva #{{ booking.id }} · {{ booking.booking_date }} {{ booking.booking_time.strftime('%H:%M') }}</p>
+                  <h3 class="h6 mb-1">{{ booking.service_type|title }} con {{ booking.technician.technician_profile.full_name if booking.technician.technician_profile else booking.technician.email }}</h3>
+                  <p class="small mb-0 text-secondary">{{ booking.locality|title }}</p>
+                </div>
+                <span class="hf-status-chip hf-status-{{ booking.status|lower }}">{{ booking.status }}</span>
+              </div>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <a href="{{ url_for('main.repeat_service', booking_id=booking.id) }}" class="btn btn-sm hf-btn-outline">Repetir servicio</a>
+                {% if booking.status != 'cancelado' %}
+                  <form method="post" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="status" value="cancelado">
+                    <button class="btn btn-sm btn-outline-danger">Cancelar</button>
+                  </form>
+                {% endif %}
+              </div>
+              {% if booking.status == 'confirmado' and not booking.review %}
+                <form method="post" action="{{ url_for('booking.create_review', booking_id=booking.id) }}" class="row g-2 mt-3 border-top pt-3">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <div class="col-md-3">
+                    <select name="rating" class="form-select form-select-sm" required>
+                      <option value="">Estrellas</option>
+                      <option value="5">5 estrellas</option>
+                      <option value="4">4 estrellas</option>
+                      <option value="3">3 estrellas</option>
+                      <option value="2">2 estrellas</option>
+                      <option value="1">1 estrella</option>
+                    </select>
+                  </div>
+                  <div class="col-md-7">
+                    <input type="text" name="comment" class="form-control form-control-sm" placeholder="Comparte tu experiencia con el tecnico">
+                  </div>
+                  <div class="col-md-2 d-grid">
+                    <button class="btn btn-sm hf-btn-action">Calificar</button>
+                  </div>
+                </form>
+              {% elif booking.review %}
+                <div class="small border-top pt-3 mt-3">
+                  <strong>{{ '★' * booking.review.rating }}{{ '☆' * (5 - booking.review.rating) }}</strong>
+                  <span class="text-secondary">{{ booking.review.comment or 'Sin comentario' }}</span>
+                </div>
+              {% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="hf-account-empty">
+          <h3 class="h6 mb-1">Aun no tienes servicios</h3>
+          <p class="small text-secondary mb-3">Cuando hagas tu primera reserva, aqui veras estados, historial y la opcion para repetir el servicio.</p>
+          <a href="{{ url_for('main.search_technicians') }}" class="btn hf-btn-action">Reservar ahora</a>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="col-xl-4">
+    <section class="hf-card rounded-4 p-3 p-lg-4 hf-account-section d-flex align-items-center justify-content-between gap-3 flex-wrap" data-aos="fade-up" data-aos-delay="100">
+      <div>
+        <h2 class="h6 mb-1"><i class="bi bi-gear-fill me-2" style="color:#FF6B00"></i>Configuración y seguridad</h2>
+        <p class="small text-secondary mb-0">Contraseña, sesiones activas, notificaciones y preferencias de cuenta.</p>
+      </div>
+      <a href="{{ url_for('main.client_settings') }}" class="btn hf-btn-outline btn-sm">
+        <i class="bi bi-arrow-right me-1"></i>Ir a Configuración
+      </a>
+    </section>
+
+    <section class="hf-card rounded-4 p-3 p-lg-4 mt-3" data-aos="fade-up" data-aos-delay="140">
+      <h2 class="h5 mb-2">Calificaciones recientes</h2>
+      {% if completed_reviews %}
+        <div class="d-grid gap-2">
+          {% for review in completed_reviews %}
+            <article class="hf-account-list-item p-3">
+              <div class="d-flex justify-content-between gap-2 mb-1">
+                <strong>{{ review.booking.service_type|title }}</strong>
+                <span>{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</span>
+              </div>
+              <p class="small text-secondary mb-0">{{ review.comment or 'Sin comentario' }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="hf-account-empty">
+          <p class="small text-secondary mb-0">Aun no has enviado calificaciones a tecnicos.</p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── Editar / Guardar perfil ── */
+(function () {
+  const form       = document.getElementById('editar-perfil');
+  const avatarWrap = document.getElementById('hf-avatar-wrap');
+  const editBtn    = document.getElementById('btn-editar-perfil');
+  const saveBtn    = document.getElementById('btn-guardar-perfil');
+  const cancelBtn  = document.getElementById('btn-cancelar-perfil');
+  const phoneSelect = document.getElementById('hf-phone-country');
+
+  const fields = form.querySelectorAll('input.hf-field-locked, select.hf-field-locked');
+  const originals = {};
+  fields.forEach(f => { originals[f.name] = f.value; });
+
+  function setEditMode() {
+    fields.forEach(f => {
+      f.classList.remove('hf-field-locked');
+      if (f.tagName === 'SELECT') f.disabled = false;
+      else f.removeAttribute('readonly');
+    });
+    avatarWrap.style.display = '';
+    editBtn.classList.add('d-none');
+    saveBtn.classList.remove('d-none');
+    cancelBtn.classList.remove('d-none');
+  }
+
+  function setViewMode() {
+    fields.forEach(f => {
+      f.classList.add('hf-field-locked');
+      if (f.tagName === 'SELECT') f.disabled = true;
+      else f.setAttribute('readonly', '');
+      f.value = originals[f.name];
+    });
+    avatarWrap.style.display = 'none';
+    editBtn.classList.remove('d-none');
+    saveBtn.classList.add('d-none');
+    cancelBtn.classList.add('d-none');
+  }
+
+  form.addEventListener('submit', function () {
+    if (phoneSelect) phoneSelect.disabled = false;
+  });
+
+  editBtn.addEventListener('click', setEditMode);
+  cancelBtn.addEventListener('click', setViewMode);
+})();
+
+/* ── Tiempo relativo en sesiones ── */
+(function () {
+  function timeAgo(isoDate) {
+    var diff = Math.floor((Date.now() - new Date(isoDate)) / 1000);
+    if (diff < 60)    return 'Activo ahora';
+    if (diff < 3600)  return 'hace ' + Math.floor(diff / 60) + ' min';
+    if (diff < 86400) return 'hace ' + Math.floor(diff / 3600) + ' h';
+    return 'hace ' + Math.floor(diff / 86400) + ' d\u00edas';
+  }
+  function updateAll() {
+    document.querySelectorAll('.hf-timeago').forEach(function (el) {
+      if (el.dataset.ts) el.textContent = timeAgo(el.dataset.ts);
+    });
+  }
+  updateAll();
+  setInterval(updateAll, 60000);
+})();
+</script>
+{% endblock %}

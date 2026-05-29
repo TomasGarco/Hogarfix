@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{# ── HERO ──────────────────────────────────────────────────────── #}
+<section class="hf-dash-hero hf-dash-hero-admin rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <p class="hf-dash-overline mb-1">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none" style="color:inherit">Admin</a>
+        &rsaquo; Reseñas
+      </p>
+      <h1 class="h3 mb-1">Gestión de reseñas</h1>
+      <p class="mb-0 hf-dash-subline">Modera y elimina reseñas de la plataforma</p>
+    </div>
+    <div class="text-end">
+      <p class="mb-0 fw-bold" id="hf-adm-time" style="font-size:1.4rem;color:#0a2540">--:--</p>
+      <p class="mb-0 small" id="hf-adm-date" style="color:#4d6781;font-size:.78rem">---</p>
+      <p class="mb-0" style="font-size:.68rem;color:#8aabb8;letter-spacing:.05em">COLOMBIA · UTC−5</p>
+    </div>
+  </div>
+</section>
+
+{# ── KPIs ──────────────────────────────────────────────────────── #}
+<section class="row g-3 mb-4" data-aos="fade-up" data-aos-delay="60">
+  <div class="col-6 col-xl-4">
+    <article class="hf-dash-kpi hf-dash-kpi-blue rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Total reseñas</p>
+      <p class="h3 m-0">{{ reviews|length }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-4">
+    <article class="hf-dash-kpi hf-dash-kpi-cyan rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Promedio general</p>
+      <p class="h3 m-0">
+        {% if reviews %}
+          {{ (reviews|sum(attribute='rating') / reviews|length)|round(1) }}/5
+        {% else %}—{% endif %}
+      </p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-4">
+    <article class="hf-dash-kpi hf-dash-kpi-orange rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Puntuación baja (≤2★)</p>
+      <p class="h3 m-0">{{ reviews|selectattr('rating','le',2)|list|length }}</p>
+    </article>
+  </div>
+</section>
+
+<div class="hf-card rounded-4 p-3" data-aos="fade-up" data-aos-delay="80">
+  {% if reviews %}
+  <div class="table-responsive">
+    <table class="table hf-admin-table align-middle table-sm">
+      <thead>
+        <tr><th>#</th><th>Cliente</th><th>Técnico</th><th>Calificación</th><th>Comentario</th><th>Fecha</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for r in reviews %}
+        <tr {% if r.rating <= 2 %}style="background:rgba(255,200,200,.12)"{% endif %}>
+          <td class="text-secondary">#{{ r.id }}</td>
+          <td>
+            <a href="{{ url_for('admin.user_detail', user_id=r.client_id) }}" class="small">
+              {{ r.booking.client.full_name or r.booking.client.email if r.booking and r.booking.client else '—' }}
+            </a>
+          </td>
+          <td>
+            {% set tech_profile = r.booking.technician.technician_profile if r.booking and r.booking.technician else none %}
+            {% if tech_profile %}
+              <a href="{{ url_for('admin.tech_detail', profile_id=tech_profile.id) }}" class="small">
+                {{ r.booking.technician.full_name or r.booking.technician.email }}
+              </a>
+            {% else %}
+              <span class="small text-secondary">—</span>
+            {% endif %}
+          </td>
+          <td class="text-nowrap">
+            <span class="text-warning fw-semibold">{{ '★' * r.rating }}</span><span class="text-secondary">{{ '★' * (5 - r.rating) }}</span>
+            <span class="ms-1 small text-secondary">{{ r.rating }}/5</span>
+          </td>
+          <td class="small" style="max-width:220px">
+            {% if r.comment %}
+              <span title="{{ r.comment }}">{{ r.comment[:80] }}{% if r.comment|length > 80 %}…{% endif %}</span>
+            {% else %}
+              <span class="text-secondary">Sin comentario</span>
+            {% endif %}
+          </td>
+          <td class="small text-secondary text-nowrap">{{ r.created_at.strftime('%d/%m/%Y') if r.created_at else '—' }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin.delete_review', review_id=r.id) }}"
+                  onsubmit="return confirm('¿Eliminar esta reseña de {{ r.rating }} estrellas?');" class="m-0">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-secondary small mb-0">No hay reseñas registradas.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  function tick(){
+    var t=document.getElementById('hf-adm-time'), d=document.getElementById('hf-adm-date');
+    if(!t) return;
+    var now=new Date();
+    t.textContent=now.toLocaleTimeString('es-CO',{timeZone:'America/Bogota',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+    d.textContent=now.toLocaleDateString('es-CO',{timeZone:'America/Bogota',weekday:'long',day:'numeric',month:'long'});
+  }
+  tick(); setInterval(tick,1000);
+})();
+</script>
+{% endblock %}

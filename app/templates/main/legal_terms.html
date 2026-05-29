@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hf-card hf-legal-card rounded-4 p-4 p-lg-5" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+      <p class="hf-dash-overline mb-1">Legal</p>
+      <h1 class="h3 mb-0">Terminos y condiciones</h1>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn hf-btn-outline btn-sm" id="btnPdfTerminos" type="button">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF
+      </button>
+      <a class="btn hf-btn-action btn-sm" href="{{ url_for('main.politicas') }}#terminos">
+        <i class="bi bi-arrow-right-circle me-1"></i> Ver politicas completas
+      </a>
+    </div>
+  </div>
+  <p class="text-secondary">Al usar HogarFix aceptas el uso responsable de la plataforma, el suministro de datos reales, el respeto a las agendas de los tecnicos y el cumplimiento de las condiciones de reserva publicadas.</p>
+  <div class="d-grid gap-3 mt-4">
+    <div>
+      <h2 class="h5">Uso de la plataforma</h2>
+      <p class="mb-0 text-secondary">HogarFix conecta clientes con tecnicos independientes y empresas locales. La plataforma facilita la reserva, seguimiento y calificacion de servicios.</p>
+    </div>
+    <div>
+      <h2 class="h5">Responsabilidad del usuario</h2>
+      <p class="mb-0 text-secondary">Debes mantener tus datos actualizados, proteger tu cuenta y usar la plataforma sin fraude, suplantacion o solicitudes falsas.</p>
+    </div>
+    <div>
+      <h2 class="h5">Reservas y cambios</h2>
+      <p class="mb-0 text-secondary">Toda reserva puede ser aceptada, reprogramada o cancelada segun la disponibilidad del tecnico y las politicas activas del servicio.</p>
+    </div>
+    <div>
+      <h2 class="h5">Cancelaciones</h2>
+      <p class="mb-0 text-secondary">Puedes cancelar reservas desde tu historial. Con mas de 24 horas de anticipacion no hay penalizacion. Cancelaciones frecuentes afectan la reputacion del usuario.</p>
+    </div>
+    <div>
+      <h2 class="h5">Suspension de cuentas</h2>
+      <p class="mb-0 text-secondary">HogarFix puede suspender cuentas que incumplan los terminos, realicen fraudes o reciban multiples reportes de otros usuarios.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+document.getElementById('btnPdfTerminos').addEventListener('click', function () {
+  var btn = this; btn.disabled = true;
+  async function buildPDF(logo) {
+    try {
+      var { jsPDF } = window.jspdf;
+      var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      var pageW = doc.internal.pageSize.getWidth();
+      var margin = 18;
+      var usableW = pageW - margin * 2;
+      var y = 0;
+      function footer() {
+        var h = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8); doc.setTextColor(140,140,140);
+        doc.text('© HogarFix 2026 - Todos los derechos reservados', pageW/2, h-8, {align:'center'});
+      }
+      doc.setFillColor(10,37,64);
+      doc.rect(0,0,pageW,50,'F');
+      if (logo) { doc.addImage(logo,'PNG',margin,7,52,18); }
+      else { doc.setFontSize(22); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.text('HogarFix',margin,20); }
+      doc.setFontSize(12); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
+      doc.text('Terminos y Condiciones', margin, 34);
+      doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(0,212,255);
+      doc.text('Generado: ' + new Date().toLocaleDateString('es-CO'), margin, 43);
+      y = 58; footer();
+    var sections = [
+      ['Uso de la plataforma','HogarFix conecta clientes con tecnicos independientes y empresas locales. La plataforma facilita la reserva, seguimiento y calificacion de servicios.'],
+      ['Responsabilidad del usuario','Debes mantener tus datos actualizados, proteger tu cuenta y usar la plataforma sin fraude, suplantacion o solicitudes falsas.'],
+      ['Reservas y cambios','Toda reserva puede ser aceptada, reprogramada o cancelada segun la disponibilidad del tecnico y las politicas activas del servicio.'],
+      ['Cancelaciones','Puedes cancelar reservas desde tu historial. Con mas de 24 horas de anticipacion no hay penalizacion. Cancelaciones frecuentes pueden afectar la reputacion del usuario.'],
+      ['Suspension de cuentas','HogarFix puede suspender cuentas que incumplan los terminos, realicen fraudes o reciban multiples reportes de otros usuarios.'],
+    ];
+    sections.forEach(function(s) {
+      if (y > 265) { doc.addPage(); y = 18; footer(); }
+      doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(10,37,64);
+      doc.text(s[0], margin, y); y += 6;
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+      var lines = doc.splitTextToSize(s[1], usableW);
+      lines.forEach(function(l){ if(y>265){doc.addPage();y=18;footer();} doc.text(l, margin, y); y+=5; });
+      y += 5;
+    });
+      var filename = 'HogarFix-Terminos.pdf';
+      if (window.showSaveFilePicker) {
+        try {
+          var blob = doc.output('blob');
+          var fh = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Documento PDF', accept: { 'application/pdf': ['.pdf'] } }] });
+          var writable = await fh.createWritable(); await writable.write(blob); await writable.close();
+        } catch(saveErr) { if (saveErr.name !== 'AbortError') doc.save(filename); }
+      } else { doc.save(filename); }
+    } catch(e) { alert('No fue posible generar el PDF.'); }
+    btn.disabled = false;
+  }
+  var img = new Image(); img.crossOrigin='anonymous';
+  img.onload = function(){ var c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext('2d').drawImage(img,0,0); buildPDF(c.toDataURL('image/png')); };
+  img.onerror = function(){ buildPDF(null); };
+  img.src = "{{ url_for('static', filename='img/logo-hogarfix.png') }}";
+});
+</script>
+{% endblock %}

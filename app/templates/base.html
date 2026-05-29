@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HogarFix</title>
+  <meta name="description" content="HogarFix conecta hogares en Bogota con tecnicos verificados para resolver servicios rapido y sin complicaciones.">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo-hogarfix-mark.svg') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  {% block preloads %}
+  <link rel="preload" href="{{ url_for('static', filename='img/logo-hogarfix.svg') }}" as="image" type="image/svg+xml">
+  {% endblock preloads %}
+  {% block head %}{% endblock %}
+  <script>
+  /* HogarFix: apply user prefs before paint to avoid flash */
+  (function(){
+    try {
+      var p = JSON.parse(localStorage.getItem('hf_prefs') || '{}');
+      if (p.theme) { var t = p.theme === 'system' ? (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light') : p.theme; document.documentElement.setAttribute('data-bs-theme', t); }
+      if (p.fontsize) { document.documentElement.style.fontSize = p.fontsize === 'small' ? '14px' : p.fontsize === 'large' ? '17px' : ''; }
+      if (p.reduceMotion) document.documentElement.classList.add('hf-reduce-motion');
+      if (p.highContrast) document.documentElement.classList.add('hf-high-contrast');
+      if (p.lang === 'ar') { document.documentElement.dir = 'rtl'; document.documentElement.lang = 'ar'; }
+      else if (p.lang) document.documentElement.lang = p.lang.split('-')[0];
+    } catch(e){}
+  })();
+  </script>
+  <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+</head>
+<body class="hf-bg min-vh-100 d-flex flex-column">
+  {% block navbar %}
+  <!-- Navbar flotante tipo pill -->
+  <div class="hf-navbar-wrap sticky-top">
+    <nav class="navbar navbar-expand-lg hf-navbar">
+      <div class="hf-navbar-inner">
+        <a class="navbar-brand hf-brand" href="{% if current_user.is_authenticated and current_user.role == 'admin' %}{{ url_for('admin.dashboard') }}{% elif current_user.is_authenticated and current_user.role == 'tecnico' %}{{ url_for('technician.dashboard') }}{% elif current_user.is_authenticated %}{{ url_for('main.client_dashboard') }}{% else %}{{ url_for('main.home') }}{% endif %}">
+          <img src="{{ url_for('static', filename='img/logo-hogarfix.svg') }}" alt="HogarFix" class="hf-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+          <span class="fw-bold" style="display:none;">HogarFix</span>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+          {% if current_user.is_authenticated %}
+            {% set user_label = current_user.full_name if current_user.full_name else current_user.email.split('@')[0] %}
+            {% if current_user.role == 'tecnico' and current_user.technician_profile and current_user.technician_profile.full_name %}
+              {% set user_label = current_user.technician_profile.full_name %}
+            {% endif %}
+            {% set parts = user_label.replace('.', ' ').replace('_', ' ').split() %}
+            {% set initials = ((parts[0][0] if parts and parts[0] else 'U') ~ (parts[1][0] if parts|length > 1 and parts[1] else ''))|upper %}
+            {% set avatar_src = current_user.avatar_url %}
+          {% endif %}
+          <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+            {% if not current_user.is_authenticated %}
+            <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('main.home') }}#services">Servicios</a></li>
+            <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('main.home') }}#how-it-works">Como funciona</a></li>
+            {% endif %}
+            {% if current_user.is_authenticated %}
+              {% if current_user.role != 'tecnico' %}
+              <li class="nav-item d-none d-lg-flex align-items-center me-1">
+                {% if current_user.role == 'cliente' %}
+                  {% set _role_label = 'Cliente' %}
+                {% else %}
+                  {% set _role_label = 'Admin' %}
+                {% endif %}
+                <span class="hf-nav-greeting">Hola, {{ user_label.split()[0] }} <span class="hf-nav-role-badge">{{ _role_label }}</span></span>
+              </li>
+              {% endif %}
+              {% if current_user.role == 'cliente' %}
+                <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('main.client_dashboard') }}">Mi panel</a></li>
+                <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('main.account_profile') }}">Perfil</a></li>
+                <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('main.search_technicians') }}">Buscar</a></li>
+              {% elif current_user.role == 'tecnico' %}
+                <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('technician.dashboard') }}">Mi panel</a></li>
+                <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('technician.profile') }}">Perfil</a></li>
+              {% elif current_user.role == 'admin' %}
+                <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+                <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('admin.admin_profile') }}">Perfil</a></li>
+              {% endif %}
+              {% if current_user.role == 'cliente' %}
+                <li class="nav-item ms-lg-1">
+                  <a class="hf-nav-bell" href="{{ url_for('main.account_profile', _anchor='notificaciones') }}" aria-label="Notificaciones">
+                    <i class="bi bi-bell"></i>
+                    <span class="hf-nav-badge" data-hf-notification-badge {% if unread_notification_count == 0 %}hidden{% endif %}>{{ unread_notification_count }}</span>
+                  </a>
+                </li>
+              {% endif %}
+              <li class="nav-item dropdown ms-lg-2 hf-account-dropdown">
+                <button type="button" class="hf-account-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="{{ user_label }}">
+                  <span class="hf-nav-user-pill">
+                    {% if avatar_src %}
+                      <img src="{{ url_for('static', filename=avatar_src) if not avatar_src.startswith('http') else avatar_src }}" alt="{{ user_label }}" class="hf-nav-user-avatar">
+                    {% else %}
+                      {{ initials }}
+                    {% endif %}
+                  </span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end hf-account-menu">
+                  <li>
+                    <div class="hf-account-head">
+                      <strong>{{ user_label }}</strong>
+                      <span>{{ current_user.email }}</span>
+                    </div>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  {% if current_user.role == 'cliente' %}
+                    <li><a class="dropdown-item" href="{{ url_for('main.account_profile', _anchor='perfil') }}"><i class="bi bi-person-circle"></i> Perfil</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('main.account_profile', _anchor='historial') }}"><i class="bi bi-briefcase"></i> Mis servicios</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('main.account_profile', _anchor='notificaciones') }}"><i class="bi bi-bell"></i> Notificaciones{% if unread_notification_count %}<span class="hf-inline-count">{{ unread_notification_count }}</span>{% endif %}</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('main.account_profile', _anchor='configuracion') }}"><i class="bi bi-sliders"></i> Configuracion</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('main.account_profile', _anchor='seguridad') }}"><i class="bi bi-shield-lock"></i> Seguridad</a></li>
+                  {% elif current_user.role == 'tecnico' %}
+                    <li><a class="dropdown-item" href="{{ url_for('technician.dashboard') }}"><i class="bi bi-grid"></i> Mi panel</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('technician.profile') }}"><i class="bi bi-person-vcard"></i> Editar perfil</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('technician.availability') }}"><i class="bi bi-calendar-week"></i> Disponibilidad</a></li>
+                  {% elif current_user.role == 'admin' %}
+                    <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> Panel admin</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('admin.admin_profile') }}"><i class="bi bi-person-gear"></i> Mi perfil</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('admin.users_list', role='cliente', age='all') }}"><i class="bi bi-people"></i> Usuarios</a></li>
+                  {% endif %}
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item hf-account-logout" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right"></i> Salir</a></li>
+                </ul>
+              </li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link hf-nav-link" href="{{ url_for('auth.login') }}">Entrar</a></li>
+              <li class="nav-item ms-lg-2"><a class="btn hf-btn-action btn-sm" href="{{ url_for('auth.register', account_type='tecnico') }}">Publicar trabajo</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+  {% endblock navbar %}
+
+  <main class="{% block main_class %}container py-5{% endblock %} flex-grow-1">
+    {% block alerts %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="hf-app-alerts mb-3">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show hf-app-alert mb-2" role="alert">
+              <div class="d-flex align-items-start gap-2">
+                {% if category in ['danger', 'error'] %}
+                  <i class="bi bi-exclamation-octagon-fill"></i>
+                {% elif category == 'warning' %}
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                {% elif category == 'success' %}
+                  <i class="bi bi-check-circle-fill"></i>
+                {% else %}
+                  <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+                <span>{{ message }}</span>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% endblock alerts %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}
+  <footer class="hf-footer mt-5" data-aos="fade-up">
+    <div class="container py-4">
+      <div class="row g-3 align-items-center">
+        <div class="col-lg-5">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <img src="{{ url_for('static', filename='img/logo-hogarfix.svg') }}" alt="HogarFix" class="hf-footer-logo">
+            <span class="hf-footer-badge">Nuevo en Bogota</span>
+          </div>
+          <p class="small mb-0 hf-footer-copy">Conectamos hogares con tecnicos confiables para resolver servicios del dia a dia de forma clara, agil y segura.</p>
+        </div>
+        <div class="col-lg-4">
+          <div class="d-flex align-items-center flex-wrap gap-3 hf-footer-socials" aria-label="Redes sociales proximamente">
+            <span><i class="bi bi-instagram"></i> Instagram</span>
+            <span><i class="bi bi-facebook"></i> Facebook</span>
+            <span><i class="bi bi-tiktok"></i> TikTok</span>
+          </div>
+        </div>
+        <div class="col-lg-3 text-lg-end">
+          <a class="hf-footer-mail small" href="https://mail.google.com/mail/?view=cm&to=soporte@hogarfix.co" target="_blank" rel="noopener noreferrer">soporte@hogarfix.co</a>
+          <div class="small mt-2 d-flex justify-content-lg-end flex-wrap gap-2">
+            <a class="hf-footer-mail" href="{{ url_for('main.politicas') }}">Politicas</a>
+            <a class="hf-footer-mail" href="{{ url_for('main.politicas') }}#terminos">Terminos</a>
+            <a class="hf-footer-mail" href="{{ url_for('main.politicas') }}#privacidad">Privacidad</a>
+          </div>
+          <p class="small mb-0 mt-1 hf-footer-legal">HogarFix 2026</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+  {% endblock footer %}
+
+    <!-- El botón y panel del asistente los genera help.js automáticamente -->
+
+  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}" defer></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>
+  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/onboarding.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/help.js') }}" defer></script>
+
+  {# ── Announcement Modal v2 ─────────────────────────────────────── #}
+  {% if active_announcement %}
+  <div id="hf-ann-overlay"
+       role="dialog" aria-modal="true" aria-label="Anuncio de HogarFix"
+       data-ann-id="{{ active_announcement.id }}">
+    <div id="hf-ann-card">
+
+      {# ── Botón cerrar (flotante sobre el header) ── #}
+      <button id="hf-ann-close" aria-label="Cerrar anuncio">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      {# ── Header visual ── #}
+      {% if active_announcement.imagen %}
+        <div class="hf-ann-header hf-ann-has-img" aria-hidden="true">
+          <img src="{{ active_announcement.imagen }}"
+               alt="" loading="lazy" decoding="async">
+          <div class="hf-ann-img-overlay"></div>
+        </div>
+      {% else %}
+        <div class="hf-ann-header" aria-hidden="true">
+          {# Partículas (estrellas) CSS #}
+          <div class="hf-ann-particles">
+            <span class="hf-ann-star" style="top:18%;left:14%;width:5px;height:5px;--d:2.2s;--dl:0s"></span>
+            <span class="hf-ann-star" style="top:72%;left:82%;width:3px;height:3px;--d:1.8s;--dl:.5s"></span>
+            <span class="hf-ann-star" style="top:38%;left:62%;width:4px;height:4px;--d:2.7s;--dl:.9s"></span>
+            <span class="hf-ann-star" style="top:12%;left:78%;width:3px;height:3px;--d:1.6s;--dl:1.3s"></span>
+            <span class="hf-ann-star" style="top:82%;left:22%;width:4px;height:4px;--d:2.4s;--dl:.2s"></span>
+            <span class="hf-ann-star" style="top:52%;left:40%;width:3px;height:3px;--d:2s;--dl:.7s"></span>
+            <span class="hf-ann-star" style="top:28%;left:92%;width:6px;height:6px;--d:3s;--dl:1.6s"></span>
+            <span class="hf-ann-star" style="top:90%;left:58%;width:3px;height:3px;--d:1.9s;--dl:.4s"></span>
+            <span class="hf-ann-star" style="top:60%;left:8%;width:4px;height:4px;--d:2.5s;--dl:1s"></span>
+            <span class="hf-ann-star" style="top:5%;left:46%;width:3px;height:3px;--d:1.7s;--dl:.6s"></span>
+          </div>
+          {# Icono central animado #}
+          <div class="hf-ann-icon-wrap">
+            <div class="hf-ann-icon-circle">🏠</div>
+            <span class="hf-ann-header-eyebrow">HogarFix</span>
+          </div>
+        </div>
+      {% endif %}
+
+      {# ── Contenido ── #}
+      <div class="hf-ann-body">
+        <span class="hf-ann-badge">
+          <i class="bi bi-megaphone-fill" style="font-size:.7em"></i>&nbsp;Novedad
+        </span>
+        <h2 class="hf-ann-title">{{ active_announcement.titulo }}</h2>
+        {% if active_announcement.mensaje %}
+          <p class="hf-ann-msg">{{ active_announcement.mensaje }}</p>
+        {% endif %}
+        {% if active_announcement.boton_texto %}
+          <a href="{{ active_announcement.boton_link or '#' }}"
+             class="hf-ann-cta"
+             {% if active_announcement.boton_link and active_announcement.boton_link.startswith('http') %}
+               target="_blank" rel="noopener"
+             {% endif %}>
+            {{ active_announcement.boton_texto }}
+            <i class="bi bi-arrow-right-short" style="font-size:1.25rem"></i>
+          </a>
+        {% endif %}
+        <div class="hf-ann-dismiss-row">
+          <button id="hf-ann-dismiss">No mostrar de nuevo</button>
+        </div>
+      </div>
+
+    </div>{# /hf-ann-card #}
+  </div>{# /hf-ann-overlay #}
+
+  <script>
+  /* ── Announcement Modal v2 ── */
+  (function () {
+    var overlay  = document.getElementById('hf-ann-overlay');
+    if (!overlay) return;
+    var annId    = overlay.dataset.annId;
+    var storeKey = 'hf_ann_seen_' + annId;
+
+    /* Modo preview: ?preview_ann=<id> borra la key y limpia la URL */
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('preview_ann') === annId) {
+      localStorage.removeItem(storeKey);
+      history.replaceState({}, '', window.location.pathname);
+    }
+
+    /* Ya visto en este navegador → eliminar sin mostrar */
+    if (localStorage.getItem(storeKey)) { overlay.remove(); return; }
+
+    function dismiss(save) {
+      overlay.classList.remove('hf-ann-visible');
+      overlay.classList.add('hf-ann-closing');
+      if (save !== false) localStorage.setItem(storeKey, '1');
+      setTimeout(function () { if (overlay.parentNode) overlay.remove(); }, 420);
+    }
+
+    /* Mostrar tras un pequeño delay para que la página pinte primero */
+    setTimeout(function () { overlay.classList.add('hf-ann-visible'); }, 700);
+
+    /* Botón X — cierra pero NO guarda en localStorage (puede volver a aparecer) */
+    document.getElementById('hf-ann-close').addEventListener('click', function () { dismiss(false); });
+
+    /* "No mostrar de nuevo" — guarda en localStorage */
+    var db2 = document.getElementById('hf-ann-dismiss');
+    if (db2) db2.addEventListener('click', function () { dismiss(true); });
+
+    /* Clic en el backdrop — cierra sin guardar */
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) dismiss(false); });
+
+    /* ESC — cierra sin guardar */
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.parentNode) dismiss(false); });
+
+    /* Swipe down para cerrar en mobile */
+    var startY = 0, card = document.getElementById('hf-ann-card');
+    card.addEventListener('touchstart', function (e) { startY = e.touches[0].clientY; }, { passive: true });
+    card.addEventListener('touchend',   function (e) { if (e.changedTouches[0].clientY - startY > 60) dismiss(); }, { passive: true });
+  })();
+  </script>
+  {% endif %}
+  {# ── /Announcement Modal v2 ─────────────────────────────────────── #}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.AOS) {
+        AOS.init({ duration: 650, once: true, offset: 80, easing: 'ease-out-cubic' });
+      }
+
+      const navbarWrap = document.querySelector('.hf-navbar-wrap');
+      const accountDropdown = document.querySelector('.hf-account-dropdown');
+      const notificationBadge = document.querySelector('[data-hf-notification-badge]');
+      if (navbarWrap && accountDropdown) {
+        accountDropdown.addEventListener('show.bs.dropdown', function () {
+          navbarWrap.classList.add('is-account-open');
+          document.body.classList.add('hf-account-open');
+        });
+
+        accountDropdown.addEventListener('hide.bs.dropdown', function () {
+          navbarWrap.classList.remove('is-account-open');
+          document.body.classList.remove('hf-account-open');
+        });
+      }
+
+      if (notificationBadge) {
+        const refreshNotifications = function () {
+          fetch('{{ url_for("main.account_notifications") }}', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+            .then(function (response) { return response.ok ? response.json() : null; })
+            .then(function (payload) {
+              if (!payload || typeof payload.unread !== 'number') {
+                return;
+              }
+              notificationBadge.textContent = String(payload.unread);
+              notificationBadge.hidden = payload.unread < 1;
+            })
+            .catch(function () {
+            });
+        };
+
+        refreshNotifications();
+        window.setInterval(refreshNotifications, 30000);
+      }
+
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

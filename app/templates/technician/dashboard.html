@@ -1,0 +1,938 @@
+{% extends 'base_tech.html' %}
+
+{% block head %}
+<style>
+/* ── Agenda: mini-calendario ─────────────────────────────────── */
+.hf-da-cal {
+  background: #fff; border: 1px solid #deedf9; border-radius: 16px;
+  padding: 1rem; user-select: none;
+}
+.hf-da-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: .65rem; }
+.hf-da-nav-btn {
+  background: none; border: none; width: 30px; height: 30px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: #4d6781; font-size: 1rem; transition: background .15s;
+}
+.hf-da-nav-btn:hover { background: rgba(0,212,255,.1); color: #00a8c8; }
+.hf-da-nav-title { font-weight: 800; font-size: .88rem; color: #0a2540; }
+.hf-da-today-btn {
+  font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+  padding: .22rem .65rem; border-radius: 99px; cursor: pointer;
+  background: rgba(0,212,255,.1); color: #00a8c8;
+  border: 1px solid rgba(0,212,255,.25); transition: background .15s, color .15s;
+}
+.hf-da-today-btn:hover { background: #00d4ff; color: #0a2540; }
+.hf-da-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; text-align: center; }
+.hf-da-dow { font-size: .6rem; font-weight: 700; text-transform: uppercase; color: #8aabb8; padding: .25rem 0; }
+.hf-da-day {
+  font-size: .78rem; font-weight: 500; color: #1a3550; border-radius: 50%;
+  cursor: pointer; aspect-ratio: 1/1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 1px; margin: 1px; transition: background .12s, color .12s;
+}
+.hf-da-day:hover:not(.da-other) { background: rgba(0,212,255,.13); color: #006b87; }
+.hf-da-day.da-other { color: #c5d8e8; pointer-events: none; }
+.hf-da-day.da-today { background: rgba(255,107,0,.12); color: #d45a00; font-weight: 800; }
+.hf-da-day.da-sel   { background: #00d4ff !important; color: #0a2540 !important; font-weight: 800; }
+.hf-da-dots { display: flex; gap: 2px; justify-content: center; }
+.hf-da-dot  { width: 4px; height: 4px; border-radius: 50%; }
+.hf-da-dot.booking { background: #ff6b00; }
+.hf-da-dot.avail   { background: #059669; }
+.hf-da-legend {
+  display: flex; align-items: center; gap: .85rem; padding: .6rem .1rem 0;
+  border-top: 1px solid #eef4fb; margin-top: .5rem; font-size: .68rem; color: #7a9ab2; font-weight: 600;
+}
+.hf-da-legend span { display: flex; align-items: center; gap: .3rem; }
+.hf-da-dot-legend  { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+
+/* ── Agenda: panel eventos del día ── */
+.hf-da-panel {
+  background: #fff; border: 1px solid #deedf9; border-radius: 16px;
+  padding: 1rem 1.15rem; min-height: 300px; display: flex; flex-direction: column;
+}
+.hf-da-panel-hdr { padding-bottom: .65rem; margin-bottom: .65rem; border-bottom: 1px solid #eef4fb; }
+.hf-da-panel-date { font-size: 1rem; font-weight: 800; color: #0a2540; }
+.hf-da-panel-sub  { font-size: .73rem; color: #8aabb8; }
+.hf-da-events {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: .4rem;
+}
+.hf-da-events::-webkit-scrollbar { width: 3px; }
+.hf-da-events::-webkit-scrollbar-thumb { background: #deedf9; border-radius: 99px; }
+.hf-da-event {
+  border-radius: 12px; padding: .6rem .85rem;
+  border: 1px solid #eef4fb; border-left: 3px solid #0d6efd;
+  transition: box-shadow .12s; background: #fff;
+}
+.hf-da-event:hover { box-shadow: 0 4px 14px rgba(10,37,64,.07); }
+.hf-da-event.ev-confirmado { border-left-color: #00d4ff; background: #f4fffe; }
+.hf-da-event.ev-pendiente  { border-left-color: #ff6b00; background: #fff8f0; }
+.hf-da-event.ev-cancelado  { border-left-color: #adb5bd; opacity: .65; }
+.hf-da-event.ev-disponible { border-left-color: #10b981; background: #f0fdf8; }
+.hf-da-event.ev-completado { border-left-color: #6366f1; background: #f5f3ff; }
+.hf-da-event-time  { font-size: .68rem; color: #8aabb8; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.hf-da-event-title { font-size: .85rem; font-weight: 700; color: #0a2540; margin: 2px 0; }
+.hf-da-event-meta  { font-size: .72rem; color: #7a9ab2; }
+.hf-da-chip { display: inline-block; font-size: .64rem; font-weight: 700; padding: .1rem .5rem; border-radius: 99px; }
+.ev-confirmado .hf-da-chip { background: #dff9ff; color: #006b87; }
+.ev-pendiente  .hf-da-chip { background: #fff0e0; color: #c45200; }
+.ev-disponible .hf-da-chip { background: #d1fae5; color: #065f46; }
+.ev-cancelado  .hf-da-chip { background: #f0f0f0; color: #6c757d; }
+.ev-completado .hf-da-chip { background: #ede9fe; color: #5b21b6; }
+.hf-da-no-events { text-align: center; padding: 2.5rem 1rem; color: #b0c4d8; }
+
+/* ── Competitividad ── */
+.hf-rank-card { border: 1px solid #deedf9; box-shadow: 0 8px 20px rgba(18,51,78,.06); }
+.hf-rank-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+.hf-rank-stars i { font-size: .85rem; }
+.hf-rank-bar { height: 6px; border-radius: 99px; background: #e8f2fb; overflow: hidden; }
+.hf-rank-bar-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
+.hf-kpi-rank { background: linear-gradient(160deg, #fff 0%, #f0f8ff 100%); }
+.hf-kpi-rating { background: linear-gradient(160deg, #fff 0%, #fffbf0 100%); }
+.hf-kpi-completion { background: linear-gradient(160deg, #fff 0%, #f0fdf4 100%); }
+
+/* ── Tarjeta pendiente urgente ── */
+.hf-pending-item { border: 1px solid #ffe0b2; border-radius: 12px; padding: .75rem; background: #fffbf5; }
+.hf-pending-item + .hf-pending-item { margin-top: .6rem; }
+</style>
+{% endblock %}
+
+{% block page_title %}Mi panel{% endblock %}
+
+{% block tech_content %}
+<section class="hf-dash-hero hf-dash-hero-tech rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+      {% set photo = profile.profile_photo if profile and profile.profile_photo else '' %}
+      {% if photo %}
+        <img src="{{ url_for('static', filename=photo) }}" alt="{{ tech_name }}"
+             class="rounded-circle object-fit-cover"
+             style="width:56px;height:56px;border:3px solid #e0f2fe;">
+      {% else %}
+        <div class="hf-panel-initials">{{ tech_initials }}</div>
+      {% endif %}
+      <div>
+        {% set _ttype = profile.technician_type if profile and profile.technician_type else 'independiente' %}
+        <p class="hf-dash-overline mb-1">
+          {% if _ttype == 'empresa' %}
+            <i class="bi bi-building me-1"></i><span data-i18n="dash.tech.overline.empresa">Panel empresa</span>
+          {% else %}
+            <i class="bi bi-tools me-1"></i><span data-i18n="dash.tech.overline.tech">Panel técnico</span>
+          {% endif %}
+        </p>
+        <h1 class="h3 mb-1">Hola, {{ tech_name.split()[0] }}</h1>
+        <p class="mb-0 hf-dash-subline">
+          {% if _ttype == 'empresa' %}
+            <span data-i18n="dash.tech.sub.empresa">Gestiona tu equipo, solicitudes y agenda de servicios.</span>
+          {% else %}
+            <span data-i18n="dash.tech.sub.tech">Gestiona solicitudes, confirma reservas y controla tu agenda.</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+      <div class="text-end">
+        <p class="mb-0 fw-bold" id="hf-col-time" style="font-size:1.35rem;letter-spacing:.01em;color:#0a2540;">--:-- --</p>
+        <p class="mb-0" id="hf-col-date" style="font-size:.75rem;color:rgba(10,37,64,.55);">---</p>
+        <p id="hf-tz-label" class="mb-0" style="font-size:.65rem;color:rgba(10,37,64,.38);letter-spacing:.05em;">COLOMBIA &middot; UTC&minus;5</p>
+      </div>
+  </div>
+</section>
+{# ── Banner suscripción ── #}
+{% set prof = current_user.technician_profile %}
+{% if prof %}
+  {% if not prof.subscription_active %}
+    <div class="rounded-4 p-3 mb-4 d-flex align-items-center gap-3 flex-wrap"
+         style="background:linear-gradient(135deg,#fef2f2,#fff0f0);border:1.5px solid #fca5a5;">
+      <i class="bi bi-exclamation-triangle-fill" style="color:#dc2626;font-size:1.4rem;flex-shrink:0"></i>
+      <div class="flex-grow-1">
+        <p class="fw-bold mb-0" style="color:#7f1d1d">Tu suscripción venció</p>
+        <p class="small mb-0" style="color:#991b1b">Tu perfil no aparece en las búsquedas. Contáctanos para renovar.</p>
+      </div>
+      <a href="{{ url_for('technician.subscription_plans') }}" class="btn btn-sm" style="background:#dc2626;color:#fff">Ver planes</a>
+    </div>
+  {% elif prof.subscription_days_left <= 7 %}
+    <div class="rounded-4 p-3 mb-4 d-flex align-items-center gap-3 flex-wrap"
+         style="background:linear-gradient(135deg,#fff7ed,#fffbeb);border:1.5px solid #fbbf24;">
+      <i class="bi bi-clock-history" style="color:#d97706;font-size:1.4rem;flex-shrink:0"></i>
+      <div class="flex-grow-1">
+        <p class="fw-bold mb-0" style="color:#78350f">
+          {% if prof.subscription_status == 'trial' %}Trial{% else %}Suscripción{% endif %}
+          vence en {{ prof.subscription_days_left }} día{{ 's' if prof.subscription_days_left != 1 }}
+        </p>
+        <p class="small mb-0" style="color:#92400e">Renueva para seguir apareciendo en las búsquedas.</p>
+      </div>
+      <a href="{{ url_for('technician.subscription_plans') }}" class="btn btn-sm" style="background:#d97706;color:#fff">Renovar</a>
+    </div>
+  {% elif prof.subscription_status == 'trial' %}
+    <div class="rounded-4 p-3 mb-4 d-flex align-items-center gap-3 flex-wrap"
+         style="background:linear-gradient(135deg,#eff6ff,#e0f2fe);border:1.5px solid #93c5fd;">
+      <i class="bi bi-gift-fill" style="color:#2563eb;font-size:1.4rem;flex-shrink:0"></i>
+      <div class="flex-grow-1">
+        <p class="fw-bold mb-0" style="color:#1e3a5f">Trial gratuito activo — {{ prof.subscription_days_left }} días restantes</p>
+        <p class="small mb-0" style="color:#1e40af">Disfruta la plataforma sin costo. Al vencer, elige un plan para continuar.</p>
+      </div>
+      <a href="{{ url_for('technician.my_subscription') }}" class="btn btn-sm" style="background:#dbeafe;color:#1d4ed8;font-weight:700">Mi suscripción</a>
+    </div>
+  {% else %}
+    <div class="rounded-4 p-3 mb-4 d-flex align-items-center gap-3"
+         style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;">
+      <i class="bi bi-patch-check-fill" style="color:#16a34a;font-size:1.4rem;flex-shrink:0"></i>
+      <div class="flex-grow-1">
+        <p class="fw-bold mb-0" style="color:#14532d">Suscripción activa — {{ prof.subscription_days_left }} días restantes</p>
+        <p class="small mb-0" style="color:#166534">Vence el {{ prof.subscription_expires_at.strftime('%d/%m/%Y') if prof.subscription_expires_at }}.</p>
+      </div>
+      <a href="{{ url_for('technician.my_subscription') }}" class="btn btn-sm" style="background:#dcfce7;color:#15803d;font-weight:700">Ver detalles</a>
+    </div>
+  {% endif %}
+{% endif %}
+{# ══ KPIs DE RESERVAS ══════════════════════════════════════════════════ #}
+<div class="row g-3 mb-3" data-aos="fade-up" data-aos-delay="60">
+  <div class="col-6 col-xl">
+    <article class="hf-dash-kpi hf-dash-kpi-orange rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1"><i class="bi bi-hourglass-split me-1"></i><span data-i18n="kpi.pending">Pendientes</span></p>
+      <p class="h3 m-0">{{ counters.pendiente }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl">
+    <article class="hf-dash-kpi hf-dash-kpi-cyan rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1"><i class="bi bi-check2-circle me-1"></i><span data-i18n="kpi.confirmed">Confirmadas</span></p>
+      <p class="h3 m-0">{{ counters.confirmado }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl">
+    <article class="hf-dash-kpi hf-dash-kpi-green rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1"><i class="bi bi-patch-check me-1"></i>Completadas</p>
+      <p class="h3 m-0">{{ counters.completado }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl">
+    <article class="hf-dash-kpi hf-dash-kpi-blue rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1"><i class="bi bi-x-circle me-1"></i><span data-i18n="kpi.cancelled">Canceladas</span></p>
+      <p class="h3 m-0">{{ counters.cancelado }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl">
+    <article class="hf-dash-kpi hf-dash-kpi-dark rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1"><i class="bi bi-stack me-1"></i><span data-i18n="kpi.total_short">Total</span></p>
+      <p class="h3 m-0">{{ bookings|length }}</p>
+    </article>
+  </div>
+</div>
+
+{# ══ COMPETITIVIDAD ═══════════════════════════════════════════════════ #}
+{% set rank_pct = [((total_techs - ranking_position + 1) / total_techs * 100)|round|int, 0]|max %}
+<div class="row g-3 mb-4" data-aos="fade-up" data-aos-delay="100">
+
+  {# Calificación promedio #}
+  <div class="col-md-4">
+    <article class="hf-rank-card hf-kpi-rating rounded-4 p-4 h-100 text-center">
+      <p class="hf-dash-overline mb-2" data-i18n="kpi.rating">Calificación</p>
+      <div class="hf-rank-value mb-1" style="color:#f59e0b;">
+        {{ avg_rating if avg_rating else '—' }}
+      </div>
+      <div class="hf-rank-stars mb-1">
+        {% for i in range(1, 6) %}
+          {% if i <= avg_rating|round %}
+            <i class="bi bi-star-fill" style="color:#f59e0b;"></i>
+          {% elif i - avg_rating < 1 %}
+            <i class="bi bi-star-half" style="color:#f59e0b;"></i>
+          {% else %}
+            <i class="bi bi-star" style="color:#d1d5db;"></i>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <p class="small text-secondary mb-0">{{ review_count }} reseña{{ 's' if review_count != 1 else '' }}</p>
+    </article>
+  </div>
+
+  {# Posición en el ranking #}
+  <div class="col-md-4">
+    <article class="hf-rank-card hf-kpi-rank rounded-4 p-4 h-100 text-center">
+      <p class="hf-dash-overline mb-2">Ranking</p>
+      <div class="hf-rank-value mb-1" style="color:#0d6efd;">
+        #{{ ranking_position }}
+      </div>
+      <p class="small text-secondary mb-2">de {{ total_techs }} técnico{{ 's' if total_techs != 1 else '' }}</p>
+      <div class="hf-rank-bar mx-auto" style="max-width:140px;">
+        <div class="hf-rank-bar-fill" style="width:{{ rank_pct }}%;background:#0d6efd;"></div>
+      </div>
+      <p class="small text-secondary mt-1" style="font-size:.72rem;">
+        Top {{ 100 - rank_pct }}% de la plataforma
+      </p>
+    </article>
+  </div>
+
+  {# Tasa de completadas #}
+  <div class="col-md-4">
+    <article class="hf-rank-card hf-kpi-completion rounded-4 p-4 h-100 text-center">
+      <p class="hf-dash-overline mb-2">Completadas</p>
+      <div class="hf-rank-value mb-1" style="color:#059669;">{{ completion_rate }}%</div>
+      <p class="small text-secondary mb-2">{{ counters.completado }} completada{{ 's' if counters.completado != 1 }} de {{ bookings|length }} total{{ 'es' if bookings|length != 1 }}</p>
+      <div class="hf-rank-bar mx-auto" style="max-width:140px;">
+        <div class="hf-rank-bar-fill" style="width:{{ completion_rate }}%;background:#059669;"></div>
+      </div>
+      <p class="small text-secondary mt-1" style="font-size:.72rem;">
+        {% if completion_rate >= 80 %}¡Excelente rendimiento!
+        {% elif completion_rate >= 50 %}Sigue mejorando
+        {% else %}Acepta más reservas
+        {% endif %}
+      </p>
+    </article>
+  </div>
+
+</div>
+
+{# ══ MIS RESEÑAS ══════════════════════════════════════════════════════ #}
+{% if my_reviews %}
+<div class="hf-card rounded-4 p-4 mb-4" data-aos="fade-up" data-aos-delay="110">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h2 class="h5 m-0">
+      <i class="bi bi-star-fill me-2" style="color:#f59e0b"></i>Reseñas recibidas
+      <span class="badge ms-1 rounded-pill" style="background:#fef9c3;color:#854d0e;font-size:.72rem">{{ review_count }}</span>
+    </h2>
+  </div>
+  <div class="row g-2">
+    {% for rev in my_reviews[:6] %}
+      {% set _c = rev.booking.client %}
+      <div class="col-md-6 col-xl-4">
+        <div class="rounded-3 p-3 h-100" style="background:#f8fafc;border:1px solid #e2e8f0">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                 style="width:34px;height:34px;background:#e0f2fe;color:#0369a1;font-size:.82rem">
+              {{ (_c.full_name or _c.email)[:1].upper() }}
+            </div>
+            <div class="flex-grow-1" style="min-width:0">
+              <p class="small fw-semibold mb-0 text-truncate" style="color:#0a2540">
+                {{ (_c.full_name or '').split()[0] or 'Cliente' }}
+              </p>
+              <p class="mb-0" style="font-size:.68rem;color:#9ca3af">{{ rev.created_at.strftime('%d/%m/%Y') }}</p>
+            </div>
+            <div class="d-flex gap-0 flex-shrink-0">
+              {% for i in range(1, 6) %}
+                <i class="bi bi-star-fill" style="color:{% if i <= rev.rating %}#f59e0b{% else %}#d1d5db{% endif %};font-size:.72rem"></i>
+              {% endfor %}
+            </div>
+          </div>
+          {% if rev.comment %}
+            <p class="small text-secondary mb-0 fst-italic" style="font-size:.8rem;line-height:1.5">"{{ rev.comment }}"</p>
+          {% else %}
+            <p class="small text-muted mb-0" style="font-size:.75rem">Sin comentario.</p>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# ══ MI AGENDA ════════════════════════════════════════════════════════ #}
+<div class="hf-card rounded-4 p-4 mb-4" data-aos="fade-up" data-aos-delay="120">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h2 class="h5 m-0"><i class="bi bi-calendar3 me-2" style="color:var(--hf-cyan)"></i>Mi agenda</h2>
+      <p class="small text-secondary mb-0">Toca un día para ver tus reservas y disponibilidad</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="hf-da-today-btn" id="calToday">Hoy</button>
+      <a href="{{ url_for('technician.availability') }}" class="btn btn-sm hf-btn-outline rounded-3">
+        <i class="bi bi-plus-lg me-1"></i>Disponibilidad
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    {# — Mini-calendario — #}
+    <div class="col-lg-4">
+      <div class="hf-da-cal">
+        <div class="hf-da-nav">
+          <button type="button" class="hf-da-nav-btn" id="calPrev" aria-label="Mes anterior"><i class="bi bi-chevron-left"></i></button>
+          <span class="hf-da-nav-title" id="calMonthTitle">—</span>
+          <button type="button" class="hf-da-nav-btn" id="calNext" aria-label="Mes siguiente"><i class="bi bi-chevron-right"></i></button>
+        </div>
+        <div class="hf-da-grid" id="calGrid"></div>
+        <div class="hf-da-legend">
+          <span><span class="hf-da-dot-legend" style="background:#ff6b00"></span>Reserva</span>
+          <span><span class="hf-da-dot-legend" style="background:#059669"></span>Disponible</span>
+        </div>
+      </div>
+    </div>
+
+    {# — Panel del día — #}
+    <div class="col-lg-8">
+      <div class="hf-da-panel">
+        <div class="hf-da-panel-hdr">
+          <div class="hf-da-panel-date" id="panelDayLabel">Selecciona un día</div>
+          <div class="hf-da-panel-sub" id="panelDaySub"></div>
+        </div>
+        <div class="hf-da-events" id="panelEvents">
+          <div class="hf-da-no-events">
+            <i class="bi bi-calendar3" style="font-size:2rem;display:block;margin-bottom:.75rem;"></i>
+            Toca un día para ver tu agenda.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ══ SOLICITUDES ══════════════════════════════════════════════════════ #}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-aos="fade-up" data-aos-delay="140">
+  <h2 class="h5 m-0"><i class="bi bi-list-check me-2 text-primary"></i>Solicitudes</h2>
+  <span class="small text-secondary">{{ bookings|length }} en total</span>
+</div>
+
+<div class="row g-3" data-aos="fade-up" data-aos-delay="155">
+  {% for b in bookings %}
+  <div class="col-md-6 col-xl-4">
+    <article class="hf-card rounded-4 p-3 h-100 hf-dash-booking-card d-flex flex-column">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="small text-secondary">#{{ b.id }}</span>
+        <span class="hf-status-chip hf-status-{{ b.status|lower }}">{{ b.status }}</span>
+      </div>
+      <h2 class="h6 mb-1">{{ b.service_type|title }}</h2>
+      <p class="small text-secondary mb-1">
+        <i class="bi bi-geo-alt me-1"></i>{{ b.locality }}
+      </p>
+      <p class="small mb-1">
+        <i class="bi bi-person me-1"></i>{{ b.client.full_name or b.client.email }}
+      </p>
+      <p class="small mb-1">
+        <i class="bi bi-calendar3 me-1"></i>{{ b.booking_date.strftime('%d %b %Y') }}
+        <strong>{{ b.booking_time.strftime('%H:%M') }}</strong>
+      </p>
+      {% if b.payment_method %}
+      <p class="small mb-1">
+        <i class="bi bi-credit-card-fill me-1" style="color:#7c3aed"></i>
+        Pago: <span class="text-capitalize fw-semibold">{{ b.payment_method }}</span>
+      </p>
+      {% endif %}
+      {% if b.payment_proof %}
+      <p class="small mb-3">
+        <a href="{{ url_for('booking.view_payment_proof', booking_id=b.id) }}" target="_blank"
+           class="text-decoration-none fw-semibold" style="color:#16a34a;">
+          <i class="bi bi-receipt-cutoff me-1"></i>Ver comprobante de pago
+        </a>
+      </p>
+      {% else %}
+      <p class="mb-3"></p>
+      {% endif %}
+      <div class="d-flex gap-2 flex-wrap mt-auto">
+        {% if b.status == 'pendiente' %}
+        <form method="post" action="{{ url_for('booking.update_booking_status', booking_id=b.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="confirmado">
+          <button class="btn btn-sm hf-btn-primary">
+            <i class="bi bi-check-lg me-1"></i>Aceptar
+          </button>
+        </form>
+        <form method="post" action="{{ url_for('booking.update_booking_status', booking_id=b.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="status" value="cancelado">
+          <button class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-x-lg me-1"></i>Rechazar
+          </button>
+        </form>
+        {% elif b.status == 'confirmado' %}
+        <button class="btn btn-sm hf-btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#completarModal"
+                data-booking-id="{{ b.id }}">
+          <i class="bi bi-check-circle me-1"></i>Completar
+        </button>
+        {% elif b.status == 'completado' and b.payment_method == 'efectivo' and not b.cash_confirmed_at %}
+        <form method="post" action="{{ url_for('booking.confirm_cash_payment', booking_id=b.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" style="background:#16a34a;color:#fff;">
+            <i class="bi bi-cash-coin me-1"></i>Confirmar cobro en efectivo
+          </button>
+        </form>
+        {% elif b.status == 'completado' and b.payment_method == 'efectivo' and b.cash_confirmed_at %}
+        <span class="badge" style="background:#d1fae5;color:#065f46;font-size:.78rem;padding:.4rem .8rem;border-radius:99px;">
+          <i class="bi bi-check-circle-fill me-1"></i>Efectivo confirmado
+        </span>
+        {% elif b.status == 'completado' and b.payment_method != 'efectivo' and b.payment_proof %}
+        <span class="badge" style="background:#ede9fe;color:#5b21b6;font-size:.78rem;padding:.4rem .8rem;border-radius:99px;">
+          <i class="bi bi-phone-fill me-1"></i>Pago digital recibido
+        </span>
+        {% elif b.status == 'completado' and b.payment_method != 'efectivo' and not b.payment_proof %}
+        <span class="badge" style="background:#fef9c3;color:#854d0e;font-size:.78rem;padding:.4rem .8rem;border-radius:99px;">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i>Comprobante pendiente
+        </span>
+        {% endif %}
+      </div>
+    </article>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="hf-empty-state rounded-4 p-5 text-center">
+      <i class="bi bi-inbox" style="font-size:2rem;color:#b0c4d8;"></i>
+      <h3 class="h5 mt-3 mb-1">Sin solicitudes aún</h3>
+      <p class="text-secondary small">Cuando un cliente te reserve aparecerá aquí.</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Modal: Completar servicio -->
+<div class="modal fade" id="completarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content rounded-4 shadow border-0">
+
+      <div class="modal-header border-0 px-4 pt-4 pb-2" style="position:relative;">
+        <div>
+          <h5 class="modal-title fw-bold mb-0">
+            <i class="bi bi-patch-check-fill me-2" style="color:#059669"></i>Completar servicio
+          </h5>
+          <p class="small text-secondary mb-0 mt-1">Documenta el trabajo para que el cliente vea los resultados</p>
+        </div>
+        <button type="button" class="btn-close"
+                data-bs-dismiss="modal"
+                style="position:absolute;top:1rem;right:1.1rem;"></button>
+      </div>
+
+      <form id="completarForm" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="modal-body px-4 py-3">
+
+          {# ── PASO 1: Fotos ANTES ── #}
+          <div class="rounded-3 p-3 mb-3" style="background:#fefce8;border:1.5px dashed #fbbf24;">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:34px;height:34px;background:#fef3c7;">
+                <i class="bi bi-camera" style="color:#d97706;font-size:1.05rem"></i>
+              </div>
+              <div>
+                <p class="mb-0 fw-bold small" style="color:#0a2540">
+                  Fotos ANTES del servicio
+                  <span class="fw-normal text-muted" style="font-size:.78rem;"> · opcional · hasta 3</span>
+                </p>
+                <p class="mb-0" style="font-size:.72rem;color:#64748b">Estado inicial del problema antes de comenzar</p>
+              </div>
+            </div>
+            <input type="file" name="before_photos" id="cmpBeforeInput"
+                   class="form-control form-control-sm" accept="image/*" multiple>
+            <div class="d-flex flex-wrap gap-2 mt-2" id="cmpBeforePreview"></div>
+          </div>
+
+          {# ── PASO 2: Fotos DESPUÉS ── #}
+          <div class="rounded-3 p-3 mb-3" style="background:#f0fdf4;border:1.5px dashed #86efac;">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:34px;height:34px;background:#dcfce7;">
+                <i class="bi bi-check-circle-fill" style="color:#059669;font-size:1.05rem"></i>
+              </div>
+              <div>
+                <p class="mb-0 fw-bold small" style="color:#0a2540">
+                  Fotos DESPUÉS del servicio
+                  <span class="fw-normal text-muted" style="font-size:.78rem;"> · hasta 4</span>
+                </p>
+                <p class="mb-0" style="font-size:.72rem;color:#64748b">Muestra el trabajo terminado — el cliente las verá en su panel</p>
+              </div>
+            </div>
+            <input type="file" name="after_photos" id="cmpAfterInput"
+                   class="form-control form-control-sm" accept="image/*" multiple>
+            <div class="d-flex flex-wrap gap-2 mt-2" id="cmpAfterPreview"></div>
+          </div>
+
+          {# ── PASO 3: Nota de cierre ── #}
+          <div class="mb-3">
+            <label class="form-label fw-semibold small mb-1"
+                   style="display:flex;justify-content:space-between;align-items:baseline;width:100%;">
+              <span>
+                <i class="bi bi-pencil-square me-1" style="color:#0a2540"></i>
+                Nota de cierre <span class="text-danger">*</span>
+              </span>
+              <span id="cmpNoteCount"
+                    style="font-weight:400;color:#9ca3af;font-size:.75rem;font-variant-numeric:tabular-nums;">
+                0 / 400
+              </span>
+            </label>
+            <textarea name="completion_note" id="cmpNote" class="form-control form-control-sm" rows="4"
+                      placeholder="Ej: Se cambió la tubería del cuarto de baño, se probó el sistema y no hay fugas. Garantía de 30 días."
+                      maxlength="400" required
+                      style="resize:vertical;"></textarea>
+            <small style="display:block;color:#6c757d;font-size:.78rem;margin-top:.25rem;">El cliente verá esta nota junto con las fotos del trabajo.</small>
+          </div>
+
+          {# ── Guía contextual colapsada ── #}
+          <div class="border-top pt-2 mt-1">
+            <button class="btn btn-link btn-sm text-muted p-0 d-flex align-items-center gap-1 text-decoration-none"
+                    type="button" data-bs-toggle="collapse" data-bs-target="#cmpGuia" aria-expanded="false">
+              <i class="bi bi-info-circle"></i>
+              <span style="font-size:.78rem;">Ver protocolo, garantía y cómo funcionan las reseñas</span>
+              <i class="bi bi-chevron-down" style="font-size:.65rem;"></i>
+            </button>
+            <div class="collapse mt-2" id="cmpGuia">
+              <div class="rounded-3 p-3" style="background:#f8fafc;border:1px solid #e2eaf3;font-size:.8rem;color:#3a5068;">
+
+                <p class="fw-bold mb-2" style="color:#0a2540;font-size:.82rem;">
+                  <i class="bi bi-clipboard2-check-fill me-1" style="color:#059669;"></i>Pasos para un cierre correcto
+                </p>
+                <ol class="ps-3 mb-3" style="line-height:1.85;">
+                  <li>Sube fotos <strong>antes</strong> del trabajo (estado inicial del problema).</li>
+                  <li>Sube fotos <strong>después</strong> — el cliente las verá en su panel.</li>
+                  <li>Escribe una nota clara: qué se hizo, materiales y condiciones de garantía.</li>
+                  <li>Confirma verbalmente con el cliente antes de pulsar <em>Marcar completado</em>.</li>
+                  <li>Guarda recibos de materiales por si se necesitan.</li>
+                </ol>
+
+                <p class="fw-bold mb-2" style="color:#0a2540;font-size:.82rem;">
+                  <i class="bi bi-exclamation-triangle-fill me-1" style="color:#FF6B00;"></i>Garantía
+                </p>
+                <ul class="ps-3 mb-3" style="line-height:1.85;">
+                  <li><strong>30 días</strong> desde el cierre. Si falla lo mismo, revisita sin costo.</li>
+                  <li>El técnico tiene <strong>48&nbsp;h</strong> para responder si el cliente reporta un problema.</li>
+                  <li>El cliente puede abrir una disputa desde su panel. HogarFix media si no hay acuerdo en 5 días hábiles.</li>
+                  <li class="text-danger-emphasis">Las fotos del antes/después son tu respaldo — sin ellas es tu palabra contra la del cliente.</li>
+                  <li style="color:#6b7280;"><i class="bi bi-bank me-1"></i>Fundamento legal: <strong>Ley 1480 de 2011 — Estatuto del Consumidor colombiano</strong>, Art. 11 (garantía de servicios). La SIC puede intervenir si hay reclamaciones formales.</li>
+                </ul>
+
+                <p class="fw-bold mb-2" style="color:#0a2540;font-size:.82rem;">
+                  <i class="bi bi-star-fill me-1" style="color:#f59e0b;"></i>Reseñas
+                </p>
+                <ul class="ps-3 mb-0" style="line-height:1.85;">
+                  <li>El cliente recibe invitación automática por correo al cerrar el servicio.</li>
+                  <li>1–5 estrellas + comentario opcional, público en tu perfil.</li>
+                  <li>Mayor promedio = mejor posición en búsquedas. Puedes responder cada reseña desde tu perfil.</li>
+                </ul>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer border-0 px-4 pb-4 pt-1">
+          <div class="d-flex align-items-center gap-2 w-100 flex-wrap">
+            <p class="small text-secondary mb-0 flex-grow-1">
+              <i class="bi bi-bell me-1"></i>Al confirmar el cliente recibirá una notificación automática.
+            </p>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm hf-btn-primary px-4">
+              <i class="bi bi-check-circle-fill me-1"></i>Marcar completado
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{# ── Modal: límite de reservas plan Básico ── #}
+<div class="modal fade" id="limitModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+    <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+      {# Header ─────────────────────────────── #}
+      <div class="p-4 pb-3 text-center"
+           style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border-bottom:1.5px solid #fde68a">
+        <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+             style="width:58px;height:58px;background:#fef3c7;border:2.5px solid #f59e0b">
+          <i class="bi bi-exclamation-triangle-fill" style="color:#d97706;font-size:1.5rem"></i>
+        </div>
+        <h5 class="fw-bold mb-1" style="color:#92400e;font-size:1.05rem">Límite de reservas alcanzado</h5>
+        <p class="small mb-0" style="color:#b45309">
+          Con el plan <strong>Básico</strong> puedes tener hasta <strong>10 reservas activas</strong> al mismo tiempo.
+        </p>
+      </div>
+      {# Body ──────────────────────────────── #}
+      <div class="p-4">
+        <p class="text-secondary mb-3" style="font-size:.9rem">
+          Para aceptar esta solicitud necesitas liberar espacio completando una reserva existente,
+          o actualizar a un plan superior con <strong>reservas ilimitadas</strong>.
+        </p>
+        {# Option 1 ─ try later #}
+        <div class="rounded-3 p-3 mb-2 d-flex align-items-start gap-3"
+             style="background:#f8fafc;border:1.5px solid #e2e8f0">
+          <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+               style="width:36px;height:36px;background:#e0f2fe;border:1.5px solid #7dd3fc">
+            <i class="bi bi-clock" style="color:#0284c7;font-size:.9rem"></i>
+          </div>
+          <div>
+            <p class="fw-bold mb-0" style="font-size:.87rem;color:#0a2540">Intentar en 12 horas</p>
+            <p class="small mb-0 text-secondary">Cuando una reserva actual se complete, habrá espacio para nuevas. El límite del plan Básico es de 10 activas.</p>
+          </div>
+        </div>
+        {# Option 2 ─ upgrade #}
+        <div class="rounded-3 p-3 d-flex align-items-start gap-3"
+             style="background:#eff6ff;border:1.5px solid #93c5fd">
+          <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+               style="width:36px;height:36px;background:#dbeafe;border:1.5px solid #60a5fa">
+            <i class="bi bi-stars" style="color:#0d6efd;font-size:.9rem"></i>
+          </div>
+          <div>
+            <p class="fw-bold mb-0" style="font-size:.87rem;color:#0a2540">Actualizar mi plan</p>
+            <p class="small mb-0 text-secondary">Profesional ($25.000/mes) o Elite ($55.000/mes) tienen reservas ilimitadas.</p>
+          </div>
+        </div>
+      </div>
+      {# Footer ─────────────────────────────── #}
+      <div class="px-4 pb-4 d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-bs-dismiss="modal">
+          <i class="bi bi-clock me-1"></i>Intentar más tarde
+        </button>
+        <a href="{{ url_for('technician.subscription_plans') }}"
+           class="btn btn-sm flex-fill fw-bold"
+           style="background:linear-gradient(135deg,#0d6efd,#0a58ca);color:#fff">
+          <i class="bi bi-stars me-1"></i>Ver planes
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock tech_content %}
+
+{% block scripts %}
+<script>
+/* ── Auto-abrir modal de límite si viene ?limit_reached=1 ── */
+(function () {
+  if (new URLSearchParams(location.search).get('limit_reached') === '1') {
+    var _el = document.getElementById('limitModal');
+    if (_el) {
+      var _m = new bootstrap.Modal(_el, {backdrop: 'static'});
+      _m.show();
+      // limpiar query param sin recargar
+      history.replaceState(null, '', location.pathname);
+    }
+  }
+})();
+
+/* ── Reloj dinámico según idioma ── */
+(function () {
+  var DAYS   = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  var MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var tzOff = -300, tzLabel = 'BOGOTÁ · UTC−5';
+  try {
+    var _p = JSON.parse(localStorage.getItem('hf_prefs') || '{}');
+    var _l = _p.lang || 'es-CO';
+    if (typeof HF_TZ !== 'undefined' && HF_TZ[_l]) {
+      tzOff  = HF_TZ[_l].offset;
+      tzLabel = HF_TZ[_l].label;
+    }
+  } catch(e) {}
+  function tick() {
+    var now  = new Date();
+    var utc  = now.getTime() + now.getTimezoneOffset() * 60000;
+    var loc  = new Date(utc + tzOff * 60000);
+    var h = loc.getHours(), m = loc.getMinutes(), ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    var timeEl = document.getElementById('hf-col-time');
+    var dateEl = document.getElementById('hf-col-date');
+    var zEl    = document.getElementById('hf-tz-label');
+    if (timeEl) timeEl.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+    if (dateEl) dateEl.textContent = DAYS[loc.getDay()] + ', ' + loc.getDate() + ' de ' + MONTHS[loc.getMonth()];
+    if (zEl) zEl.textContent = tzLabel;
+  }
+  tick(); setInterval(tick, 1000);
+})();
+</script>
+<script>
+// Modal Completar: ajusta la action del form según la reserva seleccionada
+var _cModal = document.getElementById('completarModal');
+if (_cModal) {
+  // Mover foco antes de que aria-hidden se aplique (fix accesibilidad)
+  _cModal.addEventListener('hide.bs.modal', function () {
+    if (document.activeElement && _cModal.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+  });
+
+  _cModal.addEventListener('show.bs.modal', function (e) {
+    var bid = e.relatedTarget.dataset.bookingId;
+    document.getElementById('completarForm').action = '/reservas/' + bid + '/completar';
+    // Limpiar previews y inputs al abrir
+    ['cmpBeforeInput','cmpAfterInput'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('cmpBeforePreview').innerHTML = '';
+    document.getElementById('cmpAfterPreview').innerHTML = '';
+    var note = document.getElementById('cmpNote');
+    note.value = '';
+    document.getElementById('cmpNoteCount').textContent = '0 / 400';
+  });
+}
+
+// Contador de caracteres en Nota de cierre
+(function () {
+  var note  = document.getElementById('cmpNote');
+  var count = document.getElementById('cmpNoteCount');
+  if (!note || !count) return;
+  note.addEventListener('input', function () {
+    var len = note.value.length;
+        count.textContent = len + ' / 400';
+        count.style.color = len >= 380 ? '#dc2626' : len >= 320 ? '#d97706' : '';
+  });
+})();
+
+// Vista previa de fotos seleccionadas
+function _setupPhotoPreview(inputId, previewId, maxFiles) {
+  var input = document.getElementById(inputId);
+  var preview = document.getElementById(previewId);
+  if (!input || !preview) return;
+  input.addEventListener('change', function () {
+    preview.innerHTML = '';
+    var files = Array.prototype.slice.call(this.files, 0, maxFiles);
+    files.forEach(function (file) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'rounded-2';
+        img.style.cssText = 'width:60px;height:60px;object-fit:cover;border:2px solid #e2ecf5;';
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+}
+_setupPhotoPreview('cmpBeforeInput', 'cmpBeforePreview', 3);
+_setupPhotoPreview('cmpAfterInput',  'cmpAfterPreview',  4);
+</script>
+<script>
+(function () {
+  'use strict';
+  const DAYS      = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+  const DAYS_FULL = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const MONTHS    = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                     'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const AGENDA_URL = '{{ url_for("technician.agenda_json") }}';
+  const LABELS     = {
+    confirmado:'Confirmado', pendiente:'Pendiente',
+    cancelado:'Cancelado', disponible:'Disponible', completado:'Completado'
+  };
+
+  let allEvents = [], curYear, curMonth, selectedDate = null;
+
+  const gridEl      = document.getElementById('calGrid');
+  const titleEl     = document.getElementById('calMonthTitle');
+  const panelLabel  = document.getElementById('panelDayLabel');
+  const panelSub    = document.getElementById('panelDaySub');
+  const panelEvents = document.getElementById('panelEvents');
+
+  /* ── Carga eventos desde API ── */
+  fetch(AGENDA_URL)
+    .then(r => r.json())
+    .then(data => {
+      allEvents = data || [];
+      const today = new Date();
+      curYear = today.getFullYear(); curMonth = today.getMonth();
+      renderMonth(curYear, curMonth);
+      selectDate(today.toISOString().slice(0,10));
+    })
+    .catch(() => {
+      const today = new Date();
+      curYear = today.getFullYear(); curMonth = today.getMonth();
+      renderMonth(curYear, curMonth);
+    });
+
+  /* ── Navegación ── */
+  document.getElementById('calPrev').addEventListener('click', () => {
+    curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; }
+    renderMonth(curYear, curMonth);
+  });
+  document.getElementById('calNext').addEventListener('click', () => {
+    curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; }
+    renderMonth(curYear, curMonth);
+  });
+  document.getElementById('calToday').addEventListener('click', () => {
+    const today = new Date();
+    curYear = today.getFullYear(); curMonth = today.getMonth();
+    renderMonth(curYear, curMonth);
+    selectDate(today.toISOString().slice(0,10));
+  });
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+
+  /* ── Renderiza el mes ── */
+  function renderMonth(year, month) {
+    titleEl.textContent = MONTHS[month] + ' ' + year;
+    gridEl.innerHTML = '';
+    DAYS.forEach(d => {
+      const h = document.createElement('div');
+      h.className = 'hf-da-dow'; h.textContent = d;
+      gridEl.appendChild(h);
+    });
+    const firstDay    = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const daysInPrev  = new Date(year, month, 0).getDate();
+    const todayStr    = new Date().toISOString().slice(0,10);
+    for (let i = firstDay-1; i >= 0; i--) {
+      addDayCell(daysInPrev-i, month===0?year-1:year, month===0?11:month-1, true, todayStr);
+    }
+    for (let d = 1; d <= daysInMonth; d++) addDayCell(d, year, month, false, todayStr);
+    const rem = (7 - ((firstDay + daysInMonth) % 7)) % 7;
+    for (let d = 1; d <= rem; d++) addDayCell(d, month===11?year+1:year, month===11?0:month+1, true, todayStr);
+  }
+
+  function addDayCell(day, year, month, otherMonth, todayStr) {
+    const dateStr    = year+'-'+pad(month+1)+'-'+pad(day);
+    const dayEvs     = allEvents.filter(e => (e.start||'').slice(0,10) === dateStr);
+    const hasBooking = dayEvs.some(e => (e.id||'').startsWith('booking-'));
+    const hasAvail   = dayEvs.some(e => (e.id||'').startsWith('slot-'));
+    const cell = document.createElement('div');
+    cell.className = 'hf-da-day'
+      + (otherMonth             ? ' da-other' : '')
+      + (dateStr === todayStr   ? ' da-today' : '')
+      + (dateStr === selectedDate ? ' da-sel' : '');
+    const numSpan = document.createElement('span');
+    numSpan.textContent = day;
+    cell.appendChild(numSpan);
+    if ((hasBooking || hasAvail) && !otherMonth) {
+      const row = document.createElement('div');
+      row.className = 'hf-da-dots';
+      if (hasBooking) { const d = document.createElement('span'); d.className='hf-da-dot booking'; row.appendChild(d); }
+      if (hasAvail)   { const d = document.createElement('span'); d.className='hf-da-dot avail';   row.appendChild(d); }
+      cell.appendChild(row);
+    }
+    if (!otherMonth) cell.addEventListener('click', () => selectDate(dateStr));
+    gridEl.appendChild(cell);
+  }
+
+  /* ── Selecciona día y actualiza panel ── */
+  function selectDate(dateStr) {
+    selectedDate = dateStr;
+    renderMonth(curYear, curMonth);
+    const [yyyy, mm, dd] = dateStr.split('-').map(Number);
+    const dateObj = new Date(yyyy, mm-1, dd);
+    panelLabel.textContent = dd + ' de ' + MONTHS[mm-1] + ' ' + yyyy;
+    if (panelSub) panelSub.textContent = DAYS_FULL[dateObj.getDay()];
+
+    const dayEvs = allEvents
+      .filter(e => (e.start||'').slice(0,10) === dateStr)
+      .sort((a,b) => (a.start||'').localeCompare(b.start||''));
+
+    panelEvents.innerHTML = '';
+    if (dayEvs.length === 0) {
+      panelEvents.innerHTML = '<div class="hf-da-no-events"><i class="bi bi-calendar-x" style="font-size:2rem;display:block;margin-bottom:.75rem;"></i>Sin eventos este día.</div>';
+      return;
+    }
+
+    const fmt = iso => iso
+      ? new Date(iso).toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit', hour12:true })
+      : '';
+
+    dayEvs.forEach(ev => {
+      const isSlot   = (ev.id||'').startsWith('slot-');
+      const status   = isSlot ? 'disponible' : ((ev.extendedProps && ev.extendedProps.status) || 'pendiente');
+      const label    = LABELS[status] || status;
+      const parts    = (ev.title||'').split(' — ');
+      const service  = parts[0] || 'Evento';
+      const locality = parts[1] || '';
+      const timeStr  = fmt(ev.start);
+      const timeEnd  = fmt(ev.end);
+
+      const item = document.createElement('div');
+      item.className = 'hf-da-event ev-' + status;
+      item.innerHTML =
+        (timeStr ? '<div class="hf-da-event-time">' + timeStr + (timeEnd ? ' – ' + timeEnd : '') + '</div>' : '') +
+        '<div class="hf-da-event-title">' + service + '</div>' +
+        (locality ? '<div class="hf-da-event-meta"><i class="bi bi-geo-alt" style="font-size:.65rem;"></i> ' + locality + '</div>' : '') +
+        '<span class="hf-da-chip">' + label + '</span>';
+      panelEvents.appendChild(item);
+    });
+  }
+})();
+</script>
+{% endblock %}

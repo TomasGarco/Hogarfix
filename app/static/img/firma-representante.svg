@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 68">
+  <!-- Barra horizontal de la T -->
+  <path d="M8,24 C16,8 28,8 38,20 C44,26 48,23 54,20"
+        stroke="#0d0d1a" stroke-width="2.3" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Trazo vertical de la T con ligero curve -->
+  <path d="M30,16 C30,24 29,34 28,44 C27,52 30,56 34,52"
+        stroke="#0d0d1a" stroke-width="2.3" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Punto después de la T -->
+  <circle cx="60" cy="52" r="1.8" fill="#0d0d1a"/>
+  <!-- G de García - bucle superior -->
+  <path d="M76,42 C72,18 90,10 102,20 C114,30 110,50 96,52 C82,54 74,42 78,32 C80,24 92,24 100,32"
+        stroke="#0d0d1a" stroke-width="2.3" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Segundo inicial G de Guevara -->
+  <path d="M118,42 C114,20 130,12 142,22 C154,32 150,50 136,52 C122,54 115,43 119,33 C121,25 132,25 140,33"
+        stroke="#0d0d1a" stroke-width="2.3" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Trazo final de salida -->
+  <path d="M148,42 C155,38 162,38 168,44"
+        stroke="#0d0d1a" stroke-width="2.0" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Subrayado con flourish -->
+  <path d="M6,62 C55,57 125,59 198,57"
+        stroke="#0d0d1a" stroke-width="1.5" fill="none"
+        stroke-linecap="round"/>
+</svg>

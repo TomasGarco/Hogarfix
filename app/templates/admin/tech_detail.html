@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{# HERO #}
+<section class="hf-dash-hero hf-dash-hero-admin rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+      {% if profile.profile_photo %}
+        <img src="{{ url_for('static', filename=profile.profile_photo) }}"
+             class="hf-panel-avatar" alt="{{ profile.full_name }}">
+      {% else %}
+        <div class="hf-panel-initials">{{ (profile.full_name[:2])|upper }}</div>
+      {% endif %}
+      <div>
+        <p class="hf-dash-overline mb-1">
+          <a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none" style="color:inherit">Admin</a>
+          &rsaquo; Técnico
+        </p>
+        <h1 class="h3 mb-1">{{ profile.full_name }}</h1>
+        <p class="mb-0 hf-dash-subline">
+          <span class="hf-admin-status me-1">{{ profile.verification_status }}</span>
+          {% if profile.suspended_at %}
+            <span class="badge text-bg-danger">Suspendido</span>
+          {% elif profile.subscription_active %}
+            <span class="badge text-bg-success">Suscripción activa</span>
+          {% else %}
+            <span class="badge text-bg-secondary">Sin suscripción</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="text-end">
+      <p class="mb-0 fw-bold" id="hf-adm-time" style="font-size:1.4rem;color:#0a2540">--:-- --</p>
+      <p class="mb-0 small" id="hf-adm-date" style="color:#4d6781;font-size:.78rem">---</p>
+      <p class="mb-0" style="font-size:.68rem;color:#8aabb8;letter-spacing:.05em">COLOMBIA &middot; UTC&minus;5</p>
+    </div>
+  </div>
+</section>
+
+{# KPIs #}
+<section class="row g-3 mb-4" data-aos="fade-up" data-aos-delay="60">
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-blue rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Reservas totales</p>
+      <p class="h3 m-0">{{ bookings|length }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-cyan rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Reseñas</p>
+      <p class="h3 m-0">{{ reviews|length }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-orange rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Calificación prom.</p>
+      <p class="h3 m-0">{% if avg_rating %}{{ avg_rating }}/5{% else %}&mdash;{% endif %}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-{% if profile.subscription_active %}green{% else %}dark{% endif %} rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Días suscripción</p>
+      <p class="h3 m-0">{% if profile.subscription_active %}{{ profile.subscription_days_left }}{% else %}0{% endif %}</p>
+    </article>
+  </div>
+</section>
+
+{# CONTENIDO #}
+<div class="row g-3">
+
+  {# ── Col izquierda: datos + docs + moderación ── #}
+  <div class="col-lg-5">
+
+    <div class="hf-card rounded-4 p-4 mb-3" data-aos="fade-up" data-aos-delay="80">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-person-badge text-primary"></i> Datos del perfil
+      </h2>
+      <dl class="row small mb-0">
+        <dt class="col-5 text-secondary">Email</dt>
+        <dd class="col-7">{{ profile.user.email }}</dd>
+        <dt class="col-5 text-secondary">Teléfono</dt>
+        <dd class="col-7">{{ bio.contact_phone or profile.user.phone or '&mdash;' }}</dd>
+        <dt class="col-5 text-secondary">Tipo documento</dt>
+        <dd class="col-7">{{ bio.document_type or '&mdash;' }}</dd>
+        <dt class="col-5 text-secondary">N.&ordm; documento</dt>
+        <dd class="col-7">{{ bio.document_number or '&mdash;' }}</dd>
+        <dt class="col-5 text-secondary">Tipo técnico</dt>
+        <dd class="col-7">{{ profile.technician_type }}</dd>
+        <dt class="col-5 text-secondary">Localidades</dt>
+        <dd class="col-7">{{ profile.localities or '&mdash;' }}</dd>
+        <dt class="col-5 text-secondary">Especialidades</dt>
+        <dd class="col-7">{{ profile.specialties or '&mdash;' }}</dd>
+        <dt class="col-5 text-secondary">Precio base</dt>
+        <dd class="col-7">{{ profile.bio_base_price or '&mdash;' }}</dd>
+        <dt class="col-5 text-secondary">Tipo cobro</dt>
+        <dd class="col-7">{{ profile.bio_charge_type or '&mdash;' }}</dd>
+        {% if profile.service_description %}
+        <dt class="col-5 text-secondary">Descripción</dt>
+        <dd class="col-7">{{ profile.service_description }}</dd>
+        {% endif %}
+        <dt class="col-5 text-secondary">Plan</dt>
+        <dd class="col-7">{{ profile.subscription_plan or '&mdash;' }}</dd>
+      </dl>
+      <a href="{{ url_for('admin.user_detail', user_id=profile.user_id) }}" class="btn btn-sm hf-btn-outline mt-3 w-100">
+        <i class="bi bi-person-gear me-1"></i>Editar cuenta de usuario
+      </a>
+    </div>
+
+    {# Documentos de verificación — miniaturas clicables #}
+    <div class="hf-card rounded-4 p-4 mb-3" data-aos="fade-up" data-aos-delay="100">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-file-earmark-person text-primary"></i> Documentos de verificación
+      </h2>
+      {% for label, img_path in [
+          ('Cédula frontal', profile.verification_id_front),
+          ('Cédula trasera', profile.verification_id_back),
+          ('Selfie',         profile.verification_selfie)
+      ] %}
+      <div class="mb-3">
+        <p class="small fw-semibold mb-1 text-secondary">{{ label }}</p>
+        {% if img_path %}
+          <a href="{{ url_for('static', filename=img_path) }}" target="_blank" rel="noopener"
+             title="Ver {{ label }} a tamaño completo">
+            <img src="{{ url_for('static', filename=img_path) }}"
+                 class="img-fluid rounded border shadow-sm"
+                 style="max-height:170px;width:100%;object-fit:cover;transition:opacity .2s;cursor:zoom-in"
+                 onmouseover="this.style.opacity='.82'" onmouseout="this.style.opacity='1'"
+                 alt="{{ label }}">
+          </a>
+        {% else %}
+          <div class="border rounded p-2 text-center text-secondary small bg-light">
+            <i class="bi bi-x-circle me-1"></i>No subido
+          </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    {# Moderación #}
+    <div class="hf-card rounded-4 p-4" data-aos="fade-up" data-aos-delay="120">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-shield-check text-warning"></i> Moderación
+      </h2>
+      <form method="post" action="{{ url_for('admin.update_verification', profile_id=profile.id) }}" class="mb-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="form-label small fw-semibold">Estado de verificación</label>
+        <div class="d-flex gap-2">
+          <select name="verification_status" class="form-select form-select-sm">
+            <option value="pending"        {% if profile.verification_status=='pending'        %}selected{% endif %}>Pendiente</option>
+            <option value="basic_verified" {% if profile.verification_status=='basic_verified' %}selected{% endif %}>Básica</option>
+            <option value="approved"       {% if profile.verification_status=='approved'       %}selected{% endif %}>Aprobado</option>
+            <option value="fully_verified" {% if profile.verification_status=='fully_verified' %}selected{% endif %}>Completa</option>
+            <option value="rejected"       {% if profile.verification_status=='rejected'       %}selected{% endif %}>Rechazado</option>
+          </select>
+          <button class="btn btn-sm btn-primary">Guardar</button>
+        </div>
+      </form>
+
+      <label class="form-label small fw-semibold">Suscripción</label>
+      <form method="post" action="{{ url_for('admin.manage_subscription', profile_id=profile.id) }}" class="d-flex gap-1 flex-wrap mb-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button name="action" value="30"     class="btn btn-sm hf-btn-outline">+30d</button>
+        <button name="action" value="90"     class="btn btn-sm hf-btn-outline">+90d</button>
+        <button name="action" value="365"    class="btn btn-sm hf-btn-outline">+1 año</button>
+        <button name="action" value="expire" class="btn btn-sm btn-outline-danger">Vencer</button>
+      </form>
+
+      <label class="form-label small fw-semibold">Suspensión</label>
+      <form method="post" action="{{ url_for('admin.toggle_suspension', profile_id=profile.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if profile.suspended_at %}
+          <div class="alert alert-danger py-2 small mb-2">{{ profile.suspension_reason }}</div>
+          <input type="hidden" name="accion" value="reactivar">
+          <button class="btn btn-sm btn-outline-success w-100">
+            <i class="bi bi-play-circle me-1"></i>Reactivar técnico
+          </button>
+        {% else %}
+          <input type="hidden" name="accion" value="suspender">
+          <input type="text" name="motivo" class="form-control form-control-sm mb-2" placeholder="Motivo de suspensión">
+          <select name="tipo" class="form-select form-select-sm mb-2">
+            <option value="temporal">Temporal</option>
+            <option value="definitiva">Definitiva</option>
+          </select>
+          <button class="btn btn-sm btn-outline-danger w-100">
+            <i class="bi bi-slash-circle me-1"></i>Suspender técnico
+          </button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  {# ── Col derecha: foto + fotos trabajo + reseñas + reservas ── #}
+  <div class="col-lg-7">
+
+    {# Foto de perfil grande #}
+    {% if profile.profile_photo %}
+    <div class="hf-card rounded-4 p-4 mb-3 text-center" data-aos="fade-up" data-aos-delay="60">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-person-circle text-primary"></i> Foto de perfil
+      </h2>
+      <img src="{{ url_for('static', filename=profile.profile_photo) }}"
+           class="rounded-3 img-fluid shadow-sm"
+           style="max-height:220px;object-fit:cover;border:2px solid #e8f4fd"
+           alt="{{ profile.full_name }}">
+    </div>
+    {% endif %}
+
+    {# Fotos de trabajos #}
+    {% if profile.work_photos_list %}
+    <div class="hf-card rounded-4 p-4 mb-3" data-aos="fade-up" data-aos-delay="80">
+      <h2 class="h6 mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-images text-primary"></i> Fotos de trabajos ({{ profile.work_photos_list|length }})
+      </h2>
+      <div class="row g-2">
+        {% for ph in profile.work_photos_list %}
+        <div class="col-4">
+          <a href="{{ url_for('static', filename=ph) }}" target="_blank" rel="noopener">
+            <img src="{{ url_for('static', filename=ph) }}" class="img-fluid rounded"
+                 style="height:90px;object-fit:cover;width:100%;transition:opacity .2s"
+                 onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"
+                 alt="Foto de trabajo">
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# Reseñas #}
+    <div class="hf-card rounded-4 p-4 mb-3" data-aos="fade-up" data-aos-delay="100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h6 m-0 d-flex align-items-center gap-2">
+          <i class="bi bi-star text-warning"></i> Reseñas ({{ reviews|length }})
+        </h2>
+        {% if avg_rating %}
+        <span class="badge text-bg-warning text-dark fw-bold">{{ avg_rating }}/5 &#9733;</span>
+        {% endif %}
+      </div>
+      {% if reviews %}
+      <div class="d-grid gap-2" style="max-height:260px;overflow-y:auto">
+        {% for r in reviews %}
+        <div class="border rounded-3 p-2 small">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-warning">
+              {% for _ in range(r.rating) %}&#9733;{% endfor %}<span class="text-secondary">{% for _ in range(5 - r.rating) %}&#9733;{% endfor %}</span>
+            </span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-secondary" style="font-size:.72rem">{{ r.created_at.strftime('%d/%m/%Y') if r.created_at else '&mdash;' }}</span>
+              <form method="post" action="{{ url_for('admin.delete_review', review_id=r.id) }}"
+                    onsubmit="return confirm('¿Eliminar esta reseña?');" class="m-0">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger" style="padding:.1rem .3rem;font-size:.7rem">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          {% if r.comment %}<p class="mb-0 mt-1 text-secondary">{{ r.comment }}</p>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-secondary small mb-0">Sin reseñas registradas.</p>
+      {% endif %}
+    </div>
+
+    {# Reservas #}
+    <div class="hf-card rounded-4 p-4" data-aos="fade-up" data-aos-delay="120">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h6 m-0 d-flex align-items-center gap-2">
+          <i class="bi bi-calendar3 text-primary"></i> Reservas ({{ bookings|length }})
+        </h2>
+        <a href="{{ url_for('admin.reservas_list') }}" class="btn btn-sm hf-btn-outline">Ver todas</a>
+      </div>
+      {% if bookings %}
+      <div class="table-responsive">
+        <table class="table hf-admin-table align-middle table-sm">
+          <thead>
+            <tr><th>#</th><th>Servicio</th><th>Fecha</th><th>Estado</th><th>Pago</th></tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+            <tr>
+              <td class="text-secondary">#{{ b.id }}</td>
+              <td>{{ b.service_type }}</td>
+              <td class="small">{{ b.booking_date.strftime('%d/%m/%Y') if b.booking_date else '&mdash;' }}</td>
+              <td><span class="hf-status-chip hf-status-{{ b.status }}">{{ b.status }}</span></td>
+              <td class="small">{{ b.payment_method }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-secondary small mb-0">Sin reservas.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  function tick(){
+    var t=document.getElementById('hf-adm-time'), d=document.getElementById('hf-adm-date');
+    if(!t) return;
+    var now=new Date();
+    t.textContent=now.toLocaleTimeString('es-CO',{timeZone:'America/Bogota',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+    d.textContent=now.toLocaleDateString('es-CO',{timeZone:'America/Bogota',weekday:'long',day:'numeric',month:'long'});
+  }
+  tick(); setInterval(tick,1000);
+})();
+</script>
+{% endblock %}

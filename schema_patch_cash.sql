@@ -1,0 +1,2 @@
+ALTER TABLE reservas
+  ADD COLUMN IF NOT EXISTS cash_confirmed_at DATETIME DEFAULT NULL;

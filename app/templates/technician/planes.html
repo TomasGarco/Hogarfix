@@ -1,0 +1,412 @@
+﻿{% extends 'base_tech.html' %}
+
+{% block head %}
+<style>
+/* ── Pricing layout ──────────────────────────────── */
+.hf-plans-title { font-size: 1.85rem; font-weight: 900; color: #0a2540; }
+.hf-plans-sub   { color: #64748b; font-size: .95rem; }
+
+/* ── Card base ───────────────────────────────────── */
+.hf-plan-card {
+  border-radius: 22px; border: 2px solid #e2e8f0;
+  background: #fff; height: 100%;
+  display: flex; flex-direction: column;
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s;
+  position: relative; overflow: hidden;
+}
+.hf-plan-card:hover { transform: translateY(-4px); box-shadow: 0 16px 44px rgba(10,37,64,.09); }
+
+/* ── FREE card (Basico) ──────────────────────────── */
+.hf-plan-card.free-card {
+  border-color: #d1fae5;
+  background: linear-gradient(170deg,#f0fdf4 0%,#fff 50%);
+}
+.hf-plan-card.free-card:hover { box-shadow: 0 16px 44px rgba(16,185,129,.1); }
+.hf-free-forever-badge {
+  display: inline-flex; align-items: center; gap: .35rem;
+  background: linear-gradient(135deg,#d1fae5,#a7f3d0);
+  color: #065f46; font-size: .7rem; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase; padding: .28rem .85rem; border-radius: 99px;
+  border: 1.5px solid #6ee7b7; margin-bottom: .75rem;
+}
+
+/* ── Popular card (Profesional) ──────────────────── */
+.hf-plan-card.popular-card {
+  border-color: #93c5fd;
+  box-shadow: 0 12px 40px rgba(13,110,253,.14);
+  transform: translateY(-6px);
+  background: linear-gradient(170deg,#eff6ff 0%,#fff 50%);
+}
+.hf-plan-card.popular-card:hover { transform: translateY(-10px); box-shadow: 0 22px 58px rgba(13,110,253,.20); }
+.hf-popular-pill {
+  position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg,#0d6efd,#0a58ca);
+  color: #fff; font-size: .67rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+  padding: .26rem 1.1rem; border-radius: 0 0 12px 12px;
+  box-shadow: 0 4px 12px rgba(13,110,253,.38);
+}
+
+/* ── Elite card ──────────────────────────────────── */
+.hf-plan-card.elite-card {
+  border-color: #c4b5fd;
+  background: linear-gradient(170deg,#f5f3ff 0%,#fff 50%);
+}
+.hf-plan-card.elite-card:hover { box-shadow: 0 16px 44px rgba(124,58,237,.12); }
+
+/* ── Card header ─────────────────────────────────── */
+.hf-plan-hdr { padding: 1.75rem 1.75rem 1rem; }
+.hf-plan-icon-wrap {
+  width: 54px; height: 54px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.45rem; margin-bottom: .9rem;
+}
+.hf-plan-badge-chip {
+  display: inline-block; font-size: .63rem; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; padding: .18rem .65rem; border-radius: 99px; margin-bottom: .5rem;
+}
+.hf-plan-name { font-size: 1.2rem; font-weight: 800; color: #0a2540; margin-bottom: .35rem; }
+
+.hf-plan-price-row { display: flex; align-items: baseline; gap: .35rem; margin: .4rem 0 .15rem; }
+.hf-plan-price     { font-size: 2.1rem; font-weight: 900; line-height: 1; }
+.hf-plan-price-period { font-size: .78rem; color: #94a3b8; font-weight: 600; }
+.hf-plan-price-future { font-size: .74rem; color: #94a3b8; font-weight: 500; margin-bottom: .1rem; }
+.hf-plan-trial-pill {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .72rem; font-weight: 700; padding: .22rem .75rem;
+  border-radius: 99px; margin-bottom: .15rem;
+}
+
+/* ── Feature groups (Pro / Elite) ────────────────── */
+.hf-feat-groups { padding: 0 1.75rem 1.25rem; flex: 1; }
+.hf-feat-group  { margin-bottom: 1rem; }
+.hf-feat-group:last-child { margin-bottom: 0; }
+.hf-feat-group-title {
+  display: flex; align-items: center; gap: .45rem;
+  font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+  color: #64748b; margin-bottom: .5rem;
+}
+.hf-feat-group-title i { font-size: .85rem; }
+.hf-feat-item {
+  display: flex; align-items: flex-start; gap: .42rem;
+  font-size: .85rem; color: #334155; padding: .28rem 0;
+  border-bottom: 1px solid #f8fafc;
+}
+.hf-feat-item:last-child { border-bottom: none; }
+.hf-feat-item i { flex-shrink: 0; font-size: .82rem; color: #22c55e; margin-top: 2px; }
+
+/* ── Simple features (Basico) ────────────────────── */
+.hf-simple-feats { padding: 0 1.75rem 1.25rem; flex: 1; }
+.hf-simple-feat {
+  display: flex; align-items: flex-start; gap: .45rem;
+  font-size: .87rem; color: #334155; padding: .35rem 0; border-bottom: 1px solid #f8fafc;
+}
+.hf-simple-feat:last-child { border-bottom: none; }
+.hf-simple-feat.ok  i { color: #22c55e; font-size: .88rem; margin-top: 2px; flex-shrink: 0; }
+.hf-simple-feat.lim i { color: #e2e8f0; font-size: .88rem; margin-top: 2px; flex-shrink: 0; }
+.hf-simple-feat.lim span { color: #cbd5e1; }
+
+/* ── CTA ─────────────────────────────────────────── */
+.hf-plan-cta-wrap { padding: 1.1rem 1.75rem 1.75rem; margin-top: auto; }
+.hf-plan-cta {
+  display: block; width: 100%; padding: .72rem; border-radius: 14px; border: none;
+  font-weight: 700; font-size: .93rem; cursor: pointer; text-align: center;
+  transition: all .18s; text-decoration: none;
+}
+.hf-plan-cta.current { background: #f1f5f9; color: #94a3b8; cursor: default; pointer-events: none; }
+.hf-plan-cta.cta-free { background: #f0fdf4; color: #059669; border: 1.5px solid #6ee7b7; }
+.hf-plan-cta.cta-free:hover { background: #dcfce7; }
+.hf-plan-cta.cta-profesional {
+  background: linear-gradient(135deg,#0d6efd,#0a58ca); color: #fff;
+  box-shadow: 0 4px 14px rgba(13,110,253,.35);
+}
+.hf-plan-cta.cta-profesional:hover { box-shadow: 0 6px 22px rgba(13,110,253,.45); transform: translateY(-1px); }
+.hf-plan-cta.cta-elite {
+  background: linear-gradient(135deg,#7c3aed,#6d28d9); color: #fff;
+  box-shadow: 0 4px 14px rgba(124,58,237,.35);
+}
+.hf-plan-cta.cta-elite:hover { box-shadow: 0 6px 22px rgba(124,58,237,.45); transform: translateY(-1px); }
+
+/* ── Comparison table ────────────────────────────── */
+.hf-compare-wrap { background: #fff; border: 1.5px solid #deedf9; border-radius: 20px; overflow: hidden; }
+.hf-compare-head { background: linear-gradient(135deg,#f8fafc,#eff6ff); border-bottom: 1.5px solid #deedf9; padding: .85rem 1.25rem; }
+</style>
+{% endblock %}
+
+{% block tech_content %}
+{% set _prof = current_user.technician_profile %}
+
+{# ── Sandbox notice ── #}
+<div class="rounded-4 mb-4 p-3 d-flex align-items-start gap-3"
+     style="background:linear-gradient(135deg,#fef9c3,#fef3c7);border:1.5px solid #fbbf24;">
+  <i class="bi bi-flask-fill mt-1" style="color:#d97706;font-size:1.1rem;flex-shrink:0"></i>
+  <div>
+    <p class="fw-bold mb-0" style="color:#92400e;font-size:.9rem">Modo de prueba activo</p>
+    <p class="small mb-0" style="color:#b45309">
+      Todos los planes estan <strong>completamente gratuitos</strong> durante el periodo de prueba.
+      Proximamente habilitaremos pagos seguros (PSE &middot; Nequi &middot; Daviplata &middot; Tarjeta).
+    </p>
+  </div>
+</div>
+
+{# ── Header ── #}
+<div class="text-center mb-4">
+  <h1 class="hf-plans-title">Elige tu plan</h1>
+  <p class="hf-plans-sub mt-1">Sin tarjeta &middot; Cancela cuando quieras &middot; Prueba gratis</p>
+  {% if _prof and _prof.subscription_active %}
+  <div class="mt-3">
+    <a href="{{ url_for('technician.my_subscription') }}"
+       style="display:inline-flex;align-items:center;gap:.4rem;background:#f0fdf4;border:1.5px solid #6ee7b7;
+              border-radius:12px;padding:.45rem 1.1rem;font-size:.85rem;font-weight:600;color:#065f46;text-decoration:none">
+      <i class="bi bi-patch-check-fill"></i>Ver mi suscripcion actual<i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+{# ══ TARJETAS DE PLANES ══ #}
+<div class="row g-4 mb-4 align-items-start">
+
+  {# ── BASICO — Siempre gratis ── #}
+  {% set plan = plans.basico %}
+  {% set is_current = (_prof and _prof.subscription_active and _prof.subscription_plan == 'basico') %}
+  <div class="col-12 col-md-4">
+    <div class="hf-plan-card free-card">
+      <div class="hf-plan-hdr">
+        <div class="hf-plan-icon-wrap"
+             style="background:{{ plan.gradient }};border:1.5px solid {{ plan.border }}">
+          <i class="bi {{ plan.icon }}" style="color:#059669"></i>
+        </div>
+        <span class="hf-free-forever-badge">
+          <i class="bi bi-infinity"></i>Siempre gratis
+        </span>
+        <p class="hf-plan-name">{{ plan.name }}</p>
+        <div class="hf-plan-price-row">
+          <span class="hf-plan-price" style="color:#059669">$0</span>
+          <span class="hf-plan-price-period">/ mes</span>
+        </div>
+        <p class="hf-plan-price-future" style="color:#6ee7b7">Sin costo, para siempre</p>
+      </div>
+
+      <div class="hf-simple-feats">
+        {% for feat in plan.features %}
+        <div class="hf-simple-feat ok">
+          <i class="bi bi-check-circle-fill"></i><span>{{ feat }}</span>
+        </div>
+        {% endfor %}
+        {% for lim in plan.limits %}
+        <div class="hf-simple-feat lim">
+          <i class="bi bi-x-circle-fill"></i><span>{{ lim }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="hf-plan-cta-wrap">
+        {% if is_current %}
+          <button class="hf-plan-cta current" disabled>
+            <i class="bi bi-patch-check-fill me-1"></i>Plan actual
+          </button>
+        {% else %}
+          <form method="POST" action="{{ url_for('technician.activate_subscription') }}" style="margin:0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="plan" value="basico">
+            <button type="submit" class="hf-plan-cta cta-free">
+              Comenzar gratis &nbsp;<i class="bi bi-arrow-right"></i>
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ── PROFESIONAL — Trial 90 dias ── #}
+  {% set plan = plans.profesional %}
+  {% set is_current = (_prof and _prof.subscription_active and _prof.subscription_plan == 'profesional') %}
+  <div class="col-12 col-md-4">
+    <div class="hf-plan-card popular-card">
+      <div class="hf-popular-pill">Mas popular</div>
+      <div class="hf-plan-hdr" style="padding-top:2.25rem">
+        <div class="hf-plan-icon-wrap"
+             style="background:{{ plan.gradient }};border:1.5px solid {{ plan.border }}">
+          <i class="bi {{ plan.icon }}" style="color:{{ plan.color }}"></i>
+        </div>
+        <span class="hf-plan-badge-chip"
+              style="background:{{ plan.badge_bg }};color:{{ plan.badge_color }}">PRO</span>
+        <p class="hf-plan-name">{{ plan.name }}</p>
+        <div class="hf-plan-price-row">
+          <span class="hf-plan-price" style="color:#0d6efd">$25.000</span>
+          <span class="hf-plan-price-period">/ mes</span>
+        </div>
+        <p class="hf-plan-price-future" style="color:#94a3b8">Activo en modo sandbox sin costo</p>
+      </div>
+
+      <div class="hf-feat-groups">
+        {% for group in plan.groups %}
+        <div class="hf-feat-group">
+          <div class="hf-feat-group-title">
+            <i class="bi {{ group.icon }}" style="color:{{ group.color }}"></i>
+            {{ group.title }}
+          </div>
+          {% for item in group['items'] %}
+          <div class="hf-feat-item">
+            <i class="bi bi-check-circle-fill"></i><span>{{ item }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="hf-plan-cta-wrap">
+        {% if is_current %}
+          <button class="hf-plan-cta current" disabled>
+            <i class="bi bi-patch-check-fill me-1"></i>Plan actual
+          </button>
+        {% else %}
+          <form method="POST" action="{{ url_for('technician.activate_subscription') }}" style="margin:0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="plan" value="profesional">
+            <button type="submit" class="hf-plan-cta cta-profesional">
+              Elegir Profesional &nbsp;<i class="bi bi-arrow-right"></i>
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ── ELITE — Trial 365 dias ── #}
+  {% set plan = plans.elite %}
+  {% set is_current = (_prof and _prof.subscription_active and _prof.subscription_plan == 'elite') %}
+  <div class="col-12 col-md-4">
+    <div class="hf-plan-card elite-card">
+      <div class="hf-plan-hdr">
+        <div class="hf-plan-icon-wrap"
+             style="background:{{ plan.gradient }};border:1.5px solid {{ plan.border }}">
+          <i class="bi {{ plan.icon }}" style="color:{{ plan.color }}"></i>
+        </div>
+        <span class="hf-plan-badge-chip"
+              style="background:{{ plan.badge_bg }};color:{{ plan.badge_color }}">ELITE</span>
+        <p class="hf-plan-name">{{ plan.name }}</p>
+        <div class="hf-plan-price-row">
+          <span class="hf-plan-price" style="color:#7c3aed">$55.000</span>
+          <span class="hf-plan-price-period">/ mes</span>
+        </div>
+        <p class="hf-plan-price-future" style="color:#94a3b8">Activo en modo sandbox sin costo</p>
+      </div>
+
+      <div class="hf-feat-groups">
+        {% for group in plan.groups %}
+        <div class="hf-feat-group">
+          <div class="hf-feat-group-title">
+            <i class="bi {{ group.icon }}" style="color:{{ group.color }}"></i>
+            {{ group.title }}
+          </div>
+          {% for item in group['items'] %}
+          <div class="hf-feat-item">
+            <i class="bi bi-check-circle-fill"></i><span>{{ item }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="hf-plan-cta-wrap">
+        {% if is_current %}
+          <button class="hf-plan-cta current" disabled>
+            <i class="bi bi-patch-check-fill me-1"></i>Plan actual
+          </button>
+        {% else %}
+          <form method="POST" action="{{ url_for('technician.activate_subscription') }}" style="margin:0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="plan" value="elite">
+            <button type="submit" class="hf-plan-cta cta-elite">
+              Elegir Elite &nbsp;<i class="bi bi-arrow-right"></i>
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>{# /row #}
+
+{# ══ TABLA COMPARATIVA ══ #}
+<div class="hf-compare-wrap mb-4">
+  <div class="hf-compare-head">
+    <p class="fw-bold mb-0" style="color:#0a2540;font-size:.9rem">
+      <i class="bi bi-table me-1" style="color:#0d6efd"></i>Comparacion rapida
+    </p>
+  </div>
+  <div class="table-responsive">
+    <table class="table mb-0" style="font-size:.84rem">
+      <thead style="background:#f8fafc">
+        <tr>
+          <th style="padding:.7rem 1.25rem;border-bottom:1.5px solid #deedf9;color:#64748b;font-weight:700">Caracteristica</th>
+          <th class="text-center" style="padding:.7rem;border-bottom:1.5px solid #deedf9;color:#059669;font-weight:800">Basico</th>
+          <th class="text-center" style="padding:.7rem;border-bottom:1.5px solid #deedf9;color:#0d6efd;font-weight:800">Profesional</th>
+          <th class="text-center" style="padding:.7rem;border-bottom:1.5px solid #deedf9;color:#7c3aed;font-weight:800">Elite</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set rows = [
+          ('Precio mensual',            'Gratis (siempre)',  '$25.000/mes',    '$55.000/mes'),
+          ('Reservas al mes',           '10 max.',           'Ilimitadas',     'Ilimitadas'),
+          ('Badge verificado',          '&#8212;',           'PRO',            'ELITE'),
+          ('Posicion en busquedas',     'Estandar',          'Destacado',      '#1 garantizado'),
+          ('Seccion recomendados',      '&#8212;',           'Incluido',       'Posicion #1'),
+          ('Estadisticas',              '&#8212;',           'Basicas',        'Avanzadas + reporte'),
+          ('Soporte',                   'Correo',            'Prioritario',    '24/7 dedicado'),
+          ('Verificacion',              'Normal',            'Normal',         'Menos de 24h'),
+          ('Redes sociales HogarFix',   '&#8212;',           '&#8212;',        'Incluido'),
+        ] %}
+        {% for label, v1, v2, v3 in rows %}
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:.55rem 1.25rem;color:#475569;font-weight:500">{{ label }}</td>
+          <td class="text-center" style="padding:.55rem">
+            {% if v1 == '&#8212;' %}<span style="color:#e2e8f0">&mdash;</span>
+            {% elif 'siempre' in v1.lower() %}<span style="color:#059669;font-weight:700">{{ v1 }}</span>
+            {% else %}<span style="color:#475569">{{ v1 }}</span>{% endif %}
+          </td>
+          <td class="text-center" style="padding:.55rem">
+            {% if v2 == '&#8212;' %}<span style="color:#e2e8f0">&mdash;</span>
+            {% else %}<span style="color:#0d6efd;font-weight:600">{{ v2 }}</span>{% endif %}
+          </td>
+          <td class="text-center" style="padding:.55rem">
+            {% if v3 == '&#8212;' %}<span style="color:#e2e8f0">&mdash;</span>
+            {% else %}<span style="color:#7c3aed;font-weight:600">{{ v3 }}</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# ── FAQ ── #}
+<div class="row g-3 mb-4">
+  {% set faqs = [
+    ('bi-question-circle-fill','#0d6efd','Necesito tarjeta de credito?',
+     'No. Durante el periodo de prueba todo es completamente gratuito, sin datos de pago.'),
+    ('bi-arrow-repeat','#7c3aed','Puedo cambiar de plan?',
+     'Si, en cualquier momento. El nuevo plan se activa inmediatamente y reemplaza el anterior.'),
+    ('bi-x-circle-fill','#dc2626','Puedo cancelar?',
+     'Si. Cancela cuando quieras desde la seccion Mi suscripcion. Sin penalizaciones ni cargos.'),
+  ] %}
+  {% for icon, color, q, a in faqs %}
+  <div class="col-12 col-md-4">
+    <div class="rounded-4 p-3 h-100" style="background:#fff;border:1.5px solid #deedf9">
+      <i class="bi {{ icon }} mb-2 d-block" style="color:{{ color }};font-size:1.2rem"></i>
+      <p class="fw-bold mb-1" style="font-size:.87rem;color:#0a2540">{{ q }}</p>
+      <p class="small mb-0 text-secondary">{{ a }}</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<p class="text-center small" style="color:#94a3b8;padding-bottom:1rem">
+  <i class="bi bi-shield-lock-fill me-1" style="color:#22c55e"></i>
+  <strong style="color:#475569">Sin compromisos.</strong>
+  El plan Basico es gratuito para siempre.
+  Los planes de pago solo se activaran cuando habilitemos la pasarela de pagos.
+</p>
+
+{% endblock %}

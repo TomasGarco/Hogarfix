@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hf-card hf-legal-card rounded-4 p-4 p-lg-5" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+      <p class="hf-dash-overline mb-1">Legal</p>
+      <h1 class="h3 mb-0">Politica de cancelacion</h1>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn hf-btn-outline btn-sm" id="btnPdfCancelacion" type="button">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF
+      </button>
+      <a class="btn hf-btn-action btn-sm" href="{{ url_for('main.politicas') }}#terminos">
+        <i class="bi bi-arrow-right-circle me-1"></i> Ver politicas completas
+      </a>
+    </div>
+  </div>
+  <p class="text-secondary">Esta politica define como cancelar, reagendar y gestionar incidencias de una reserva en HogarFix. Aplica para clientes y tecnicos desde el momento en que una solicitud es creada hasta la finalizacion del servicio.</p>
+  <div class="d-grid gap-3 mt-4">
+    <div>
+      <h2 class="h5">1. Alcance y definiciones</h2>
+      <p class="mb-0 text-secondary">Una reserva puede estar en estado pendiente, confirmada o cancelada. Esta politica cubre cancelaciones voluntarias, ausencias, rechazos, reprogramaciones y casos de fuerza mayor. Todas las acciones quedan registradas para control de calidad y seguridad operativa.</p>
+    </div>
+    <div>
+      <h2 class="h5">2. Cancelacion por parte del cliente</h2>
+      <p class="mb-0 text-secondary">El cliente puede cancelar desde el historial de reservas. Si la cancelacion ocurre con 24 horas o mas de anticipacion, no afecta su reputacion. Si ocurre con menos de 24 horas, puede impactar su reputacion y prioridad de atencion en futuras solicitudes.</p>
+    </div>
+    <div>
+      <h2 class="h5">3. Cancelacion por parte del tecnico</h2>
+      <p class="mb-0 text-secondary">Cuando un tecnico cancela una reserva confirmada, el sistema notifica al cliente y libera el horario. Cancelaciones reiteradas sin causa valida reducen visibilidad del tecnico en resultados y pueden generar suspension temporal o definitiva de su cuenta.</p>
+    </div>
+    <div>
+      <h2 class="h5">4. No presentacion y llegadas tardias</h2>
+      <p class="mb-0 text-secondary">Si una de las partes no se presenta en el horario acordado sin aviso previo, se registra como incidencia. Una demora mayor a 30 minutos sin comunicacion previa puede tratarse como cancelacion tardia y afectar la reputacion de quien incumple.</p>
+    </div>
+    <div>
+      <h2 class="h5">5. Reagendamiento</h2>
+      <p class="mb-0 text-secondary">Si ambas partes estan de acuerdo, la reserva puede reprogramarse con nueva fecha y hora. Si no hay acuerdo, se debe cancelar y crear una nueva solicitud para evitar confusiones operativas y mantener trazabilidad del servicio.</p>
+    </div>
+    <div>
+      <h2 class="h5">6. Fuerza mayor y excepciones</h2>
+      <p class="mb-0 text-secondary">Eventos como emergencias medicas, incidentes de seguridad, fallas graves de transporte, desastres naturales o cortes criticos de servicios pueden considerarse fuerza mayor. Debe reportarse la situacion tan pronto sea posible para evaluar ajustes sin sancion automatica.</p>
+    </div>
+    <div>
+      <h2 class="h5">7. Soporte y resolucion de casos</h2>
+      <p class="mb-0 text-secondary">Para cancelaciones urgentes o disputas, escribe a <a href="https://mail.google.com/mail/?view=cm&to=soporte@hogarfix.co" target="_blank" rel="noopener noreferrer">soporte@hogarfix.co</a> con numero de reserva, fecha, descripcion del caso y evidencia disponible. HogarFix revisa cada situacion y puede aplicar medidas correctivas para proteger a ambas partes.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+document.getElementById('btnPdfCancelacion').addEventListener('click', function () {
+  var btn = this; btn.disabled = true;
+  async function buildPDF(logo) {
+    try {
+      var { jsPDF } = window.jspdf;
+      var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      var pageW = doc.internal.pageSize.getWidth();
+      var margin = 18;
+      var usableW = pageW - margin * 2;
+      var y = 0;
+      function footer() {
+        var h = doc.internal.pageSize.getHeight();
+        doc.setFontSize(8); doc.setTextColor(140,140,140);
+        doc.text('© HogarFix 2026 - Todos los derechos reservados', pageW/2, h-8, {align:'center'});
+      }
+      doc.setFillColor(10,37,64);
+      doc.rect(0,0,pageW,50,'F');
+      if (logo) { doc.addImage(logo,'PNG',margin,7,52,18); }
+      else { doc.setFontSize(22); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.text('HogarFix',margin,20); }
+      doc.setFontSize(12); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
+      doc.text('Politica de Cancelacion', margin, 34);
+      doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(0,212,255);
+      doc.text('Generado: ' + new Date().toLocaleDateString('es-CO'), margin, 43);
+      y = 58; footer();
+    var sections = [
+      ['1. Alcance y definiciones','Esta politica aplica a clientes y tecnicos desde la creacion hasta la finalizacion de la reserva. Cubre cancelaciones voluntarias, no presentacion, reprogramaciones y eventos de fuerza mayor.'],
+      ['2. Cancelacion por cliente','El cliente puede cancelar desde su historial. Con 24 horas o mas de anticipacion no hay impacto reputacional. Con menos de 24 horas puede afectar reputacion y prioridad en futuras solicitudes.'],
+      ['3. Cancelacion por tecnico','Si el tecnico cancela una reserva confirmada, se notifica al cliente y se libera el horario. Reiteraciones sin causa valida pueden reducir visibilidad y generar suspension temporal o definitiva.'],
+      ['4. No presentacion y llegadas tardias','Si alguna parte no se presenta o llega con mas de 30 minutos de retraso sin aviso, puede registrarse como incidencia y tratarse como cancelacion tardia.'],
+      ['5. Reagendamiento','Si cliente y tecnico acuerdan nueva fecha, la reserva puede reprogramarse. Si no hay acuerdo, se recomienda cancelar y crear una nueva solicitud para mantener trazabilidad.'],
+      ['6. Fuerza mayor y excepciones','Emergencias medicas, incidentes de seguridad, desastres naturales o fallas criticas pueden considerarse fuerza mayor. Debe reportarse oportunamente para evaluar excepciones sin sancion automatica.'],
+      ['7. Soporte y resolucion','Para casos urgentes o disputas, escribe a soporte@hogarfix.co indicando numero de reserva, fecha del servicio, descripcion y evidencia. HogarFix revisa el caso y aplica medidas de proteccion para ambas partes.'],
+    ];
+    sections.forEach(function(s) {
+      if (y > 265) { doc.addPage(); y = 18; footer(); }
+      doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(10,37,64);
+      doc.text(s[0], margin, y); y += 6;
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+      var lines = doc.splitTextToSize(s[1], usableW);
+      lines.forEach(function(l){ if(y>265){doc.addPage();y=18;footer();} doc.text(l, margin, y); y+=5; });
+      y += 5;
+    });
+      var filename = 'HogarFix-Cancelacion.pdf';
+      if (window.showSaveFilePicker) {
+        try {
+          var blob = doc.output('blob');
+          var fh = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Documento PDF', accept: { 'application/pdf': ['.pdf'] } }] });
+          var writable = await fh.createWritable(); await writable.write(blob); await writable.close();
+        } catch(saveErr) { if (saveErr.name !== 'AbortError') doc.save(filename); }
+      } else { doc.save(filename); }
+    } catch(e) { alert('No fue posible generar el PDF.'); }
+    btn.disabled = false;
+  }
+  var img = new Image(); img.crossOrigin='anonymous';
+  img.onload = function(){ var c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext('2d').drawImage(img,0,0); buildPDF(c.toDataURL('image/png')); };
+  img.onerror = function(){ buildPDF(null); };
+  img.src = "{{ url_for('static', filename='img/logo-hogarfix.png') }}";
+});
+</script>
+{% endblock %}

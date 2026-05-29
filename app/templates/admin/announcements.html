@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% block page_title %}Anuncios{% endblock %}
+{% block content %}
+
+<section class="hf-dash-hero hf-dash-hero-admin rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <p class="hf-dash-overline mb-1"><i class="bi bi-megaphone-fill me-1"></i>Centro de control</p>
+      <h1 class="h3 mb-1">Anuncios promocionales</h1>
+      <p class="mb-0 hf-dash-subline">Gestiona los popups que ven los usuarios al entrar a la plataforma.</p>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn hf-btn-outline">
+      <i class="bi bi-arrow-left me-1"></i>Volver al panel
+    </a>
+  </div>
+</section>
+
+{# ── Formulario: crear anuncio ─────────────────────────────────────── #}
+<div class="hf-card rounded-4 p-4 mb-4" data-aos="fade-up" data-aos-delay="60">
+  <h2 class="h5 mb-3">
+    <i class="bi bi-plus-circle-fill me-2" style="color:var(--hf-cyan)"></i>Nuevo anuncio
+  </h2>
+  <form method="post" action="{{ url_for('admin.create_announcement') }}" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+
+      <div class="col-12">
+        <label class="form-label fw-semibold small mb-1">Título <span class="text-danger">*</span></label>
+        <input type="text" name="titulo" class="form-control form-control-sm"
+               placeholder="Ej: ¡Nueva función disponible! 🎉" required maxlength="120">
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-semibold small mb-1">Mensaje (opcional)</label>
+        <textarea name="mensaje" class="form-control form-control-sm" rows="3"
+                  placeholder="Descripción breve del anuncio..." maxlength="500"></textarea>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-semibold small mb-1">
+          <i class="bi bi-image me-1"></i>URL de imagen / banner (opcional)
+        </label>
+        <input type="url" name="imagen" class="form-control form-control-sm"
+               placeholder="https://... o /static/img/nombre.jpg">
+        <small class="text-muted">Imagen mostrada en la parte superior del popup.</small>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-semibold small mb-1">
+          <i class="bi bi-link-45deg me-1"></i>Texto del botón CTA (opcional)
+        </label>
+        <input type="text" name="boton_texto" class="form-control form-control-sm"
+               placeholder="Ej: Ver oferta" maxlength="60">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-semibold small mb-1">
+          <i class="bi bi-arrow-right-circle me-1"></i>Enlace del botón CTA
+        </label>
+        <input type="text" name="boton_link" class="form-control form-control-sm"
+               placeholder="Ej: /buscar  o  https://...">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label fw-semibold small mb-1">Fecha de inicio (opcional)</label>
+        <input type="datetime-local" name="fecha_inicio" class="form-control form-control-sm">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label fw-semibold small mb-1">Fecha de fin (opcional)</label>
+        <input type="datetime-local" name="fecha_fin" class="form-control form-control-sm">
+      </div>
+
+      <div class="col-12 d-flex align-items-center gap-3 flex-wrap">
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" name="activo" id="newActivo" checked>
+          <label class="form-check-label small fw-semibold" for="newActivo">Activar inmediatamente</label>
+        </div>
+        <button type="submit" class="btn hf-btn-primary ms-auto">
+          <i class="bi bi-plus-lg me-1"></i>Crear anuncio
+        </button>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+{# ── Lista de anuncios ─────────────────────────────────────────────── #}
+<div data-aos="fade-up" data-aos-delay="80">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 m-0">
+      <i class="bi bi-collection-fill me-2" style="color:var(--hf-orange)"></i>Historial
+      <span class="badge ms-1 rounded-pill" style="background:#e0f2fe;color:#0369a1;font-size:.72rem">{{ announcements|length }}</span>
+    </h2>
+  </div>
+
+  {% if announcements %}
+    <div class="row g-3">
+      {% for ann in announcements %}
+        {% set is_live = ann.is_currently_active %}
+        <div class="col-12">
+          <div class="hf-card rounded-4 p-4" style="border-left:4px solid {% if is_live %}#16a34a{% elif ann.activo %}#f59e0b{% else %}#d1d5db{% endif %}">
+
+            {# Header #}
+            <div class="d-flex flex-wrap align-items-start gap-3 mb-3">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                  <span class="h6 mb-0 fw-bold" style="color:#0a2540">{{ ann.titulo }}</span>
+                  {% if is_live %}
+                    <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.68rem">
+                      <i class="bi bi-circle-fill me-1" style="font-size:.4rem;vertical-align:middle"></i>En vivo
+                    </span>
+                  {% elif ann.activo %}
+                    <span class="badge" style="background:#fef9c3;color:#854d0e;font-size:.68rem">Activo (fuera de rango)</span>
+                  {% else %}
+                    <span class="badge" style="background:#f1f5f9;color:#64748b;font-size:.68rem">Inactivo</span>
+                  {% endif %}
+                </div>
+                <p class="small text-muted mb-0">
+                  ID #{{ ann.id }} &nbsp;·&nbsp; Creado: {{ ann.created_at.strftime('%d/%m/%Y %H:%M') }}
+                  {% if ann.fecha_inicio %}&nbsp;·&nbsp; Desde: {{ ann.fecha_inicio.strftime('%d/%m/%Y') }}{% endif %}
+                  {% if ann.fecha_fin %}&nbsp;·&nbsp; Hasta: {{ ann.fecha_fin.strftime('%d/%m/%Y') }}{% endif %}
+                </p>
+              </div>
+
+              {# Acciones rápidas #}
+              <div class="d-flex gap-2 flex-shrink-0">
+                <a href="/?preview_ann={{ ann.id }}"
+                   class="btn btn-sm"
+                   style="background:#e0f2fe;color:#0369a1;border:1px solid #93c5fd;"
+                   title="Ver cómo aparece el modal en el sitio">
+                  <i class="bi bi-eye-fill me-1"></i>Preview
+                </a>
+                <form method="post" action="{{ url_for('admin.toggle_announcement', ann_id=ann.id) }}" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm"
+                          style="background:{% if ann.activo %}#fef9c3;color:#854d0e{% else %}#dcfce7;color:#15803d{% endif %};border:1px solid {% if ann.activo %}#fbbf24{% else %}#86efac{% endif %};">
+                    <i class="bi bi-{% if ann.activo %}pause-fill{% else %}play-fill{% endif %} me-1"></i>
+                    {{ 'Desactivar' if ann.activo else 'Activar' }}
+                  </button>
+                </form>
+                <button class="btn btn-sm btn-outline-secondary" type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#editAnn{{ ann.id }}">
+                  <i class="bi bi-pencil-fill me-1"></i>Editar
+                </button>
+                <form method="post" action="{{ url_for('admin.delete_announcement', ann_id=ann.id) }}"
+                      onsubmit="return confirm('¿Eliminar este anuncio?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash3-fill"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {# Vista previa #}
+            {% if ann.mensaje %}
+              <p class="small text-secondary mb-2 fst-italic" style="line-height:1.6">
+                "{{ ann.mensaje[:180] }}{% if ann.mensaje|length > 180 %}…{% endif %}"
+              </p>
+            {% endif %}
+            <div class="d-flex flex-wrap gap-2 small">
+              {% if ann.imagen %}
+                <span class="badge" style="background:#ede9fe;color:#5b21b6">
+                  <i class="bi bi-image me-1"></i>Imagen
+                </span>
+              {% endif %}
+              {% if ann.boton_texto %}
+                <span class="badge" style="background:#fff0e0;color:#c45200">
+                  <i class="bi bi-cursor-fill me-1"></i>CTA: {{ ann.boton_texto }}
+                </span>
+              {% endif %}
+            </div>
+
+            {# Formulario de edición (colapsable) #}
+            <div class="collapse mt-3 pt-3 border-top" id="editAnn{{ ann.id }}">
+              <form method="post" action="{{ url_for('admin.edit_announcement', ann_id=ann.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="row g-2">
+                  <div class="col-12">
+                    <input type="text" name="titulo" class="form-control form-control-sm"
+                           value="{{ ann.titulo }}" required maxlength="120"
+                           placeholder="Título *">
+                  </div>
+                  <div class="col-12">
+                    <textarea name="mensaje" class="form-control form-control-sm" rows="2"
+                              maxlength="500" placeholder="Mensaje (opcional)">{{ ann.mensaje or '' }}</textarea>
+                  </div>
+                  <div class="col-md-6">
+                    <input type="text" name="imagen" class="form-control form-control-sm"
+                           value="{{ ann.imagen or '' }}" placeholder="URL imagen (opcional)">
+                  </div>
+                  <div class="col-md-3">
+                    <input type="text" name="boton_texto" class="form-control form-control-sm"
+                           value="{{ ann.boton_texto or '' }}" placeholder="Texto botón">
+                  </div>
+                  <div class="col-md-3">
+                    <input type="text" name="boton_link" class="form-control form-control-sm"
+                           value="{{ ann.boton_link or '' }}" placeholder="Enlace botón">
+                  </div>
+                  <div class="col-md-4">
+                    <input type="datetime-local" name="fecha_inicio" class="form-control form-control-sm"
+                           value="{{ ann.fecha_inicio.strftime('%Y-%m-%dT%H:%M') if ann.fecha_inicio else '' }}">
+                  </div>
+                  <div class="col-md-4">
+                    <input type="datetime-local" name="fecha_fin" class="form-control form-control-sm"
+                           value="{{ ann.fecha_fin.strftime('%Y-%m-%dT%H:%M') if ann.fecha_fin else '' }}">
+                  </div>
+                  <div class="col-md-4 d-flex align-items-center gap-3">
+                    <div class="form-check form-switch mb-0">
+                      <input class="form-check-input" type="checkbox" name="activo"
+                             id="editActivo{{ ann.id }}" {% if ann.activo %}checked{% endif %}>
+                      <label class="form-check-label small" for="editActivo{{ ann.id }}">Activo</label>
+                    </div>
+                    <button type="submit" class="btn btn-sm hf-btn-primary ms-auto">
+                      <i class="bi bi-check2 me-1"></i>Guardar
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="hf-empty-state rounded-4 p-5 text-center">
+      <i class="bi bi-megaphone" style="font-size:2.5rem;color:#b0c4d8"></i>
+      <h3 class="h5 mt-3 mb-1">Sin anuncios creados</h3>
+      <p class="text-secondary small">Crea el primer anuncio con el formulario de arriba.</p>
+    </div>
+  {% endif %}
+</div>
+
+{# ── Nota técnica #}
+<div class="rounded-3 p-3 mt-4 small text-secondary" style="background:#f8fafc;border:1px dashed #cbd5e1">
+  <i class="bi bi-info-circle me-1"></i>
+  <strong>¿Cómo funciona?</strong> El anuncio activo más reciente (dentro de sus fechas) aparece
+  automáticamente al entrar al sitio. Cada anuncio se muestra <strong>una sola vez por dispositivo/navegador</strong>
+  — si el usuario lo cierra, no vuelve a aparecer para ese usuario en ese dispositivo.
+  Para que reaparezca (nuevo día / nueva campaña) simplemente <strong>crea un nuevo anuncio</strong>.
+</div>
+
+{% endblock %}

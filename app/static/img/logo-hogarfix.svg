@@ -1,0 +1,15 @@
+<svg width="560" height="110" viewBox="0 0 560 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- House outline -->
+  <path d="M55 22L12 58H20V90H50V68H60V90H90V58H98L55 22Z" fill="#0A2540"/>
+  <!-- Cyan fill lower-left room -->
+  <path d="M22 58V88H48V66H62V88H50V68H22Z" fill="#00C8F0"/>
+  <path d="M22 58L55 27L88 58H22Z" fill="none"/>
+  <!-- Cyan door/window area -->
+  <rect x="23" y="58" width="26" height="30" rx="2" fill="#00C8F0"/>
+  <!-- Orange upper-right accent panel -->
+  <path d="M62 46L88 60V58L55 22L62 46Z" fill="#FF6B00"/>
+  <!-- White inner window detail -->
+  <rect x="29" y="64" width="14" height="14" rx="2" fill="white" opacity="0.35"/>
+  <!-- Text -->
+  <text x="110" y="76" font-family="Poppins, Segoe UI, sans-serif" font-size="58" font-weight="700" fill="#0A2540" letter-spacing="-1">HogarFix</text>
+</svg>

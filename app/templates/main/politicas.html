@@ -1,0 +1,856 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="hf-policies-wrap" data-aos="fade-up">
+
+  <!-- ── Header ───────────────────────────────────────────────── -->
+  <div class="hf-policies-hero text-center mb-5">
+    <img src="{{ url_for('static', filename='img/logo-hogarfix.svg') }}" alt="HogarFix" class="hf-policies-logo mb-3">
+    <h1 class="h2 fw-bold mb-1">Politicas de Privacidad y Seguridad</h1>
+    <p class="text-secondary mb-2">Transparencia y proteccion para nuestros usuarios</p>
+    <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+      <span class="hf-policy-badge"><i class="bi bi-patch-check-fill me-1"></i> Version {{ policies_version }}</span>
+      <span class="hf-policy-badge hf-policy-badge--gray"><i class="bi bi-calendar3 me-1"></i> Actualizado: {{ policies_updated }}</span>
+      <button class="btn hf-btn-outline btn-sm" id="btnDownloadPDF" type="button">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Navegacion rapida ─────────────────────────────────────── -->
+  <div class="hf-policy-nav mb-4 d-flex flex-wrap gap-2 justify-content-center">
+    <a href="#privacidad" class="hf-policy-navbtn"><i class="bi bi-shield-lock"></i> Privacidad</a>
+    <a href="#terminos" class="hf-policy-navbtn"><i class="bi bi-file-text"></i> Terminos</a>
+    <a href="#seguridad" class="hf-policy-navbtn"><i class="bi bi-lock"></i> Seguridad</a>
+    <a href="#cookies" class="hf-policy-navbtn"><i class="bi bi-cookie"></i> Cookies</a>
+  </div>
+
+  <!-- ── 1. Politica de Privacidad ─────────────────────────────── -->
+  <div class="hf-card rounded-4 p-0 mb-4 overflow-hidden" id="privacidad">
+    <div class="hf-policy-section-head d-flex align-items-center gap-3 px-4 py-3" data-bs-toggle="collapse" data-bs-target="#colPrivacidad" role="button" aria-expanded="true">
+      <span class="hf-policy-icon hf-policy-icon--blue"><i class="bi bi-shield-lock-fill"></i></span>
+      <div>
+        <h2 class="h5 mb-0 fw-bold">Politica de Privacidad</h2>
+        <span class="small text-secondary">Como recopilamos y protegemos tus datos</span>
+      </div>
+      <i class="bi bi-chevron-down ms-auto hf-policy-chevron"></i>
+    </div>
+    <div class="collapse show" id="colPrivacidad">
+      <div class="px-4 pb-4">
+        <div class="hf-policy-body">
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-sm hf-btn-outline" data-pdf-section="privacidad" type="button">
+              <i class="bi bi-file-earmark-pdf me-1"></i> Descargar Privacidad PDF
+            </button>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-house-heart me-2"></i>Quienes somos</h3>
+            <p>HogarFix es una plataforma digital colombiana que conecta a usuarios con tecnicos verificados para la contratacion de servicios del hogar en Bogota. Operamos bajo la normativa colombiana de proteccion de datos personales (Ley 1581 de 2012 y Decreto 1377 de 2013).</p>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-database me-2"></i>Datos que recopilamos</h3>
+            <p>Recopilamos la informacion estrictamente necesaria para prestarte el servicio:</p>
+            <ul class="hf-policy-list">
+              <li><strong>Datos de identidad:</strong> Nombre completo, tipo de cuenta (cliente o tecnico)</li>
+              <li><strong>Datos de contacto:</strong> Correo electronico, numero de telefono</li>
+              <li><strong>Datos de ubicacion:</strong> Localidad y barrio en Bogota, direccion del servicio</li>
+              <li><strong>Datos tecnicos:</strong> Direccion IP, tipo de navegador y sistema operativo</li>
+              <li><strong>Datos de uso:</strong> Historial de reservas, calificaciones y mensajes en plataforma</li>
+              <li><strong>Datos de verificacion (tecnicos):</strong> Foto de cedula, selfie de verificacion</li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-bullseye me-2"></i>Para que usamos tus datos</h3>
+            <ul class="hf-policy-list">
+              <li>Crear y gestionar tu cuenta en la plataforma</li>
+              <li>Conectarte con tecnicos disponibles en tu zona</li>
+              <li>Enviar notificaciones de reservas y actualizaciones del servicio</li>
+              <li>Verificar la identidad de los tecnicos para garantizar tu seguridad</li>
+              <li>Detectar y prevenir fraudes o actividades sospechosas</li>
+              <li>Mejorar la plataforma con base en patrones de uso anonimizados</li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-balance-scale me-2"></i>Base legal</h3>
+            <p>El tratamiento de tus datos se realiza con base en:</p>
+            <ul class="hf-policy-list">
+              <li><strong>Tu consentimiento</strong> al registrarte y aceptar estas politicas</li>
+              <li><strong>Ejecucion del contrato</strong> entre tu y HogarFix para prestarte el servicio</li>
+              <li><strong>Interes legitimo</strong> en la prevencion de fraudes y seguridad de la plataforma</li>
+              <li><strong>Obligacion legal</strong> cuando la ley colombiana lo requiera</li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-share me-2"></i>Comparticion de datos</h3>
+            <p>No vendemos tus datos personales. Solo los compartimos con:</p>
+            <ul class="hf-policy-list">
+              <li><strong>Tecnicos:</strong> Tu nombre, localidad y descripcion del servicio (nunca tu direccion exacta hasta confirmar la reserva)</li>
+              <li><strong>Proveedores de servicios:</strong> Plataformas de correo (para notificaciones), Google (si usas login con Google)</li>
+              <li><strong>Autoridades:</strong> Solo cuando la ley colombiana lo exija mediante orden judicial</li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-clock-history me-2"></i>Tiempo de almacenamiento</h3>
+            <ul class="hf-policy-list">
+              <li>Datos de cuenta activa: mientras la cuenta este activa</li>
+              <li>Historial de reservas: 5 anos desde la fecha del servicio</li>
+              <li>Logs de acceso: 90 dias</li>
+              <li>Datos de verificacion de tecnicos: hasta 1 ano despues de cierre de cuenta</li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-person-check me-2"></i>Tus derechos</h3>
+            <p>Tienes derecho a:</p>
+            <div class="row g-2 mt-1">
+              <div class="col-md-6"><div class="hf-right-chip"><i class="bi bi-eye me-1"></i> Acceder a tus datos personales</div></div>
+              <div class="col-md-6"><div class="hf-right-chip"><i class="bi bi-pencil me-1"></i> Rectificar datos incorrectos</div></div>
+              <div class="col-md-6"><div class="hf-right-chip"><i class="bi bi-trash me-1"></i> Solicitar eliminacion de tu cuenta</div></div>
+              <div class="col-md-6"><div class="hf-right-chip"><i class="bi bi-download me-1"></i> Portabilidad de datos</div></div>
+              <div class="col-md-6"><div class="hf-right-chip"><i class="bi bi-x-circle me-1"></i> Revocar consentimiento</div></div>
+              <div class="col-md-6"><div class="hf-right-chip"><i class="bi bi-envelope me-1"></i> Presentar quejas ante la SIC</div></div>
+            </div>
+            <p class="mt-3 small text-secondary">Para ejercer estos derechos, escribe a: <a href="mailto:privacidad@hogarfix.co" class="hf-link">privacidad@hogarfix.co</a></p>
+          </div>
+
+          <div class="hf-policy-item mb-0">
+            <h3 class="hf-policy-item-title"><i class="bi bi-envelope-at me-2"></i>Contacto</h3>
+            <p class="mb-0">Responsable del tratamiento: HogarFix S.A.S. &bull; Bogota, Colombia &bull; <a href="mailto:privacidad@hogarfix.co" class="hf-link">privacidad@hogarfix.co</a></p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. Terminos y Condiciones ──────────────────────────────── -->
+  <div class="hf-card rounded-4 p-0 mb-4 overflow-hidden" id="terminos">
+    <div class="hf-policy-section-head d-flex align-items-center gap-3 px-4 py-3" data-bs-toggle="collapse" data-bs-target="#colTerminos" role="button" aria-expanded="false">
+      <span class="hf-policy-icon hf-policy-icon--green"><i class="bi bi-file-text-fill"></i></span>
+      <div>
+        <h2 class="h5 mb-0 fw-bold">Terminos y Condiciones</h2>
+        <span class="small text-secondary">Reglas de uso de la plataforma HogarFix</span>
+      </div>
+      <i class="bi bi-chevron-down ms-auto hf-policy-chevron"></i>
+    </div>
+    <div class="collapse" id="colTerminos">
+      <div class="px-4 pb-4">
+        <div class="hf-policy-body">
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-sm hf-btn-outline" data-pdf-section="terminos" type="button">
+              <i class="bi bi-file-earmark-pdf me-1"></i> Descargar Terminos PDF
+            </button>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-laptop me-2"></i>Uso de la plataforma</h3>
+            <p>HogarFix es un intermediario tecnologico. Facilitamos el contacto entre clientes y tecnicos, pero no somos parte directa del contrato de servicio. Al registrarte aceptas:</p>
+            <ul class="hf-policy-list">
+              <li>Usar la plataforma solo con fines licitos</li>
+              <li>No suplantar identidades ni crear cuentas falsas</li>
+              <li>No publicar contenido ofensivo, falso o engañoso</li>
+              <li>Respetar a los demas usuarios de la plataforma</li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-person me-2"></i>Responsabilidad del cliente</h3>
+            <ul class="hf-policy-list">
+              <li>Proveer informacion veraz sobre el servicio que necesitas</li>
+              <li>Garantizar el acceso al lugar del servicio en la fecha acordada</li>
+              <li>Tratar con respeto al tecnico asignado</li>
+              <li>Realizar el pago segun lo acordado</li>
+              <li>Dejar una valoracion honesta del servicio recibido</li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-tools me-2"></i>Responsabilidad del tecnico</h3>
+            <ul class="hf-policy-list">
+              <li>Proporcionar informacion veraz sobre sus capacidades y experiencia</li>
+              <li>Cumplir con las reservas confirmadas puntualmente</li>
+              <li>Ejecutar el servicio con calidad y materiales adecuados</li>
+              <li>Mantener vigente la documentacion de verificacion</li>
+              <li>No solicitar pagos fuera de la plataforma sin acuerdo previo</li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-cash-coin me-2"></i>Pagos y reservas</h3>
+            <ul class="hf-policy-list">
+              <li>El precio del servicio es acordado directamente entre el cliente y el tecnico</li>
+              <li>HogarFix no procesa pagos actualmente; la plataforma es de contacto y gestion</li>
+              <li>Las reservas se confirman cuando el tecnico acepta la solicitud</li>
+              <li>Se recomienda acordar el precio antes de iniciar cualquier trabajo</li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-calendar-x me-2"></i>Cancelaciones</h3>
+            <ul class="hf-policy-list">
+              <li>Clientes pueden cancelar con al menos 24 horas de anticipacion sin penalizacion</li>
+              <li>Cancelaciones con menos de 24 horas pueden afectar la reputacion del usuario</li>
+              <li>Tecnicos que cancelen reiteradamente podran ser suspendidos de la plataforma</li>
+              <li>En caso de fuerza mayor, contacta a <a href="https://mail.google.com/mail/?view=cm&to=soporte@hogarfix.co" target="_blank" rel="noopener noreferrer">soporte@hogarfix.co</a></li>
+            </ul>
+          </div>
+
+          <div class="hf-policy-item mb-0">
+            <h3 class="hf-policy-item-title"><i class="bi bi-slash-circle me-2"></i>Suspension de cuentas</h3>
+            <p>HogarFix puede suspender o eliminar cuentas que:</p>
+            <ul class="hf-policy-list mb-0">
+              <li>Incumplan repetidamente estos terminos</li>
+              <li>Realicen actividades fraudulentas o ilegales</li>
+              <li>Reciban multiples reportes de otros usuarios</li>
+              <li>Presenten documentacion de verificacion falsa</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. Politica de Seguridad ───────────────────────────────── -->
+  <div class="hf-card rounded-4 p-0 mb-4 overflow-hidden" id="seguridad">
+    <div class="hf-policy-section-head d-flex align-items-center gap-3 px-4 py-3" data-bs-toggle="collapse" data-bs-target="#colSeguridad" role="button" aria-expanded="false">
+      <span class="hf-policy-icon hf-policy-icon--orange"><i class="bi bi-lock-fill"></i></span>
+      <div>
+        <h2 class="h5 mb-0 fw-bold">Politica de Seguridad</h2>
+        <span class="small text-secondary">Como protegemos tu cuenta e informacion</span>
+      </div>
+      <i class="bi bi-chevron-down ms-auto hf-policy-chevron"></i>
+    </div>
+    <div class="collapse" id="colSeguridad">
+      <div class="px-4 pb-4">
+        <div class="hf-policy-body">
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-sm hf-btn-outline" data-pdf-section="seguridad" type="button">
+              <i class="bi bi-file-earmark-pdf me-1"></i> Descargar Seguridad PDF
+            </button>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <div class="hf-security-card">
+                <i class="bi bi-lock hf-security-icon"></i>
+                <h4 class="hf-security-title">HTTPS en todo el sitio</h4>
+                <p class="small mb-0">Toda la comunicacion entre tu navegador y nuestros servidores esta cifrada con TLS. El candado verde en tu navegador lo confirma.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="hf-security-card">
+                <i class="bi bi-key hf-security-icon"></i>
+                <h4 class="hf-security-title">Contrasenas seguras</h4>
+                <p class="small mb-0">Las contrasenas se almacenan con hash bcrypt/scrypt. Nunca guardamos tu contrasena en texto plano. Requerimos contrasenas fuertes con mayusculas, numeros y caracteres especiales.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="hf-security-card">
+                <i class="bi bi-phone hf-security-icon"></i>
+                <h4 class="hf-security-title">Verificacion en dos pasos (2FA)</h4>
+                <p class="small mb-0">Cada inicio de sesion requiere un codigo de 6 digitos enviado a tu correo. Incluso con Google o Microsoft, el pin de seguridad es obligatorio.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="hf-security-card">
+                <i class="bi bi-shield-exclamation hf-security-icon"></i>
+                <h4 class="hf-security-title">Alertas de acceso inusual</h4>
+                <p class="small mb-0">Si detectamos un inicio de sesion desde una IP o dispositivo diferente al habitual, te enviamos un correo de alerta automaticamente.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="hf-security-card">
+                <i class="bi bi-bug hf-security-icon"></i>
+                <h4 class="hf-security-title">Proteccion contra ataques</h4>
+                <p class="small mb-0">Implementamos proteccion CSRF en todos los formularios, sanitizacion de entradas contra XSS y consultas parametrizadas para prevenir inyeccion SQL.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="hf-security-card">
+                <i class="bi bi-person-vcard hf-security-icon"></i>
+                <h4 class="hf-security-title">Verificacion de tecnicos</h4>
+                <p class="small mb-0">Todos los tecnicos pasan por un proceso de verificacion de identidad con cedula y selfie antes de poder recibir reservas activas en la plataforma.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="hf-policy-item mb-0">
+            <h3 class="hf-policy-item-title"><i class="bi bi-activity me-2"></i>Monitoreo de actividad</h3>
+            <p class="mb-0">Registramos los inicios de sesion (IP, dispositivo, fecha) para detectar accesos no autorizados. Esta informacion no se comparte y se elimina automaticamente a los 90 dias.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4. Politica de Cookies ─────────────────────────────────── -->
+  <div class="hf-card rounded-4 p-0 mb-5 overflow-hidden" id="cookies">
+    <div class="hf-policy-section-head d-flex align-items-center gap-3 px-4 py-3" data-bs-toggle="collapse" data-bs-target="#colCookies" role="button" aria-expanded="false">
+      <span class="hf-policy-icon hf-policy-icon--purple"><i class="bi bi-cookie"></i></span>
+      <div>
+        <h2 class="h5 mb-0 fw-bold">Politica de Cookies</h2>
+        <span class="small text-secondary">Que cookies usamos y como puedes gestionarlas</span>
+      </div>
+      <i class="bi bi-chevron-down ms-auto hf-policy-chevron"></i>
+    </div>
+    <div class="collapse" id="colCookies">
+      <div class="px-4 pb-4">
+        <div class="hf-policy-body">
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-sm hf-btn-outline" data-pdf-section="cookies" type="button">
+              <i class="bi bi-file-earmark-pdf me-1"></i> Descargar Cookies PDF
+            </button>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-question-circle me-2"></i>Que son las cookies</h3>
+            <p>Las cookies son pequenos archivos de texto que tu navegador guarda en tu dispositivo cuando visitas un sitio web. Nos permiten recordar tu sesion y preferencias para ofrecerte una mejor experiencia.</p>
+          </div>
+
+          <div class="hf-policy-item">
+            <h3 class="hf-policy-item-title"><i class="bi bi-grid-3x3-gap me-2"></i>Tipos de cookies que usamos</h3>
+            <div class="table-responsive mt-2">
+              <table class="table table-borderless hf-policy-table">
+                <thead>
+                  <tr>
+                    <th>Tipo</th>
+                    <th>Finalidad</th>
+                    <th>Duracion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="hf-cookie-tag hf-cookie-tag--blue">Tecnicas</span></td>
+                    <td>Mantener tu sesion iniciada, proteccion CSRF</td>
+                    <td>Sesion / 30 dias</td>
+                  </tr>
+                  <tr>
+                    <td><span class="hf-cookie-tag hf-cookie-tag--green">Funcionales</span></td>
+                    <td>Recordar preferencias de idioma y configuracion</td>
+                    <td>1 ano</td>
+                  </tr>
+                  <tr>
+                    <td><span class="hf-cookie-tag hf-cookie-tag--orange">Analiticas</span></td>
+                    <td>Estadisticas anonimas de uso (en desarrollo)</td>
+                    <td>90 dias</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="hf-policy-item mb-0">
+            <h3 class="hf-policy-item-title"><i class="bi bi-sliders me-2"></i>Como gestionarlas</h3>
+            <p>Puedes controlar y eliminar cookies desde la configuracion de tu navegador:</p>
+            <ul class="hf-policy-list mb-0">
+              <li><strong>Chrome:</strong> Configuracion &rarr; Privacidad y seguridad &rarr; Cookies</li>
+              <li><strong>Firefox:</strong> Preferencias &rarr; Privacidad y seguridad</li>
+              <li><strong>Safari:</strong> Preferencias &rarr; Privacidad</li>
+              <li><strong>Edge:</strong> Configuracion &rarr; Privacidad, busqueda y servicios</li>
+            </ul>
+            <p class="small text-secondary mt-2 mb-0">Nota: Desactivar las cookies tecnicas puede impedir el inicio de sesion y otras funciones basicas de HogarFix.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CTA aceptacion ─────────────────────────────────────────── -->
+  {% if current_user.is_authenticated %}
+  <div class="hf-policy-accept-bar text-center mb-5" id="policyAcceptBar">
+    <p class="mb-2 small text-secondary">Si aun no has registrado tu aceptacion formal de esta version</p>
+    <button class="btn hf-btn-action" id="btnAcceptPolicies" type="button">
+      <i class="bi bi-check-circle me-1"></i> Confirmar aceptacion de politicas v{{ policies_version }}
+    </button>
+    <div id="acceptFeedback" class="mt-2 small" style="display:none;"></div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ── Boton volver arriba ─────────────────────────────────────── -->
+<button class="hf-backtotop" id="backToTop" type="button" aria-label="Volver arriba" title="Volver arriba">
+  <i class="bi bi-chevron-up"></i>
+</button>
+
+<!-- ── Modal cookies banner ───────────────────────────────────── -->
+<div class="modal fade" id="cookieModal" tabindex="-1" aria-label="Cookies" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-4 border-0 shadow-sm">
+      <div class="modal-body p-4">
+        <h5 class="fw-bold mb-2"><i class="bi bi-cookie me-2"></i>Usamos cookies</h5>
+        <p class="small mb-3">HogarFix usa cookies tecnicas esenciales para que la plataforma funcione correctamente. Sin ellas no puedes iniciar sesion ni navegar de forma segura.</p>
+        <div class="d-flex gap-2">
+          <button class="btn hf-btn-action btn-sm flex-grow-1" id="btnAcceptCookies">Aceptar</button>
+          <a href="#cookies" class="btn hf-btn-outline btn-sm" data-bs-dismiss="modal">Mas info</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ── Chevron animation ─────────────────────────────────── */
+  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function (trigger) {
+    var targetId = trigger.getAttribute('data-bs-target');
+    var collapseEl = document.querySelector(targetId);
+    var chevron = trigger.querySelector('.hf-policy-chevron');
+    if (!collapseEl || !chevron) return;
+    collapseEl.addEventListener('show.bs.collapse', function () { chevron.style.transform = 'rotate(180deg)'; });
+    collapseEl.addEventListener('hide.bs.collapse', function () { chevron.style.transform = 'rotate(0deg)'; });
+  });
+
+  /* ── Smooth scroll for nav buttons ────────────────────── */
+  document.querySelectorAll('.hf-policy-navbtn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var targetId = this.getAttribute('href').replace('#', '');
+      var el = document.getElementById(targetId);
+      if (!el) return;
+      var collapseTarget = el.querySelector('.collapse');
+      if (collapseTarget && !collapseTarget.classList.contains('show')) {
+        var bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseTarget);
+        bsCollapse.show();
+      }
+      setTimeout(function () {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    });
+  });
+
+  /* ── Back to top ───────────────────────────────────────── */
+  var backBtn = document.getElementById('backToTop');
+  window.addEventListener('scroll', function () {
+    backBtn.classList.toggle('hf-backtotop--visible', window.scrollY > 400);
+  });
+  backBtn.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  /* ── Cookie modal (show once per session) ──────────────── */
+  if (!sessionStorage.getItem('hf_cookies_ok')) {
+    var cookieModal = new bootstrap.Modal(document.getElementById('cookieModal'));
+    setTimeout(function () { cookieModal.show(); }, 600);
+    document.getElementById('btnAcceptCookies').addEventListener('click', function () {
+      sessionStorage.setItem('hf_cookies_ok', '1');
+      cookieModal.hide();
+    });
+  }
+
+  /* ── PDF Utilities ─────────────────────────────────────── */
+  var _LOGO_URL = "{{ url_for('static', filename='img/logo-hogarfix.png') }}";
+  var _PVER     = "{{ policies_version }}";
+  var _PUPD     = "{{ policies_updated }}";
+
+  var SECTIONS_DATA = {
+    privacidad: {
+      runHead:  'POLITICA DE PRIVACIDAD - HOGARFIX',
+      title:    'Politica de Privacidad',
+      subtitle: 'Tratamiento de Datos Personales',
+      filename: 'HogarFix-Privacidad-v' + _PVER + '.pdf',
+      color:    [13, 110, 253],
+      subsections: [
+        { heading: '1. Quienes Somos',
+          body: 'HogarFix es una plataforma digital colombiana que conecta a usuarios con tecnicos verificados para la contratacion de servicios del hogar en Bogota. Operamos bajo la normativa colombiana de proteccion de datos personales (Ley 1581 de 2012 y Decreto 1377 de 2013).' },
+        { heading: '2. Datos que Recopilamos',
+          body: 'Recopilamos la informacion estrictamente necesaria para prestarte el servicio:',
+          list: ['Datos de identidad: Nombre completo, tipo de cuenta (cliente o tecnico).',
+                 'Datos de contacto: Correo electronico, numero de telefono.',
+                 'Datos de ubicacion: Localidad y barrio en Bogota, direccion del servicio.',
+                 'Datos tecnicos: Direccion IP, tipo de navegador y sistema operativo.',
+                 'Datos de uso: Historial de reservas, calificaciones y mensajes en plataforma.',
+                 'Datos de verificacion (tecnicos): Foto de cedula, selfie de verificacion.'] },
+        { heading: '3. Finalidad del Tratamiento',
+          list: ['Crear y gestionar tu cuenta en la plataforma.',
+                 'Conectarte con tecnicos disponibles en tu zona.',
+                 'Enviar notificaciones de reservas y actualizaciones del servicio.',
+                 'Verificar la identidad de los tecnicos para garantizar tu seguridad.',
+                 'Detectar y prevenir fraudes o actividades sospechosas.',
+                 'Mejorar la plataforma con base en patrones de uso anonimizados.'] },
+        { heading: '4. Base Legal',
+          body: 'El tratamiento de tus datos se realiza con base en:',
+          list: ['Tu consentimiento al registrarte y aceptar estas politicas.',
+                 'Ejecucion del contrato entre tu y HogarFix para prestarte el servicio.',
+                 'Interes legitimo en la prevencion de fraudes y seguridad de la plataforma.',
+                 'Obligacion legal cuando la ley colombiana lo requiera.'] },
+        { heading: '5. Comparticion de Datos',
+          body: 'No vendemos tus datos personales. Solo los compartimos con:',
+          list: ['Tecnicos: Tu nombre, localidad y descripcion del servicio (nunca tu direccion exacta hasta confirmar la reserva).',
+                 'Proveedores de servicios: Plataformas de correo (notificaciones), Google (login social).',
+                 'Autoridades: Solo cuando la ley colombiana lo exija mediante orden judicial.'] },
+        { heading: '6. Tiempo de Almacenamiento',
+          list: ['Datos de cuenta activa: mientras la cuenta este activa.',
+                 'Historial de reservas: 5 anos desde la fecha del servicio.',
+                 'Logs de acceso: 90 dias.',
+                 'Datos de verificacion de tecnicos: hasta 1 ano despues del cierre de cuenta.'] },
+        { heading: '7. Tus Derechos (Ley 1581 de 2012)',
+          body: 'Conforme a la normativa colombiana, tienes derecho a:',
+          list: ['Acceder a tus datos personales almacenados en la plataforma.',
+                 'Rectificar datos incorrectos o desactualizados.',
+                 'Solicitar la eliminacion de tu cuenta y datos asociados.',
+                 'Portabilidad: recibir tus datos en formato legible por maquina.',
+                 'Revocar el consentimiento para el tratamiento de tus datos.',
+                 'Presentar quejas ante la Superintendencia de Industria y Comercio (SIC).'] },
+        { heading: '8. Contacto',
+          body: 'Responsable del tratamiento: HogarFix S.A.S. | Bogota, Colombia\nCorreo: privacidad@hogarfix.co' }
+      ]
+    },
+    terminos: {
+      runHead:  'TERMINOS Y CONDICIONES - HOGARFIX',
+      title:    'Terminos y Condiciones',
+      subtitle: 'Reglas de Uso de la Plataforma HogarFix',
+      filename: 'HogarFix-Terminos-v' + _PVER + '.pdf',
+      color:    [25, 135, 84],
+      subsections: [
+        { heading: '1. Uso de la Plataforma',
+          body: 'HogarFix es un intermediario tecnologico. Facilitamos el contacto entre clientes y tecnicos, pero no somos parte directa del contrato de servicio. Al registrarte aceptas:',
+          list: ['Usar la plataforma solo con fines licitos.',
+                 'No suplantar identidades ni crear cuentas falsas.',
+                 'No publicar contenido ofensivo, falso o enganoso.',
+                 'Respetar a los demas usuarios de la plataforma.'] },
+        { heading: '2. Responsabilidad del Cliente',
+          list: ['Proveer informacion veraz sobre el servicio que necesita.',
+                 'Garantizar el acceso al lugar del servicio en la fecha acordada.',
+                 'Tratar con respeto al tecnico asignado.',
+                 'Realizar el pago segun lo acordado.',
+                 'Dejar una valoracion honesta del servicio recibido.'] },
+        { heading: '3. Responsabilidad del Tecnico',
+          list: ['Proporcionar informacion veraz sobre sus capacidades y experiencia.',
+                 'Cumplir con las reservas confirmadas puntualmente.',
+                 'Ejecutar el servicio con calidad y materiales adecuados.',
+                 'Mantener vigente la documentacion de verificacion.',
+                 'No solicitar pagos fuera de la plataforma sin acuerdo previo.'] },
+        { heading: '4. Pagos y Reservas',
+          list: ['El precio del servicio es acordado directamente entre el cliente y el tecnico.',
+                 'HogarFix no procesa pagos actualmente; la plataforma es de contacto y gestion.',
+                 'Las reservas se confirman cuando el tecnico acepta la solicitud.',
+                 'Se recomienda acordar el precio antes de iniciar cualquier trabajo.'] },
+        { heading: '5. Politica de Cancelaciones',
+          list: ['Clientes pueden cancelar con al menos 24 horas de anticipacion sin penalizacion.',
+                 'Cancelaciones con menos de 24 horas pueden afectar la reputacion del usuario.',
+                 'Tecnicos que cancelen reiteradamente podran ser suspendidos de la plataforma.',
+                 'En caso de fuerza mayor, contacta a soporte@hogarfix.co.'] },
+        { heading: '6. Suspension y Cierre de Cuentas',
+          body: 'HogarFix puede suspender o eliminar cuentas que:',
+          list: ['Incumplan repetidamente estos terminos de uso.',
+                 'Realicen actividades fraudulentas o ilegales.',
+                 'Reciban multiples reportes de otros usuarios.',
+                 'Presenten documentacion de verificacion falsa.'] }
+      ]
+    },
+    seguridad: {
+      runHead:  'POLITICA DE SEGURIDAD - HOGARFIX',
+      title:    'Politica de Seguridad',
+      subtitle: 'Proteccion de Cuentas e Informacion',
+      filename: 'HogarFix-Seguridad-v' + _PVER + '.pdf',
+      color:    [220, 80, 0],
+      subsections: [
+        { heading: '1. Cifrado y HTTPS',
+          body: 'Toda la comunicacion entre tu navegador y nuestros servidores esta cifrada con TLS 1.2+. Las contrasenas se almacenan con hash bcrypt/scrypt, nunca en texto plano. Requerimos contrasenas fuertes con mayusculas, numeros y caracteres especiales.' },
+        { heading: '2. Verificacion en Dos Pasos (2FA)',
+          body: 'Cada inicio de sesion requiere un codigo OTP de 6 digitos enviado a tu correo electronico. Esta verificacion aplica tambien para inicios de sesion con Google o Microsoft, garantizando que solo tu puedas acceder a tu cuenta.' },
+        { heading: '3. Alertas de Acceso Inusual',
+          body: 'Si detectamos un inicio de sesion desde una IP o dispositivo diferente al habitual, te enviamos automaticamente un correo de alerta para que puedas verificar o tomar accion inmediata.' },
+        { heading: '4. Proteccion Contra Ataques',
+          list: ['CSRF: todos los formularios incluyen tokens de proteccion contra falsificacion de solicitudes.',
+                 'XSS: sanitizamos todas las entradas de texto antes de procesarlas o mostrarlas.',
+                 'SQL Injection: usamos consultas parametrizadas en todas las operaciones de base de datos.',
+                 'Brute Force: limitamos los intentos de inicio de sesion fallidos consecutivos.'] },
+        { heading: '5. Verificacion de Tecnicos',
+          body: 'Todos los tecnicos pasan por un proceso de verificacion de identidad antes de poder recibir reservas activas:',
+          list: ['Foto frontal de cedula de ciudadania.',
+                 'Selfie de verificacion en tiempo real.',
+                 'Revision manual por parte del equipo HogarFix.',
+                 'Aprobacion o rechazo notificado por correo electronico.'] },
+        { heading: '6. Monitoreo de Actividad',
+          body: 'Registramos los inicios de sesion (IP, dispositivo, fecha y hora) para detectar accesos no autorizados. Esta informacion no se comparte con terceros y se elimina automaticamente a los 90 dias.' },
+        { heading: '7. Reporte de Vulnerabilidades',
+          body: 'Si descubres una vulnerabilidad de seguridad en HogarFix, reportala de forma responsable antes de divulgarla publicamente. Escribe a: seguridad@hogarfix.co' }
+      ]
+    },
+    cookies: {
+      runHead:  'POLITICA DE COOKIES - HOGARFIX',
+      title:    'Politica de Cookies',
+      subtitle: 'Uso y Gestion de Cookies en la Plataforma',
+      filename: 'HogarFix-Cookies-v' + _PVER + '.pdf',
+      color:    [111, 66, 193],
+      subsections: [
+        { heading: '1. Que son las Cookies',
+          body: 'Las cookies son pequenos archivos de texto que tu navegador guarda en tu dispositivo cuando visitas un sitio web. Nos permiten recordar tu sesion y preferencias para ofrecerte una mejor experiencia de uso.' },
+        { heading: '2. Tipos de Cookies que Usamos',
+          list: ['Tecnicas (obligatorias): Mantienen tu sesion iniciada y proveen proteccion CSRF. Duracion: sesion / 30 dias.',
+                 'Funcionales: Recuerdan preferencias de idioma y configuracion. Duracion: 1 ano.',
+                 'Analiticas: Estadisticas anonimas de uso para mejorar la plataforma (en desarrollo). Duracion: 90 dias.'] },
+        { heading: '3. Como Gestionarlas',
+          body: 'Puedes controlar y eliminar cookies desde la configuracion de tu navegador:',
+          list: ['Google Chrome: Configuracion > Privacidad y seguridad > Cookies y otros datos de sitios.',
+                 'Mozilla Firefox: Preferencias > Privacidad y seguridad > Cookies.',
+                 'Apple Safari: Preferencias > Privacidad > Cookies y datos de sitios web.',
+                 'Microsoft Edge: Configuracion > Privacidad, busqueda y servicios > Cookies.'] },
+        { heading: '4. Impacto de Desactivar Cookies',
+          body: 'Desactivar las cookies tecnicas impide el inicio de sesion y otras funciones basicas de HogarFix. Las cookies funcionales y analiticas son opcionales y su desactivacion no afecta el funcionamiento principal de la plataforma.' },
+        { heading: '5. Actualizaciones de esta Politica',
+          body: 'HogarFix puede actualizar esta politica cuando sea necesario. Te notificaremos de cambios relevantes mediante el banner de cookies en tu proxima visita. La fecha de ultima actualizacion aparece siempre en el encabezado de este documento.' }
+      ]
+    }
+  };
+
+  function _loadLogo(cb) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function () {
+      var c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      cb(c.toDataURL('image/png'));
+    };
+    img.onerror = function () { cb(null); };
+    img.src = _LOGO_URL;
+  }
+
+  async function _savePDF(doc, filename) {
+    if (window.showSaveFilePicker) {
+      try {
+        var blob = doc.output('blob');
+        var fh = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'Documento PDF', accept: { 'application/pdf': ['.pdf'] } }]
+        });
+        var w = await fh.createWritable();
+        await w.write(blob); await w.close();
+        return;
+      } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    doc.save(filename);
+  }
+
+  /* ── APA section PDF builder ─────────────────────────── */
+  async function buildSectionPDF(sectionKey, logo) {
+    var sec = SECTIONS_DATA[sectionKey];
+    var { jsPDF } = window.jspdf;
+    var doc    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    var pageW  = doc.internal.pageSize.getWidth();
+    var pageH  = doc.internal.pageSize.getHeight();
+    var mg     = 25.4;
+    var usable = pageW - mg * 2;
+    var y      = 0;
+    var dateStr = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    function addRunHead() {
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 100, 100);
+      doc.text(sec.runHead, mg, 11);
+      doc.text('Pag. ' + doc.internal.getCurrentPageInfo().pageNumber, pageW - mg, 11, { align: 'right' });
+      doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
+      doc.line(mg, 13.5, pageW - mg, 13.5);
+    }
+    function addFooterLine() {
+      doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
+      doc.line(mg, pageH - 14, pageW - mg, pageH - 14);
+      doc.setFontSize(7.5); doc.setTextColor(140, 140, 140);
+      doc.text('\u00a9 HogarFix S.A.S. 2026 | privacidad@hogarfix.co | Bogota, Colombia', pageW / 2, pageH - 9, { align: 'center' });
+    }
+    function newPage() {
+      doc.addPage(); y = mg + 4;
+      addRunHead(); addFooterLine();
+    }
+    function checkY(needed) { if (y + (needed || 10) > pageH - mg - 10) newPage(); }
+
+    /* Portada */
+    doc.setFillColor(10, 37, 64);
+    doc.rect(0, 0, pageW, 54, 'F');
+    if (logo) { doc.addImage(logo, 'PNG', mg, 8, 54, 18); }
+    else { doc.setFontSize(22); doc.setFont('helvetica', 'bold'); doc.setTextColor(255,255,255); doc.text('HogarFix', mg, 22); }
+    addRunHead(); addFooterLine();
+
+    var cx = pageW / 2;
+    y = 76;
+    doc.setFontSize(18); doc.setFont('helvetica', 'bold'); doc.setTextColor(10, 37, 64);
+    doc.text(sec.title, cx, y, { align: 'center' }); y += 9;
+    doc.setFontSize(12); doc.setFont('helvetica', 'normal'); doc.setTextColor(80, 80, 80);
+    doc.text(sec.subtitle, cx, y, { align: 'center' }); y += 10;
+    doc.setDrawColor(sec.color[0], sec.color[1], sec.color[2]); doc.setLineWidth(1);
+    doc.line(cx - 38, y, cx + 38, y); y += 10;
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(55, 55, 55);
+    doc.text('HogarFix S.A.S.', cx, y, { align: 'center' }); y += 6;
+    doc.text('Bogota, Colombia', cx, y, { align: 'center' }); y += 6;
+    doc.text('Version ' + _PVER + '  |  Actualizado: ' + _PUPD, cx, y, { align: 'center' }); y += 6;
+    doc.text('Generado: ' + dateStr, cx, y, { align: 'center' }); y += 16;
+    doc.setFontSize(8); doc.setFont('helvetica', 'italic'); doc.setTextColor(120, 120, 120);
+    var apaRef = 'Referencia APA: HogarFix S.A.S. (' + new Date().getFullYear() + '). ' + sec.title + ' (v' + _PVER + '). https://hogarfix.co/politicas';
+    var apaLines = doc.splitTextToSize(apaRef, usable);
+    apaLines.forEach(function(l){ doc.text(l, mg, y); y += 5; }); y += 10;
+
+    /* Subsecciones con formato APA */
+    sec.subsections.forEach(function(sub) {
+      checkY(22);
+      doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+      doc.setTextColor(sec.color[0], sec.color[1], sec.color[2]);
+      doc.text(sub.heading, mg, y); y += 7;
+
+      if (sub.body) {
+        doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(35, 35, 35);
+        var bLines = doc.splitTextToSize(sub.body, usable);
+        bLines.forEach(function(l){ checkY(6); doc.text(l, mg, y); y += 5.5; });
+        y += 2;
+      }
+      if (sub.list) {
+        sub.list.forEach(function(item) {
+          checkY(8);
+          doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(35, 35, 35);
+          var wrapped = doc.splitTextToSize('\u2022  ' + item, usable - 6);
+          wrapped.forEach(function(l, i){
+            checkY(6);
+            doc.text(i === 0 ? l : '    ' + l.trim(), mg + 4, y);
+            y += 5.5;
+          });
+        });
+        y += 2;
+      }
+      y += 6;
+    });
+
+    await _savePDF(doc, sec.filename);
+  }
+
+  /* ── Individual section download buttons ───────────── */
+  document.querySelectorAll('[data-pdf-section]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var key  = btn.getAttribute('data-pdf-section');
+      if (!SECTIONS_DATA[key]) return;
+      var orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Generando...';
+      _loadLogo(function (logo) {
+        buildSectionPDF(key, logo)
+          .catch(function(err){ console.error(err); alert('No fue posible generar el PDF.'); })
+          .finally(function(){ btn.disabled = false; btn.innerHTML = orig; });
+      });
+    });
+  });
+
+  /* ── PDF Generator (todas las secciones) ─────────────── */
+  document.getElementById('btnDownloadPDF').addEventListener('click', function () {
+    var btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Generando...';
+
+    async function buildAllPDF(logoDataUrl) {
+      try {
+        var { jsPDF } = window.jspdf;
+        var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        var pageW = doc.internal.pageSize.getWidth();
+        var margin = 18;
+        var usableW = pageW - margin * 2;
+        var y = 0;
+        var dateStr = new Date().toLocaleDateString('es-CO');
+
+        function checkPage(needed) {
+          if (y + (needed || 10) > 272) { doc.addPage(); y = 18; addFooter(); }
+        }
+        function addFooter() {
+          var h = doc.internal.pageSize.getHeight();
+          doc.setFontSize(8); doc.setTextColor(140, 140, 140);
+          doc.text('\u00a9 HogarFix 2026 - Todos los derechos reservados | privacidad@hogarfix.co', pageW / 2, h - 8, { align: 'center' });
+          doc.text('Pag. ' + doc.internal.getCurrentPageInfo().pageNumber, pageW - margin, h - 8, { align: 'right' });
+        }
+
+        doc.setFillColor(10, 37, 64);
+        doc.rect(0, 0, pageW, 50, 'F');
+        if (logoDataUrl) { doc.addImage(logoDataUrl, 'PNG', margin, 7, 52, 18); }
+        else { doc.setFontSize(22); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.text('HogarFix', margin, 20); }
+        doc.setFontSize(12); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
+        doc.text('Politicas de Privacidad y Seguridad', margin, 34);
+        doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(0,212,255);
+        doc.text('Version ' + _PVER + ' | Actualizado: ' + _PUPD + ' | Generado: ' + dateStr, margin, 43);
+        y = 60; addFooter();
+
+        var allSections = [
+          { key: 'privacidad', label: '1. Politica de Privacidad',   color: [13,110,253] },
+          { key: 'terminos',   label: '2. Terminos y Condiciones',    color: [25,135,84] },
+          { key: 'seguridad',  label: '3. Politica de Seguridad',     color: [220,80,0] },
+          { key: 'cookies',    label: '4. Politica de Cookies',       color: [111,66,193] }
+        ];
+
+        allSections.forEach(function(s) {
+          var sec = SECTIONS_DATA[s.key];
+          checkPage(20);
+          doc.setFillColor(s.color[0], s.color[1], s.color[2]);
+          doc.roundedRect(margin - 2, y - 5, usableW + 4, 12, 3, 3, 'F');
+          doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+          doc.text(s.label, margin + 2, y + 3); y += 14;
+
+          sec.subsections.forEach(function(sub) {
+            checkPage(14);
+            doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+            doc.text(sub.heading, margin, y); y += 5;
+            doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(70,70,70);
+            var content = (sub.body || '') + (sub.list ? (sub.body ? '\n' : '') + sub.list.map(function(i){ return '\u2022 ' + i; }).join('\n') : '');
+            var lines = doc.splitTextToSize(content, usableW);
+            lines.forEach(function(l){ checkPage(6); doc.text(l, margin + 2, y); y += 5; });
+            y += 3;
+          });
+          y += 5;
+        });
+
+        var filename = 'HogarFix-Politicas-v' + _PVER + '.pdf';
+        await _savePDF(doc, filename);
+      } catch (err) {
+        console.error('PDF error:', err);
+        alert('No fue posible generar el PDF. Intenta de nuevo.');
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-file-earmark-pdf me-1"></i> Descargar PDF';
+    }
+
+    _loadLogo(function(logo) { buildAllPDF(logo); });
+  });
+
+  /* ── Accept policies API ───────────────────────────────── */
+  var acceptBtn = document.getElementById('btnAcceptPolicies');
+  if (acceptBtn) {
+    acceptBtn.addEventListener('click', function () {
+      var btn = this;
+      var feedback = document.getElementById('acceptFeedback');
+      btn.disabled = true;
+      fetch('/api/accept-policies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '' },
+        body: JSON.stringify({ version: '{{ policies_version }}' }),
+        credentials: 'same-origin'
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        feedback.style.display = 'block';
+        if (data.ok) {
+          feedback.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Aceptacion registrada correctamente para la version ' + data.version + '.</span>';
+          btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Aceptado';
+        } else {
+          feedback.innerHTML = '<span class="text-warning">No fue posible registrar. Intenta de nuevo.</span>';
+          btn.disabled = false;
+        }
+      })
+      .catch(function () {
+        feedback.style.display = 'block';
+        feedback.innerHTML = '<span class="text-danger">Error de conexion. Intenta mas tarde.</span>';
+        btn.disabled = false;
+      });
+    });
+  }
+
+});
+</script>
+{% endblock %}

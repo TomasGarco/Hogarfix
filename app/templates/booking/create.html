@@ -1,0 +1,366 @@
+{% extends 'base_client.html' %}
+{% block page_title %}Nueva reserva{% endblock %}
+{% block client_content %}
+
+<div class="mb-4">
+  <a href="{{ url_for('main.search_technicians') }}" class="hf-back-link">
+    <i class="bi bi-arrow-left me-1"></i>Volver al buscador
+  </a>
+</div>
+
+<div class="row g-4">
+
+  {# ── Columna izquierda: perfil del técnico ── #}
+  <div class="col-lg-4">
+    <div class="hf-card rounded-4 p-0 overflow-hidden">
+
+      {# Encabezado con avatar #}
+      <div class="hf-bk-tech-head d-flex align-items-center gap-3 p-3 p-lg-4">
+        {% if profile and profile.profile_photo %}
+          <img src="{{ url_for('static', filename=profile.profile_photo) }}"
+               class="hf-bk-tech-avatar" alt="">
+        {% else %}
+          <div class="hf-bk-tech-avatar hf-bk-tech-avatar--ini">
+            {{ (profile.full_name if profile else technician.email)[:1].upper() }}
+          </div>
+        {% endif %}
+
+        <div class="flex-grow-1" style="min-width:0">
+          <h2 class="h6 mb-0 fw-bold" style="color:var(--hf-dark)">
+            {{ profile.full_name if profile else technician.email }}
+          </h2>
+          <span class="small text-secondary text-capitalize">
+            {{ profile.technician_type.replace('_',' ') if profile else 'Técnico' }}
+          </span>
+        </div>
+
+        {% if profile %}
+          {% if profile.verification_status == 'fully_verified' %}
+            <span class="hf-srp-badge hf-srp-badge--verified" title="Técnico verificado">
+              <i class="bi bi-patch-check-fill"></i>
+            </span>
+          {% elif profile.verification_status == 'basic_verified' %}
+            <span class="hf-srp-badge hf-srp-badge--basic" title="Verificación básica">
+              <i class="bi bi-check-circle-fill"></i>
+            </span>
+          {% endif %}
+        {% endif %}
+      </div>
+
+      <div class="p-3 p-lg-4 pt-0">
+        {# Descripción #}
+        {% if profile %}
+          {% set desc = profile.service_description %}
+          {% if desc %}
+            <p class="small text-secondary mb-3" style="line-height:1.5">{{ desc }}</p>
+          {% endif %}
+
+          {# Especialidades #}
+          {% if profile.specialties %}
+            <div class="d-flex flex-wrap gap-1 mb-3">
+              {% for sp in profile.specialties.split(',') %}
+                {% set sp = sp.strip() %}
+                {% if sp %}
+                  <span class="hf-srp-tag">{{ sp|title }}</span>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {# Meta info #}
+          <ul class="list-unstyled mb-0 hf-bk-info-list">
+            {% set loc0 = profile.localities.split(',')[0].strip() if profile.localities else '' %}
+            {% if loc0 %}
+              <li><i class="bi bi-geo-alt-fill" style="color:var(--hf-orange)"></i> {{ loc0|title }}</li>
+            {% endif %}
+            {% if profile.bio_base_price %}
+              <li>
+                <i class="bi bi-cash-stack" style="color:#16a34a"></i>
+                {{ profile.bio_base_price | format_cop }}
+                {% if profile.bio_charge_type %}<span class="text-muted">/ {{ profile.bio_charge_type }}</span>{% endif %}
+              </li>
+            {% elif profile.price_range %}
+              <li><i class="bi bi-tag-fill" style="color:#16a34a"></i> {{ profile.price_range }}</li>
+            {% endif %}
+          </ul>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Tip informativo #}
+    <div class="hf-bk-tip rounded-4 p-3 mt-3">
+      <i class="bi bi-info-circle-fill me-2" style="color:var(--hf-cyan)"></i>
+      <span class="small">Tu reserva queda <strong>pendiente</strong> hasta que el técnico la confirme. Te notificaremos por correo.</span>
+    </div>
+  </div>
+
+  {# ── Columna derecha: formulario ── #}
+  <div class="col-lg-8">
+    <div class="hf-card rounded-4 p-3 p-lg-4">
+      <h1 class="h5 fw-bold mb-1" style="color:var(--hf-dark)">
+        <i class="bi bi-calendar-plus me-2" style="color:var(--hf-cyan)"></i>Datos de la reserva
+      </h1>
+      <p class="small text-muted mb-4">Revisa y completa la información. Los campos marcados con * son obligatorios.</p>
+
+      {# ── Info del cliente (solo lectura) ── #}
+      <div class="hf-bk-client-info rounded-3 p-3 mb-4">
+        <p class="small fw-bold mb-2" style="color:var(--hf-dark)">
+          <i class="bi bi-person-circle me-2" style="color:var(--hf-cyan)"></i>Tus datos de contacto
+        </p>
+        <div class="row g-2">
+          <div class="col-sm-4">
+            <p class="small text-muted mb-0">Nombre</p>
+            <p class="small fw-semibold mb-0">{{ current_user.full_name or current_user.email }}</p>
+          </div>
+          {% if current_user.phone %}
+          <div class="col-sm-4">
+            <p class="small text-muted mb-0">Teléfono</p>
+            <p class="small fw-semibold mb-0">{{ current_user.phone_country or '+57' }} {{ current_user.phone }}</p>
+          </div>
+          {% endif %}
+          {% if current_user.locality %}
+          <div class="col-sm-4">
+            <p class="small text-muted mb-0">Localidad registrada</p>
+            <p class="small fw-semibold mb-0">{{ current_user.locality|title }}</p>
+          </div>
+          {% endif %}
+          {% if current_user.address %}
+          <div class="col-12">
+            <p class="small text-muted mb-0">Dirección</p>
+            <p class="small fw-semibold mb-0">{{ current_user.address }}</p>
+          </div>
+          {% endif %}
+        </div>
+        <p class="small text-muted mt-2 mb-0" style="font-size:.74rem">
+          <i class="bi bi-info-circle me-1"></i>
+          El técnico verá esta información al confirmar la reserva.
+          <a href="{{ url_for('main.account_profile') }}" class="hf-back-link" style="font-size:.74rem">Actualizar perfil</a>
+        </p>
+      </div>
+
+      <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Tipo de servicio *</label>
+          <select name="service_type" class="form-select" required>
+            {% for s in services_catalog %}
+              <option value="{{ s }}" {% if pref_service == s %}selected{% endif %}>{{ s|title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Localidad del servicio *</label>
+          <input type="text" name="locality" class="form-control"
+                 value="{{ pref_locality|title }}" required
+                 placeholder="Ej: Chapinero">
+          <p class="small text-muted mt-1 mb-0">Pre-rellenada con tu localidad registrada.</p>
+        </div>
+
+        {% if current_user.address %}
+        <div class="col-12">
+          <label class="form-label fw-semibold">Dirección exacta del servicio *</label>
+          <input type="text" name="address" class="form-control"
+                 value="{{ current_user.address }}"
+                 placeholder="Ej: Calle 72 # 10-35, apto 301" required>
+        </div>
+        {% else %}
+        <div class="col-12">
+          <label class="form-label fw-semibold">Dirección exacta del servicio *</label>
+          <input type="text" name="address" class="form-control"
+                 placeholder="Ej: Calle 72 # 10-35, apto 301" required>
+          <p class="small text-warning mt-1 mb-0">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            No tienes dirección guardada. Complétala en tu perfil o ingrésala aquí.
+          </p>
+        </div>
+        {% endif %}
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Fecha *</label>
+          <input type="date" name="booking_date" id="bookingDate" class="form-control"
+                 value="{{ pref_date }}" required
+                 min="{{ now_date }}"
+                 onchange="refreshSlots(this.value)">
+          <p class="small text-muted mt-1 mb-0">Selecciona una fecha para ver los cupos.</p>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Hora</label>
+          <input type="time" name="booking_time" id="bookingTime" class="form-control" required
+                 placeholder="Selecciona un cupo abajo">
+          <p class="small text-muted mt-1 mb-0">Elige uno de los cupos disponibles.</p>
+        </div>
+
+        {# ── Panel de cupos y asignaciones ── #}
+        <div class="col-12">
+          {% if pref_date %}
+            <div class="hf-bk-slots-panel">
+
+              {# Resumen de capacidad #}
+              <div class="hf-bk-slots-summary d-flex align-items-center gap-3 flex-wrap mb-3">
+                <div class="hf-bk-slots-stat">
+                  <span class="hf-bk-slots-num" style="color:#16a34a">{{ slots|length }}</span>
+                  <span class="small text-muted">cupo{% if slots|length != 1 %}s{% endif %} libre{% if slots|length != 1 %}s{% endif %}</span>
+                </div>
+                <div class="hf-bk-slots-divider"></div>
+                <div class="hf-bk-slots-stat">
+                  <span class="hf-bk-slots-num" style="color:var(--hf-orange)">{{ booked_count }}</span>
+                  <span class="small text-muted">persona{% if booked_count != 1 %}s{% endif %} ya asignada{% if booked_count != 1 %}s{% endif %}</span>
+                </div>
+                {% if total_slots > 0 %}
+                  <div class="hf-bk-slots-divider"></div>
+                  <div class="hf-bk-slots-stat">
+                    <span class="hf-bk-slots-num" style="color:#1d4b78">{{ total_slots }}</span>
+                    <span class="small text-muted">capacidad total</span>
+                  </div>
+                  {# Barra de ocupación #}
+                  <div class="hf-bk-occ-bar-wrap flex-grow-1" style="min-width:120px">
+                    {% set pct = ((booked_count / total_slots) * 100)|round|int %}
+                    <div class="hf-bk-occ-bar">
+                      <div class="hf-bk-occ-fill"
+                           style="width:{{ pct }}%;
+                                  background:{% if pct >= 80 %}#dc2626{% elif pct >= 50 %}#f59e0b{% else %}#16a34a{% endif %}">
+                      </div>
+                    </div>
+                    <p class="small text-muted mb-0" style="font-size:.7rem">{{ pct }}% ocupado</p>
+                  </div>
+                {% endif %}
+              </div>
+
+              {# Cupos clicables #}
+              {% if slots %}
+                <p class="small fw-semibold mb-2" style="color:var(--hf-dark)">
+                  <i class="bi bi-clock me-1" style="color:var(--hf-cyan)"></i>
+                  Cupos disponibles
+                </p>
+                <div class="d-flex flex-wrap gap-2" id="slotPicker">
+                  {% for s in slots %}
+                    <button type="button" class="hf-slot-btn"
+                            data-time="{{ s.start_time.strftime('%H:%M') }}">
+                      <i class="bi bi-clock me-1" style="font-size:.75rem"></i>
+                      {{ s.start_time.strftime('%H:%M') }} – {{ s.end_time.strftime('%H:%M') }}
+                    </button>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="hf-bk-no-slots rounded-3 p-3">
+                  <i class="bi bi-calendar-x me-2"></i>
+                  No hay cupos disponibles para esa fecha. Prueba otra fecha.
+                </div>
+              {% endif %}
+
+            </div>
+          {% else %}
+            <div class="hf-bk-slots-empty rounded-3 p-3 text-center">
+              <i class="bi bi-calendar2-date me-2" style="color:var(--hf-cyan)"></i>
+              <span class="small text-secondary">Selecciona una fecha para ver los horarios disponibles y la ocupación del técnico.</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold">Describe lo que necesitas</label>
+          <textarea name="notes" rows="4" class="form-control"
+                    placeholder="Ej: Tengo una fuga en el baño principal, el grifo gotea constantemente…"></textarea>
+        </div>
+
+        {# ── Método de pago ── #}
+        <div class="col-12">
+          <label class="form-label fw-semibold">Método de pago *</label>
+          {% set raw_price = profile.bio_base_price if profile and profile.bio_base_price else '0' %}
+          {% set price_num = raw_price | replace('.','') | int(default=0) %}
+          <div id="payMethodGroup" class="d-flex flex-wrap gap-2 mt-1">
+            <label class="hf-pay-opt">
+              <input type="radio" name="payment_method" value="tarjeta" required>
+              <span><i class="bi bi-credit-card-fill me-1"></i>Tarjeta</span>
+            </label>
+            <label class="hf-pay-opt">
+              <input type="radio" name="payment_method" value="transferencia">
+              <span><i class="bi bi-bank me-1"></i>Transferencia</span>
+            </label>
+            <label class="hf-pay-opt">
+              <input type="radio" name="payment_method" value="pse">
+              <span><i class="bi bi-phone-fill me-1"></i>PSE</span>
+            </label>
+            <label class="hf-pay-opt" id="payEfectivo"
+                   {% if price_num > 200000 %}style="display:none"{% endif %}>
+              <input type="radio" name="payment_method" value="efectivo"
+                     {% if price_num <= 200000 %}checked{% endif %}
+                     {% if price_num > 200000 %}disabled{% endif %}>
+              <span><i class="bi bi-cash-coin me-1"></i>Efectivo</span>
+            </label>
+          </div>
+          {% if price_num > 200000 %}
+            <p class="small text-warning mt-2 mb-0">
+              <i class="bi bi-info-circle me-1"></i>
+              Para servicios con tarifa base superior a <strong>$200.000</strong>, el pago en efectivo no está disponible.
+            </p>
+          {% endif %}
+          {% if profile and profile.bio_base_price %}
+            <p class="small text-muted mt-1 mb-0">
+              <i class="bi bi-cash-stack me-1" style="color:#16a34a"></i>
+              Tarifa base del técnico: <strong>{{ profile.bio_base_price | format_cop }}
+              {% if profile.bio_charge_type %} / {{ profile.bio_charge_type }}{% endif %}</strong>
+            </p>
+          {% endif %}
+        </div>
+
+        <div class="col-12">
+          <button class="btn hf-btn-action px-4">
+            <i class="bi bi-calendar-check me-2"></i>Confirmar reserva
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.hf-pay-opt {
+  display: flex; align-items: center; cursor: pointer;
+  border: 2px solid #d5e8f5; border-radius: 10px;
+  padding: .45rem .9rem; font-size: .85rem; font-weight: 600; color: #1a3550;
+  transition: border-color .15s, background .15s, color .15s;
+  user-select: none;
+}
+.hf-pay-opt input[type=radio] { display: none; }
+.hf-pay-opt:has(input:checked) {
+  border-color: var(--hf-cyan,#00d4ff);
+  background: rgba(0,212,255,.1); color: #006b87;
+}
+.hf-pay-opt:hover:not(:has(input:checked)) { border-color: #a3cde8; background: #f0f9ff; }
+</style>
+<script>
+// Auto-reload page with new date to fetch available slots
+function refreshSlots(date) {
+  if (!date) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set('date', date);
+  window.location.href = url.toString();
+}
+
+// Slot picker — click to fill the time input
+document.querySelectorAll('.hf-slot-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.hf-slot-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('bookingTime').value = btn.dataset.time;
+  });
+});
+
+// Payment method — first non-disabled auto-check
+(function () {
+  const radios = document.querySelectorAll('input[name="payment_method"]');
+  const checked = Array.from(radios).some(r => r.checked && !r.disabled);
+  if (!checked) {
+    const first = Array.from(radios).find(r => !r.disabled);
+    if (first) first.checked = true;
+  }
+})();
+</script>
+{% endblock %}

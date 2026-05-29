@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{# ── HERO ──────────────────────────────────────────────────────── #}
+<section class="hf-dash-hero hf-dash-hero-admin rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <p class="hf-dash-overline mb-1">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none" style="color:inherit">Admin</a>
+        &rsaquo; Usuarios
+      </p>
+      <h1 class="h3 mb-1">Gestión de usuarios</h1>
+      <p class="mb-0 hf-dash-subline">
+        Mostrando <strong>{{ users|length }}</strong>
+        {% if selected_role == 'cliente' %}clientes{% elif selected_role == 'tecnico' %}técnicos{% else %}admins{% endif %}
+        · filtro: <em>{{ selected_age }}</em>
+      </p>
+    </div>
+    <div class="text-end">
+      <p class="mb-0 fw-bold" id="hf-adm-time" style="font-size:1.4rem;color:#0a2540">--:--</p>
+      <p class="mb-0 small" id="hf-adm-date" style="color:#4d6781;font-size:.78rem">---</p>
+      <p class="mb-0" style="font-size:.68rem;color:#8aabb8;letter-spacing:.05em">COLOMBIA · UTC−5</p>
+    </div>
+  </div>
+</section>
+
+{# ── KPIs ──────────────────────────────────────────────────────── #}
+<section class="row g-3 mb-4" data-aos="fade-up" data-aos-delay="60">
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-blue rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Total mostrados</p>
+      <p class="h3 m-0">{{ users|length }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-green rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Activos</p>
+      <p class="h3 m-0">{{ users|selectattr('is_active')|list|length }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-orange rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Inactivos</p>
+      <p class="h3 m-0">{{ users|rejectattr('is_active')|list|length }}</p>
+    </article>
+  </div>
+  <div class="col-6 col-xl-3">
+    <article class="hf-dash-kpi hf-dash-kpi-cyan rounded-4 p-3 h-100">
+      <p class="small text-secondary mb-1">Tel. verificados</p>
+      <p class="h3 m-0">{{ users|selectattr('phone_verified')|list|length }}</p>
+    </article>
+  </div>
+</section>
+
+<div class="hf-card rounded-4 p-3 mb-3" data-aos="fade-up" data-aos-delay="80">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label">Rol</label>
+      <select name="role" class="form-select">
+        <option value="cliente" {% if selected_role == 'cliente' %}selected{% endif %}>Cliente</option>
+        <option value="tecnico" {% if selected_role == 'tecnico' %}selected{% endif %}>Tecnico</option>
+        <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Admin</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Antiguedad</label>
+      <select name="age" class="form-select">
+        <option value="new" {% if selected_age == 'new' %}selected{% endif %}>Nuevos (7 dias)</option>
+        <option value="old" {% if selected_age == 'old' %}selected{% endif %}>Antiguos</option>
+        <option value="all" {% if selected_age == 'all' %}selected{% endif %}>Todos</option>
+      </select>
+    </div>
+    <div class="col-md-4 d-grid">
+      <button class="btn hf-btn-action" type="submit">Filtrar</button>
+    </div>
+  </form>
+</div>
+
+<div class="hf-card rounded-4 p-3">
+  {% if selected_role == 'tecnico' %}
+  <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+    <div>
+      <label class="form-label mb-1">Estado verificacion</label>
+      <select id="verificationFilter" class="form-select form-select-sm">
+        <option value="all">Todos</option>
+        <option value="approved">Aprobado</option>
+        <option value="rejected">Rechazado</option>
+        <option value="pending">Pendiente</option>
+      </select>
+    </div>
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <small class="text-secondary" id="verificationSummary">Cargando estado...</small>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="verificationRefreshBtn">Refrescar ahora</button>
+    </div>
+  </div>
+  {% endif %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          {% if selected_role == 'tecnico' %}
+          <th>Verificacion</th>
+          {% endif %}
+          <th>Creado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr data-user-id="{{ u.id }}">
+          <td>{{ u.email }}</td>
+          <td><span class="badge text-bg-secondary">{{ u.role }}</span></td>
+          <td>{% if u.is_active %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-warning">Inactivo</span>{% endif %}</td>
+          {% if selected_role == 'tecnico' %}
+          <td>
+            <span class="badge text-bg-secondary js-verification-badge" data-user-id="{{ u.id }}">Cargando...</span>
+          </td>
+          {% endif %}
+          <td>{{ u.created_at }}</td>
+          <td class="d-flex gap-2 align-items-center">
+            <a href="{{ url_for('admin.user_detail', user_id=u.id) }}" class="btn btn-sm hf-btn-outline">Ver detalle</a>
+            <form method="post" action="{{ url_for('admin.toggle_user_active', user_id=u.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" type="submit">{% if u.is_active %}Desactivar{% else %}Activar{% endif %}</button>
+            </form>
+            <form method="post" action="{{ url_for('admin.delete_user', user_id=u.id) }}" onsubmit="return confirm('Seguro que deseas eliminar este usuario?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="{% if selected_role == 'tecnico' %}6{% else %}5{% endif %}">No hay usuarios para ese filtro.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if selected_role == 'tecnico' %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const badges = Array.from(document.querySelectorAll('.js-verification-badge'));
+  const rows = Array.from(document.querySelectorAll('tr[data-user-id]'));
+  const filterSelect = document.getElementById('verificationFilter');
+  const refreshBtn = document.getElementById('verificationRefreshBtn');
+  const summary = document.getElementById('verificationSummary');
+  if (!badges.length) return;
+
+  function statusBadgeClass(status) {
+    if (status === 'approved') return 'text-bg-success';
+    if (status === 'rejected') return 'text-bg-danger';
+    return 'text-bg-warning';
+  }
+
+  function statusLabel(status) {
+    if (status === 'approved') return 'Aprobado';
+    if (status === 'rejected') return 'Rechazado';
+    return 'Pendiente';
+  }
+
+  function applyFilter() {
+    if (!filterSelect) return;
+    const wanted = filterSelect.value || 'all';
+    rows.forEach(function (row) {
+      const userId = row.getAttribute('data-user-id');
+      const badge = document.querySelector('.js-verification-badge[data-user-id="' + userId + '"]');
+      const status = badge ? (badge.dataset.status || 'pending') : 'pending';
+      const visible = wanted === 'all' || status === wanted;
+      row.classList.toggle('d-none', !visible);
+    });
+  }
+
+  async function refreshStatuses() {
+    try {
+      const res = await fetch('{{ url_for("api.admin_technician_verification_status") }}', {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || !Array.isArray(data.items)) return;
+
+      const byUser = new Map(data.items.map(item => [String(item.user_id), item.verification_status || 'pending']));
+      let approvedCount = 0;
+      let rejectedCount = 0;
+      let pendingCount = 0;
+
+      badges.forEach(function (badge) {
+        const userId = badge.getAttribute('data-user-id');
+        const status = byUser.get(String(userId)) || 'pending';
+        if (status === 'approved') approvedCount += 1;
+        else if (status === 'rejected') rejectedCount += 1;
+        else pendingCount += 1;
+
+        badge.dataset.status = status;
+        badge.classList.remove('text-bg-secondary', 'text-bg-success', 'text-bg-danger', 'text-bg-warning');
+        badge.classList.add(statusBadgeClass(status));
+        badge.textContent = statusLabel(status);
+      });
+
+      if (summary) {
+        summary.textContent = 'Aprobados: ' + approvedCount + ' | Rechazados: ' + rejectedCount + ' | Pendientes: ' + pendingCount;
+      }
+      applyFilter();
+    } catch (_err) {
+      // ignore temporary network errors
+      if (summary) summary.textContent = 'No se pudo actualizar el estado.';
+    }
+  }
+
+  if (filterSelect) {
+    filterSelect.addEventListener('change', applyFilter);
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', refreshStatuses);
+  }
+
+  refreshStatuses();
+  setInterval(refreshStatuses, 15000);
+});
+</script>
+{% endif %}
+<script>
+(function(){
+  function tick(){
+    var t=document.getElementById('hf-adm-time'), d=document.getElementById('hf-adm-date');
+    if(!t) return;
+    var now=new Date();
+    t.textContent=now.toLocaleTimeString('es-CO',{timeZone:'America/Bogota',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+    d.textContent=now.toLocaleDateString('es-CO',{timeZone:'America/Bogota',weekday:'long',day:'numeric',month:'long'});
+  }
+  tick(); setInterval(tick,1000);
+})();
+</script>
+{% endblock %}

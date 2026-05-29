@@ -1,0 +1,29 @@
+<footer class="hf-footer mt-5">
+  <div class="py-4 px-3">
+    <div class="row g-3 align-items-center">
+      <div class="col-12 col-lg-5">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <img src="{{ url_for('static', filename='img/logo-hogarfix.svg') }}" alt="HogarFix" class="hf-footer-logo">
+          <span class="hf-footer-badge">Nuevo en Bogota</span>
+        </div>
+        <p class="small mb-0 hf-footer-copy">Conectamos hogares con tecnicos confiables para resolver servicios del dia a dia de forma clara, agil y segura.</p>
+      </div>
+      <div class="col-12 col-lg-4">
+        <div class="d-flex align-items-center flex-wrap gap-3 hf-footer-socials" aria-label="Redes sociales">
+          <span><i class="bi bi-instagram"></i> Instagram</span>
+          <span><i class="bi bi-facebook"></i> Facebook</span>
+          <span><i class="bi bi-tiktok"></i> TikTok</span>
+        </div>
+      </div>
+      <div class="col-12 col-lg-3 text-lg-end">
+        <a class="hf-footer-mail small" href="https://mail.google.com/mail/?view=cm&to=soporte@hogarfix.co" target="_blank" rel="noopener noreferrer">soporte@hogarfix.co</a>
+        <div class="small mt-2 d-flex justify-content-lg-end flex-wrap gap-2">
+          <a class="hf-footer-mail" href="{{ url_for('main.politicas') }}">Politicas</a>
+          <a class="hf-footer-mail" href="{{ url_for('main.politicas') }}#terminos">Terminos</a>
+          <a class="hf-footer-mail" href="{{ url_for('main.politicas') }}#privacidad">Privacidad</a>
+        </div>
+        <p class="small mb-0 mt-1 hf-footer-legal">HogarFix 2026</p>
+      </div>
+    </div>
+  </div>
+</footer>

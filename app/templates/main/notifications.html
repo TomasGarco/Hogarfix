@@ -1,0 +1,125 @@
+{% extends 'base_client.html' %}
+{% block page_title %}Notificaciones{% endblock %}
+{% block client_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
+  <div>
+    <h2 class="h5 mb-1">
+      <i class="bi bi-bell-fill me-2" style="color:#00d4ff"></i>Notificaciones
+      {% if unread_count > 0 %}
+        <span class="badge rounded-pill ms-1" style="background:#ef4444;font-size:.72rem;">{{ unread_count }}</span>
+      {% endif %}
+    </h2>
+    <p class="small text-secondary mb-0">Alertas de reservas, pagos y actividad importante de tu cuenta.</p>
+  </div>
+  {% if unread_count > 0 %}
+  <form method="post" action="{{ url_for('main.mark_all_notifications_read') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-sm hf-btn-outline">Marcar todas leídas</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="hf-card rounded-4 p-3 p-lg-4">
+  {% if notifications %}
+    <div class="hf-account-timeline">
+      {% for notif in notifications %}
+        <article class="hf-account-list-item {% if not notif.is_read %}border-primary-subtle{% endif %}"
+                 style="{% if not notif.is_read %}background:#f0f9ff;{% endif %}">
+          <div class="hf-account-notif-icon">
+            {% if notif.type in ['booking_confirmed','booking_pending'] %}
+              <i class="bi bi-calendar-check" style="color:#3b82f6"></i>
+            {% elif notif.type == 'booking_cancelled' %}
+              <i class="bi bi-x-circle" style="color:#ef4444"></i>
+            {% elif notif.type == 'booking_completed' %}
+              <i class="bi bi-patch-check-fill" style="color:#16a34a"></i>
+            {% elif notif.type == 'payment_proof' %}
+              <i class="bi bi-receipt-cutoff" style="color:#7c3aed"></i>
+            {% elif notif.type == 'cash_confirmed' %}
+              <i class="bi bi-cash-coin" style="color:#16a34a"></i>
+            {% elif notif.type == 'review' %}
+              <i class="bi bi-star-fill" style="color:#f59e0b"></i>
+            {% else %}
+              <i class="bi bi-bell" style="color:#6b7280"></i>
+            {% endif %}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <strong class="small">{{ notif.title }}</strong>
+              {% if not notif.is_read %}
+                <span class="badge text-bg-primary" style="font-size:.63rem;">Nueva</span>
+              {% endif %}
+              <span class="small text-secondary ms-auto hf-timeago"
+                    data-ts="{{ notif.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}"
+                    title="{{ notif.created_at.strftime('%d/%m/%Y %H:%M') }}">
+                {{ notif.created_at.strftime('%d/%m/%Y %H:%M') }}
+              </span>
+            </div>
+            <p class="small text-secondary mb-1 mt-1">{{ notif.message }}</p>
+            <div class="d-flex gap-2 flex-wrap">
+              {% if notif.link_url %}
+                <a href="{{ notif.link_url }}" class="btn btn-sm hf-btn-outline">Ver detalle</a>
+              {% endif %}
+              {% if not notif.is_read %}
+                <form method="post" action="{{ url_for('main.mark_notification_read', notification_id=notif.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm hf-btn-primary" type="submit">Marcar leída</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="hf-account-empty">
+      <i class="bi bi-bell-slash" style="font-size:1.8rem;color:#b0c4d8;"></i>
+      <p class="small text-secondary mb-0 mt-2">Sin notificaciones recientes. Te avisaremos cuando haya actividad en tu cuenta.</p>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var DAYS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  var MONTHS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+  function fmt12(d) {
+    var h = d.getHours(), m = d.getMinutes(), ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return (h < 10 ? '' : '') + h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+  }
+
+  function timeAgo(isoDate) {
+    var d = new Date(isoDate);
+    var diff = Math.floor((Date.now() - d) / 1000);
+    if (diff < 60)   return 'Ahora mismo';
+    if (diff < 3600) return 'hace ' + Math.floor(diff / 60) + ' min';
+    if (diff < 7200) return 'hace ' + Math.floor(diff / 3600) + ' h';
+    var now = new Date();
+    if (d.toDateString() === now.toDateString()) {
+      return 'Hoy ' + fmt12(d);
+    }
+    var ayer = new Date(now); ayer.setDate(now.getDate() - 1);
+    if (d.toDateString() === ayer.toDateString()) {
+      return 'Ayer ' + fmt12(d);
+    }
+    if (diff < 604800) {
+      return DAYS[d.getDay()] + ' ' + d.getDate() + ' de ' + MONTHS[d.getMonth()] + ' · ' + fmt12(d);
+    }
+    return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function updateAll() {
+    document.querySelectorAll('.hf-timeago').forEach(function (el) {
+      if (el.dataset.ts) el.textContent = timeAgo(el.dataset.ts);
+    });
+  }
+  updateAll();
+  setInterval(updateAll, 60000);
+})();
+</script>
+{% endblock %}

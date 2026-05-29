@@ -1,0 +1,181 @@
+{% extends 'base_client.html' %}
+{% block page_title %}Buscar técnico{% endblock %}
+{% block client_content %}
+
+{# ── Filter bar ─────────────────────────────────────────── #}
+<div class="hf-card rounded-4 p-3 p-lg-4 mb-4">
+  <h1 class="h5 fw-bold mb-3" style="color:var(--hf-dark)">
+    <i class="bi bi-search me-2" style="color:var(--hf-cyan)"></i>Buscar técnicos
+  </h1>
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small fw-semibold text-secondary mb-1">Servicio</label>
+      <select name="service" class="form-select form-select-sm">
+        <option value="">Todos</option>
+        {% for s in services_catalog %}
+          <option value="{{ s }}" {% if filters.service == s %}selected{% endif %}>{{ s|title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label small fw-semibold text-secondary mb-1">Localidad</label>
+      <input type="text" name="locality" class="form-control form-control-sm"
+             value="{{ filters.locality }}" placeholder="Ej: chapinero">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small fw-semibold text-secondary mb-1">Fecha aproximada</label>
+      <input type="date" name="approx_date" class="form-control form-control-sm"
+             value="{{ filters.approx_date }}">
+    </div>
+    <div class="col-md-1 d-grid">
+      <button class="btn btn-sm hf-btn-primary">Filtrar</button>
+    </div>
+  </form>
+</div>
+
+{# ── Result count ────────────────────────────────────────── #}
+{% if technicians %}
+<p class="small text-secondary mb-3 ps-1">
+  <strong>{{ technicians|length }}</strong>
+  técnico{% if technicians|length != 1 %}s{% endif %} encontrado{% if technicians|length != 1 %}s{% endif %}
+</p>
+{% endif %}
+
+{# ── Cards grid ──────────────────────────────────────────── #}
+<div class="row g-3">
+  {% for t in technicians %}
+    <div class="col-md-6 col-xl-4">
+      <article class="hf-card hf-srp-card rounded-4 h-100">
+
+        {# — Header: avatar + name + verification icon — #}
+        <div class="hf-srp-top d-flex align-items-center gap-3">
+          {% if t.profile_photo %}
+            <img src="{{ url_for('static', filename=t.profile_photo) }}"
+                 class="hf-srp-avatar" alt="">
+          {% else %}
+            <div class="hf-srp-avatar hf-srp-avatar--ini">{{ t.full_name[:1].upper() }}</div>
+          {% endif %}
+
+          <div class="flex-grow-1" style="min-width:0">
+            <h2 class="h6 mb-0 fw-bold text-truncate" style="color:var(--hf-dark)">{{ t.full_name }}</h2>
+            <span class="small text-secondary text-capitalize">{{ t.technician_type.replace('_',' ') }}</span>
+          </div>
+
+          <div class="d-flex flex-column align-items-center gap-1">
+            {% if t.verification_status == 'fully_verified' %}
+              <span class="hf-srp-badge hf-srp-badge--verified" title="Técnico verificado">
+                <i class="bi bi-patch-check-fill"></i>
+              </span>
+            {% elif t.verification_status == 'basic_verified' %}
+              <span class="hf-srp-badge hf-srp-badge--basic" title="Verificación básica">
+                <i class="bi bi-check-circle-fill"></i>
+              </span>
+            {% else %}
+              <span class="hf-srp-badge hf-srp-badge--pending" title="Verificación pendiente">
+                <i class="bi bi-hourglass-split"></i>
+              </span>
+            {% endif %}
+            {% if t.subscription_active and t.subscription_plan == 'elite' %}
+              <span class="badge rounded-pill" style="background:#7c3aed;font-size:.6rem;padding:.25em .55em;font-weight:700;letter-spacing:.03em" title="Plan Elite">
+                <i class="bi bi-gem me-1"></i>Elite
+              </span>
+            {% elif t.subscription_active and t.subscription_plan == 'profesional' %}
+              <span class="badge rounded-pill" style="background:#0d6efd;font-size:.6rem;padding:.25em .55em;font-weight:700;letter-spacing:.03em" title="Plan Profesional">
+                <i class="bi bi-stars me-1"></i>Pro
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        {# — Body — #}
+        <div class="hf-srp-body">
+          {# Description (from bio JSON) #}
+          {% set desc = t.service_description %}
+          {% if desc %}
+            <p class="small text-secondary hf-srp-desc mb-2">{{ desc }}</p>
+          {% else %}
+            <p class="small text-muted fst-italic mb-2">Sin descripción aún.</p>
+          {% endif %}
+
+          {# Specialty badges #}
+          <div class="d-flex flex-wrap gap-1 mb-3">
+            {% for sp in t.specialties.split(',') %}
+              {% set sp = sp.strip() %}
+              {% if sp %}
+                <span class="hf-srp-tag">{{ sp|title }}</span>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          {# Locality + price meta row #}
+          <div class="d-flex flex-wrap gap-3 mb-3 small text-secondary">
+            {% set loc0 = t.localities.split(',')[0].strip() %}
+            {% if loc0 %}
+              <span>
+                <i class="bi bi-geo-alt-fill me-1" style="color:var(--hf-orange)"></i>{{ loc0|title }}
+              </span>
+            {% endif %}
+            {% if t.bio_base_price %}
+              <span>
+                <i class="bi bi-cash-stack me-1" style="color:#16a34a"></i>
+                {{ t.bio_base_price | format_cop }}
+                {% if t.bio_charge_type %}<span class="text-muted">/ {{ t.bio_charge_type }}</span>{% endif %}
+              </span>
+            {% elif t.price_range %}
+              <span>
+                <i class="bi bi-tag-fill me-1" style="color:#16a34a"></i>{{ t.price_range }}
+              </span>
+            {% endif %}
+          </div>
+
+          {# Rating #}
+          {% set _r = rating_map.get(t.user_id) %}
+          {% if _r and _r.count > 0 %}
+            <div class="d-flex align-items-center gap-1 mb-3">
+              {% for _i in range(1, 6) %}
+                {% if _i <= _r.avg|round %}
+                  <i class="bi bi-star-fill" style="color:#f59e0b;font-size:.78rem"></i>
+                {% elif _i - _r.avg < 1 %}
+                  <i class="bi bi-star-half" style="color:#f59e0b;font-size:.78rem"></i>
+                {% else %}
+                  <i class="bi bi-star" style="color:#d1d5db;font-size:.78rem"></i>
+                {% endif %}
+              {% endfor %}
+              <span class="small text-secondary ms-1">{{ _r.avg }} ({{ _r.count }} reseña{{ 's' if _r.count != 1 }})</span>
+            </div>
+          {% else %}
+            <p class="small text-muted mb-3" style="font-size:.75rem"><i class="bi bi-star me-1"></i>Sin reseñas aún</p>
+          {% endif %}
+
+          {# CTA row #}
+          <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-sm hf-btn-action flex-grow-1 text-center"
+               href="{{ url_for('booking.create_booking', technician_id=t.user_id, date=filters.approx_date) }}">
+              <i class="bi bi-calendar-check me-1"></i>Reservar
+            </a>
+            <a class="btn btn-sm hf-btn-outline"
+               href="{{ url_for('main.technician_public_profile', user_id=t.user_id) }}"
+               title="Ver perfil completo">
+              <i class="bi bi-person-lines-fill"></i>
+            </a>
+            {% if available_map.get(t.user_id) %}
+              <span class="hf-srp-avail-pill">
+                <i class="bi bi-circle-fill" style="font-size:.4rem;vertical-align:middle"></i> Disponible
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+      </article>
+    </div>
+  {% else %}
+    <div class="col-12">
+      <div class="hf-card rounded-4 p-5 text-center">
+        <i class="bi bi-search" style="font-size:2.4rem;color:#b0c8da"></i>
+        <p class="mt-3 text-secondary mb-0">No encontramos técnicos con esos filtros.</p>
+        <p class="small text-muted">Prueba con otro servicio o localidad.</p>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

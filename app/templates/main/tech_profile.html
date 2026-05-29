@@ -1,0 +1,197 @@
+{% extends 'base_client.html' %}
+{% block page_title %}{{ profile.full_name }}{% endblock %}
+{% block client_content %}
+
+{# ── Hero ─────────────────────────────────────────────────────────── #}
+<div class="hf-card rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap gap-4 align-items-start">
+
+    {# Avatar #}
+    <div class="flex-shrink-0 text-center" style="min-width:110px">
+      {% if profile.profile_photo %}
+        <img src="{{ url_for('static', filename=profile.profile_photo) }}"
+             class="rounded-circle object-fit-cover"
+             style="width:110px;height:110px;border:3px solid #deedf9;"
+             alt="{{ profile.full_name }}">
+      {% else %}
+        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold mx-auto"
+             style="width:110px;height:110px;background:linear-gradient(135deg,#0a2540,#1a4a7a);color:#fff;font-size:2rem;border:3px solid #deedf9;">
+          {{ profile.full_name[:1].upper() }}
+        </div>
+      {% endif %}
+
+      {# Plan badge #}
+      {% if profile.subscription_active and profile.subscription_plan == 'elite' %}
+        <span class="badge rounded-pill mt-2 d-inline-block" style="background:#7c3aed;font-size:.7rem;">
+          <i class="bi bi-gem me-1"></i>Elite
+        </span>
+      {% elif profile.subscription_active and profile.subscription_plan == 'profesional' %}
+        <span class="badge rounded-pill mt-2 d-inline-block" style="background:#0d6efd;font-size:.7rem;">
+          <i class="bi bi-stars me-1"></i>Pro
+        </span>
+      {% endif %}
+    </div>
+
+    {# Info #}
+    <div class="flex-grow-1" style="min-width:0">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <h1 class="h3 mb-0 fw-bold" style="color:#0a2540">{{ profile.full_name }}</h1>
+        {% if profile.verification_status == 'fully_verified' %}
+          <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.72rem;">
+            <i class="bi bi-patch-check-fill me-1"></i>Verificado
+          </span>
+        {% elif profile.verification_status == 'basic_verified' %}
+          <span class="badge" style="background:#dbeafe;color:#1d4ed8;font-size:.72rem;">
+            <i class="bi bi-check-circle-fill me-1"></i>Verificación básica
+          </span>
+        {% endif %}
+      </div>
+
+      <p class="text-secondary text-capitalize mb-2">{{ (profile.technician_type or 'independiente').replace('_',' ') }}</p>
+
+      {# Rating #}
+      {% if avg_rating %}
+        <div class="d-flex align-items-center gap-1 mb-3">
+          {% for i in range(1, 6) %}
+            {% if i <= avg_rating|round %}
+              <i class="bi bi-star-fill" style="color:#f59e0b"></i>
+            {% elif i - avg_rating < 1 %}
+              <i class="bi bi-star-half" style="color:#f59e0b"></i>
+            {% else %}
+              <i class="bi bi-star" style="color:#d1d5db"></i>
+            {% endif %}
+          {% endfor %}
+          <span class="fw-bold ms-1" style="color:#0a2540">{{ avg_rating }}</span>
+          <span class="small text-secondary">({{ review_count }} reseña{{ 's' if review_count != 1 }})</span>
+        </div>
+      {% else %}
+        <p class="small text-muted mb-3"><i class="bi bi-star me-1"></i>Sin reseñas aún</p>
+      {% endif %}
+
+      {# Descripción #}
+      {% if profile.service_description %}
+        <p class="text-secondary mb-3" style="line-height:1.7">{{ profile.service_description }}</p>
+      {% endif %}
+
+      {# Especialidades #}
+      {% if profile.specialties %}
+        <div class="d-flex flex-wrap gap-1 mb-3">
+          {% for sp in profile.specialties.split(',') %}
+            {% set sp = sp.strip() %}
+            {% if sp %}
+              <span class="badge rounded-pill" style="background:#e0f2fe;color:#0369a1;font-size:.75rem">{{ sp|title }}</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {# Meta: localidades + precio #}
+      <div class="d-flex flex-wrap gap-3 small text-secondary mb-4">
+        {% if profile.localities %}
+          <span>
+            <i class="bi bi-geo-alt-fill me-1" style="color:#FF6B00"></i>
+            {{ profile.localities.split(',') | map('trim') | join(' · ') | title }}
+          </span>
+        {% endif %}
+        {% if profile.bio_base_price %}
+          <span>
+            <i class="bi bi-cash-stack me-1" style="color:#16a34a"></i>
+            {{ profile.bio_base_price | format_cop }}
+            {% if profile.bio_charge_type %}<span class="text-muted">/ {{ profile.bio_charge_type }}</span>{% endif %}
+          </span>
+        {% elif profile.price_range %}
+          <span>
+            <i class="bi bi-tag-fill me-1" style="color:#16a34a"></i>{{ profile.price_range }}
+          </span>
+        {% endif %}
+      </div>
+
+      {# CTA #}
+      <a href="{{ url_for('booking.create_booking', technician_id=tech_user.id) }}"
+         class="btn hf-btn-primary">
+        <i class="bi bi-calendar-check me-2"></i>Reservar ahora
+      </a>
+    </div>
+  </div>
+</div>
+
+{# ── Galería de trabajos ──────────────────────────────────────────── #}
+{% if work_photos %}
+<div class="hf-card rounded-4 p-4 mb-4" data-aos="fade-up" data-aos-delay="60">
+  <h2 class="h5 mb-3"><i class="bi bi-images me-2" style="color:var(--hf-cyan)"></i>Trabajos realizados</h2>
+  <div class="row g-2">
+    {% for ph in work_photos[:8] %}
+      <div class="col-6 col-md-4 col-xl-3">
+        <a href="{{ url_for('static', filename=ph) }}" target="_blank" rel="noopener">
+          <img src="{{ url_for('static', filename=ph) }}"
+               class="img-fluid rounded-3 w-100"
+               style="height:140px;object-fit:cover;border:1px solid #deedf9;transition:transform .15s"
+               onmouseover="this.style.transform='scale(1.03)'"
+               onmouseout="this.style.transform='scale(1)'"
+               alt="Trabajo">
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# ── Reseñas ─────────────────────────────────────────────────────── #}
+<div class="hf-card rounded-4 p-4 mb-4" data-aos="fade-up" data-aos-delay="80">
+  <h2 class="h5 mb-3">
+    <i class="bi bi-star-fill me-2" style="color:#f59e0b"></i>Reseñas
+    {% if review_count > 0 %}
+      <span class="badge ms-1 rounded-pill" style="background:#fef9c3;color:#854d0e;font-size:.72rem">{{ review_count }}</span>
+    {% endif %}
+  </h2>
+
+  {% if reviews %}
+    <div class="d-flex flex-column gap-3">
+      {% for rev in reviews %}
+        {% set _client = rev.booking.client %}
+        <div class="rounded-3 p-3" style="background:#f8fafc;border:1px solid #e2e8f0">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            {# Avatar cliente (anónimo: solo iniciales) #}
+            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                 style="width:36px;height:36px;background:#e0f2fe;color:#0369a1;font-size:.85rem">
+              {{ (_client.full_name or _client.email)[:1].upper() }}
+            </div>
+            <div>
+              <p class="small fw-semibold mb-0" style="color:#0a2540">
+                {{ (_client.full_name or '').split()[0] or 'Cliente' }}
+              </p>
+              <p class="mb-0" style="font-size:.68rem;color:#9ca3af">{{ rev.created_at.strftime('%d/%m/%Y') }}</p>
+            </div>
+            <div class="ms-auto d-flex gap-1">
+              {% for i in range(1, 6) %}
+                <i class="bi bi-star-fill" style="color:{% if i <= rev.rating %}#f59e0b{% else %}#d1d5db{% endif %};font-size:.75rem"></i>
+              {% endfor %}
+            </div>
+          </div>
+          {% if rev.comment %}
+            <p class="small text-secondary mb-0 fst-italic">"{{ rev.comment }}"</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-4">
+      <i class="bi bi-chat-square-dots" style="font-size:2rem;color:#b0c4d8"></i>
+      <p class="small text-secondary mt-2 mb-0">Este técnico aún no tiene reseñas.</p>
+    </div>
+  {% endif %}
+</div>
+
+{# ── CTA final ───────────────────────────────────────────────────── #}
+<div class="text-center pb-2">
+  <a href="{{ url_for('booking.create_booking', technician_id=tech_user.id) }}"
+     class="btn hf-btn-primary btn-lg px-5">
+    <i class="bi bi-calendar-check me-2"></i>Reservar con {{ profile.full_name.split()[0] }}
+  </a>
+  <p class="small text-muted mt-2 mb-0">
+    <i class="bi bi-arrow-left me-1"></i>
+    <a href="{{ url_for('main.search_technicians') }}" class="text-decoration-none text-secondary">Volver a la búsqueda</a>
+  </p>
+</div>
+
+{% endblock %}

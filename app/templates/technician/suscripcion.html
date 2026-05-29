@@ -1,0 +1,376 @@
+{% extends 'base_tech.html' %}
+
+{% block head %}
+<style>
+/* ── Mi Suscripción ─────────────────────────────── */
+.hf-sub-hero {
+  border-radius: 24px;
+  padding: 1.75rem 2rem;
+  display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+  margin-bottom: 1.25rem; position: relative; overflow: hidden;
+}
+.hf-sub-hero::before {
+  content: '';
+  position: absolute; right: -30px; top: -30px;
+  width: 180px; height: 180px; border-radius: 50%;
+  background: rgba(255,255,255,.25); pointer-events: none;
+}
+.hf-sub-hero-icon {
+  width: 68px; height: 68px; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.9rem; flex-shrink: 0;
+  background: rgba(255,255,255,.5); backdrop-filter: blur(6px);
+}
+.hf-sub-hero-name   { font-size: 1.55rem; font-weight: 900; color: #0a2540; line-height: 1.2; }
+.hf-sub-hero-status { font-size: .85rem; font-weight: 600; }
+
+.hf-sub-stat-card {
+  background: #fff; border: 1.5px solid #deedf9; border-radius: 18px;
+  padding: 1.1rem 1.25rem; text-align: center; height: 100%;
+}
+.hf-sub-stat-val { font-size: 1.85rem; font-weight: 900; color: #0a2540; line-height: 1; margin-bottom: .3rem; }
+.hf-sub-stat-lbl { font-size: .72rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+
+.hf-sub-section {
+  background: #fff; border: 1.5px solid #deedf9; border-radius: 18px;
+  padding: 1.4rem 1.5rem; margin-top: 1rem;
+}
+.hf-sub-section-title { font-size: .88rem; font-weight: 700; color: #0a2540; margin-bottom: 1rem; }
+
+.hf-sub-progress-bg { background: #f1f5f9; border-radius: 99px; height: 11px; overflow: hidden; }
+.hf-sub-progress-fill { height: 100%; border-radius: 99px; transition: width .6s cubic-bezier(.34,1.56,.64,1); }
+
+.hf-sub-benefit {
+  display: flex; align-items: flex-start; gap: .6rem;
+  padding: .55rem 0; border-bottom: 1px solid #f8fafc; font-size: .89rem; color: #334155;
+}
+.hf-sub-benefit:last-child { border-bottom: none; padding-bottom: 0; }
+
+.hf-sub-timeline { list-style: none; padding: 0; margin: 0; }
+.hf-sub-timeline li {
+  display: flex; align-items: flex-start; gap: .75rem;
+  padding: .6rem 0; border-bottom: 1px solid #f8fafc; font-size: .85rem;
+}
+.hf-sub-timeline li:last-child { border-bottom: none; }
+.hf-sub-tl-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; flex-shrink: 0; margin-top: 1px;
+}
+
+.hf-sub-actions { margin-top: 1.25rem; display: flex; gap: .75rem; flex-wrap: wrap; }
+
+.hf-sub-none-card {
+  background: linear-gradient(135deg,#f8fafc,#f1f5f9);
+  border: 2px dashed #cbd5e1; border-radius: 24px;
+  padding: 3.5rem 2rem; text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block tech_content %}
+{% set _prof = profile %}
+
+{# ════════════════════════════════════════════════════════
+   CASO 1: Sin perfil o sin plan iniciado
+   ════════════════════════════════════════════════════════ #}
+{% if not _prof or _prof.subscription_status == 'none' %}
+
+<div class="hf-sub-none-card">
+  <i class="bi bi-ticket-perforated" style="font-size:3.2rem;color:#cbd5e1;display:block;margin-bottom:1.1rem"></i>
+  <h2 class="fw-bold mb-2" style="color:#0a2540">Sin plan activo</h2>
+  <p class="text-secondary mb-3">Elige un plan para aparecer en las búsquedas y comenzar a recibir reservas.</p>
+  <a href="{{ url_for('technician.subscription_plans') }}" class="btn"
+     style="background:#0d6efd;color:#fff;border-radius:14px;font-weight:700;padding:.75rem 2rem">
+    <i class="bi bi-rocket-takeoff me-1"></i>Ver planes disponibles
+  </a>
+</div>
+
+{# ════════════════════════════════════════════════════════
+   CASO 2: Exento (propietario / especial)
+   ════════════════════════════════════════════════════════ #}
+{% elif _prof.subscription_exempt %}
+
+<div class="hf-sub-hero" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac">
+  <div class="hf-sub-hero-icon">
+    <i class="bi bi-shield-fill-check" style="color:#15803d"></i>
+  </div>
+  <div class="flex-grow-1">
+    <p class="hf-sub-hero-name">Acceso Premium</p>
+    <p class="hf-sub-hero-status mb-0" style="color:#15803d">
+      <i class="bi bi-infinity me-1"></i>Suscripción permanente &mdash; sin vencimiento
+    </p>
+  </div>
+  <span class="badge ms-auto"
+        style="background:#dcfce7;color:#15803d;font-size:.8rem;padding:.45rem .9rem;border-radius:99px">
+    EXENTO
+  </span>
+</div>
+
+<div class="hf-sub-section">
+  <p class="text-secondary small mb-0 text-center">
+    Tu cuenta tiene acceso permanente a todas las funciones de la plataforma
+    sin restricciones de tiempo ni plan.
+  </p>
+</div>
+
+{# ════════════════════════════════════════════════════════
+   CASO 3: Con plan activo / trial / vencido
+   ════════════════════════════════════════════════════════ #}
+{% else %}
+  {% set p = current_plan %}
+  {% set days_left  = _prof.subscription_days_left %}
+  {% set total_days = p.trial_days %}
+  {% set pct = ((days_left / total_days * 100)|int) if total_days > 0 else 0 %}
+  {% set pct_safe = [pct, 100]|min %}
+  {% set pct_safe = [pct_safe, 0]|max %}
+
+  {# ── Hero card ── #}
+  <div class="hf-sub-hero" style="background:{{ p.gradient }};border:1.5px solid {{ p.border }}">
+    <div class="hf-sub-hero-icon"
+         style="border:1.5px solid {{ p.border }}">
+      <i class="bi {{ p.icon }}" style="color:{{ p.color }}"></i>
+    </div>
+    <div class="flex-grow-1">
+      <p class="hf-sub-hero-name">Plan {{ p.name }}</p>
+      {% if _prof.subscription_status == 'trial' %}
+        <p class="hf-sub-hero-status mb-0" style="color:{{ p.accent }}">
+          <i class="bi bi-gift-fill me-1"></i>Período de prueba gratuita activo
+        </p>
+      {% elif _prof.subscription_status == 'active' %}
+        <p class="hf-sub-hero-status mb-0" style="color:{{ p.accent }}">
+          <i class="bi bi-patch-check-fill me-1"></i>Suscripción activa
+        </p>
+      {% else %}
+        <p class="hf-sub-hero-status mb-0" style="color:#dc2626">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i>Suscripción vencida
+        </p>
+      {% endif %}
+    </div>
+    {% if p.badge %}
+      <span class="badge ms-auto align-self-start"
+            style="background:{{ p.badge_bg }};color:{{ p.badge_color }};font-size:.82rem;padding:.45rem .9rem;border-radius:99px">
+        {{ p.badge }}
+      </span>
+    {% else %}
+      <span class="badge ms-auto align-self-start"
+            style="background:rgba(255,255,255,.6);color:#475569;font-size:.82rem;padding:.45rem .9rem;border-radius:99px">
+        BÁSICO
+      </span>
+    {% endif %}
+  </div>
+
+  {# ── Stats row ── #}
+  <div class="row g-3 mb-0">
+    <div class="col-6 col-md-3">
+      <div class="hf-sub-stat-card">
+        <p class="hf-sub-stat-val" style="color:{{ p.color }}">{{ days_left }}</p>
+        <p class="hf-sub-stat-lbl">Días restantes</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="hf-sub-stat-card">
+        <p class="hf-sub-stat-val">{{ total_days }}</p>
+        <p class="hf-sub-stat-lbl">Días del plan</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="hf-sub-stat-card">
+        <p class="hf-sub-stat-val" style="font-size:1.15rem">
+          {{ _prof.subscription_expires_at.strftime('%d/%m/%Y') if _prof.subscription_expires_at else '—' }}
+        </p>
+        <p class="hf-sub-stat-lbl">Vence el</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="hf-sub-stat-card">
+        <p class="hf-sub-stat-val" style="font-size:1.15rem;text-transform:capitalize">
+          {{ _prof.subscription_status }}
+        </p>
+        <p class="hf-sub-stat-lbl">Estado</p>
+      </div>
+    </div>
+  </div>
+
+  {# ── Progress bar ── #}
+  <div class="hf-sub-section">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <p class="hf-sub-section-title mb-0">Tiempo restante del plan</p>
+      <span style="font-size:.8rem;color:#94a3b8;font-weight:600">{{ days_left }} / {{ total_days }} días</span>
+    </div>
+    <div class="hf-sub-progress-bg mb-2">
+      <div class="hf-sub-progress-fill"
+           style="width:{{ pct_safe }}%;background:{{ p.color }}"></div>
+    </div>
+    <p class="small mb-0" style="color:#94a3b8">
+      {% if _prof.subscription_status == 'expired' %}
+        Tu suscripción venció. Elige un plan para volver a aparecer en las búsquedas.
+      {% elif pct_safe > 60 %}
+        Tu plan está en excelente estado. ¡Sigue recibiendo reservas!
+      {% elif pct_safe > 25 %}
+        Tu plan vence pronto. Considera renovar para no perder visibilidad.
+      {% else %}
+        Quedan muy pocos días. Elige un nuevo plan para mantener tu perfil activo.
+      {% endif %}
+    </p>
+  </div>
+
+  {# ── Beneficios ── #}
+  <div class="hf-sub-section">
+    <p class="hf-sub-section-title">
+      <i class="bi bi-check-all me-1" style="color:{{ p.color }}"></i>Beneficios de tu plan {{ p.name }}
+    </p>
+    {% for feat in p.features %}
+    <div class="hf-sub-benefit">
+      <i class="bi bi-check-circle-fill" style="color:#22c55e;flex-shrink:0;margin-top:2px"></i>
+      <span>{{ feat }}</span>
+    </div>
+    {% endfor %}
+    {% for lim in p.limits %}
+    <div class="hf-sub-benefit" style="opacity:.45">
+      <i class="bi bi-x-circle-fill" style="color:#cbd5e1;flex-shrink:0;margin-top:2px"></i>
+      <span>{{ lim }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ── Línea de tiempo ── #}
+  <div class="hf-sub-section">
+    <p class="hf-sub-section-title">
+      <i class="bi bi-calendar-event me-1" style="color:{{ p.color }}"></i>Ciclo de tu suscripción
+    </p>
+    <ul class="hf-sub-timeline">
+      <li>
+        <div class="hf-sub-tl-dot" style="background:#dcfce7">
+          <i class="bi bi-check2" style="color:#15803d"></i>
+        </div>
+        <div>
+          <p class="fw-bold mb-0" style="font-size:.85rem;color:#0a2540">Plan activado</p>
+          <p class="small mb-0 text-secondary">
+            {% if _prof.subscription_expires_at %}
+              {{ (_prof.subscription_expires_at - _prof.subscription_expires_at.__class__(
+                _prof.subscription_expires_at.year,
+                _prof.subscription_expires_at.month,
+                _prof.subscription_expires_at.day) + _prof.subscription_expires_at.__class__.fromordinal(
+                  _prof.subscription_expires_at.toordinal() - total_days
+                )).strftime('%d/%m/%Y') if false }}
+              Hace {{ total_days - days_left }} día{{ 's' if (total_days - days_left) != 1 }}
+            {% else %}Activo{% endif %}
+          </p>
+        </div>
+      </li>
+      <li>
+        <div class="hf-sub-tl-dot" style="background:{{ p.badge_bg if p.badge else '#f1f5f9' }}">
+          <i class="bi bi-clock" style="color:{{ p.color }}"></i>
+        </div>
+        <div>
+          <p class="fw-bold mb-0" style="font-size:.85rem;color:#0a2540">
+            {% if _prof.subscription_status == 'trial' %}Período de prueba{% else %}Plan activo{% endif %}
+          </p>
+          <p class="small mb-0 text-secondary">{{ days_left }} días restantes de {{ total_days }}</p>
+        </div>
+      </li>
+      <li>
+        <div class="hf-sub-tl-dot" style="background:#fef9c3">
+          <i class="bi bi-flag" style="color:#d97706"></i>
+        </div>
+        <div>
+          <p class="fw-bold mb-0" style="font-size:.85rem;color:#0a2540">Vencimiento</p>
+          <p class="small mb-0 text-secondary">
+            {{ _prof.subscription_expires_at.strftime('%d de %B de %Y') if _prof.subscription_expires_at else 'Sin fecha' }}
+          </p>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  {# ── Botones de acción ── #}
+  <div class="hf-sub-actions">
+    <a href="{{ url_for('technician.subscription_plans') }}" class="btn"
+       style="background:{{ p.color }};color:#fff;border-radius:12px;font-weight:700;padding:.7rem 1.6rem">
+      <i class="bi bi-arrow-repeat me-1"></i>Cambiar plan
+    </a>
+    {% if not _prof.subscription_exempt %}
+    <button type="button" class="btn btn-outline-danger"
+            style="border-radius:12px;font-weight:600;padding:.7rem 1.4rem"
+            data-bs-toggle="modal" data-bs-target="#cancelModal">
+      <i class="bi bi-x-circle me-1"></i>Cancelar suscripción
+    </button>
+    {% endif %}
+  </div>
+
+  {# ── Sandbox note ── #}
+  <div class="rounded-4 p-3 mt-4 d-flex align-items-start gap-3"
+       style="background:linear-gradient(135deg,#fef9c3,#fef3c7);border:1.5px solid #fbbf24;">
+    <i class="bi bi-flask-fill mt-1" style="color:#d97706;font-size:1.1rem;flex-shrink:0"></i>
+    <p class="small mb-0" style="color:#92400e">
+      <strong>Modo de prueba:</strong> Este plan está activo de forma completamente gratuita.
+      Próximamente integraremos métodos de pago seguros (PSE, Nequi, Daviplata, tarjeta de crédito/débito).
+    </p>
+  </div>
+
+{% endif %}
+
+{# ── Modal: cambiar / cancelar suscripción ── #}
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:430px">
+    <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+
+      {# Header #}
+      <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex align-items-start">
+        <div>
+          <h5 class="modal-title fw-bold mb-1" id="cancelModalLabel" style="color:#0a2540">
+            ¿Qué deseas hacer?
+          </h5>
+          <p class="small text-secondary mb-0">Plan actual: <strong>{{ current_plan.name }}</strong></p>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body px-4 pt-3 pb-4">
+
+        {# Opción 1 — Cambiar de plan (preferida) #}
+        <a href="{{ url_for('technician.subscription_plans') }}"
+           class="d-flex align-items-center gap-3 rounded-3 p-3 mb-2 text-decoration-none"
+           style="background:#eff6ff;border:1.5px solid #93c5fd;transition:box-shadow .15s"
+           onmouseover="this.style.boxShadow='0 4px 14px rgba(13,110,253,.15)'"
+           onmouseout="this.style.boxShadow='none'">
+          <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+               style="width:42px;height:42px;background:#dbeafe;border:1.5px solid #60a5fa">
+            <i class="bi bi-arrow-repeat" style="color:#0d6efd;font-size:1rem"></i>
+          </div>
+          <div>
+            <p class="fw-bold mb-0" style="font-size:.9rem;color:#0a2540">Cambiar a otro plan</p>
+            <p class="small mb-0 text-secondary">Elige un plan diferente sin perder acceso.</p>
+          </div>
+          <i class="bi bi-chevron-right ms-auto" style="color:#93c5fd"></i>
+        </a>
+
+        {# Opción 2 — Cancelar completamente #}
+        <div class="rounded-3 p-3" style="background:#fff8f8;border:1.5px solid #fecaca">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+                 style="width:42px;height:42px;background:#fee2e2;border:1.5px solid #fca5a5">
+              <i class="bi bi-x-circle" style="color:#dc2626;font-size:1rem"></i>
+            </div>
+            <div>
+              <p class="fw-bold mb-0" style="font-size:.9rem;color:#0a2540">Cancelar suscripción</p>
+              <p class="small mb-0 text-secondary">Perderás el acceso al plan activo.</p>
+            </div>
+          </div>
+          <form method="POST" action="{{ url_for('technician.cancel_subscription') }}" style="margin:0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+                    class="btn btn-sm w-100 fw-700 rounded-3"
+                    style="background:#dc2626;color:#fff;padding:.5rem">
+              <i class="bi bi-x-circle me-1"></i>Sí, cancelar mi suscripción
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

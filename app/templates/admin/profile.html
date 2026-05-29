@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hf-dash-hero hf-dash-hero-admin rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+      <p class="hf-dash-overline mb-1">Configuración de cuenta</p>
+      <h1 class="h3 mb-2">Mi perfil</h1>
+      <p class="mb-0 hf-dash-subline">Actualiza tus datos de administrador y cambia tu contraseña.</p>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn hf-btn-outline">Volver al panel</a>
+  </div>
+</section>
+
+<div class="row g-4" data-aos="fade-up" data-aos-delay="60">
+
+  <!-- DATOS PERSONALES -->
+  <div class="col-lg-6">
+    <article class="hf-account-card rounded-4 p-4 h-100">
+      <h2 class="h5 mb-4">Datos personales</h2>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{ 'danger' if cat == 'danger' else ('warning' if cat == 'warning' else 'success') }} alert-dismissible fade show small" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="post" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="form_type" value="datos">
+
+        <div class="col-12">
+          <label class="form-label">Nombre completo</label>
+          <input type="text" name="full_name" class="form-control"
+                 value="{{ current_user.full_name or '' }}"
+                 placeholder="Tu nombre" required>
+        </div>
+
+        <div class="col-4">
+          <label class="form-label">País</label>
+          <select name="phone_country" class="form-select">
+            {% for code, label in [('+57','🇨🇴 +57'),('+1','🇺🇸 +1'),('+52','🇲🇽 +52'),('+54','🇦🇷 +54'),('+56','🇨🇱 +56'),('+51','🇵🇪 +51'),('+593','🇪🇨 +593'),('+34','🇪🇸 +34')] %}
+              <option value="{{ code }}" {{ 'selected' if (current_user.phone_country or '+57') == code }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-8">
+          <label class="form-label">Teléfono</label>
+          <input type="tel" name="phone" class="form-control"
+                 value="{{ current_user.phone or '' }}"
+                 placeholder="3001234567">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Localidad / Ciudad</label>
+          <input type="text" name="locality" class="form-control"
+                 value="{{ current_user.locality or '' }}"
+                 placeholder="Ej: Bogotá, Chapinero">
+        </div>
+
+        <div class="col-12 d-grid">
+          <button type="submit" class="btn hf-btn-primary">Guardar datos</button>
+        </div>
+      </form>
+    </article>
+  </div>
+
+  <!-- CAMBIO DE CONTRASEÑA -->
+  <div class="col-lg-6">
+    <article class="hf-account-card rounded-4 p-4 h-100">
+      <h2 class="h5 mb-4">Cambiar contraseña</h2>
+      <form method="post" class="row g-3" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="form_type" value="password">
+
+        <div class="col-12">
+          <label class="form-label">Contraseña actual</label>
+          <input type="password" name="current_password" class="form-control"
+                 placeholder="Tu contraseña actual" required autocomplete="current-password">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Nueva contraseña</label>
+          <input type="password" name="new_password" class="form-control"
+                 placeholder="Mín. 8 caracteres, mayúscula, número y símbolo" required autocomplete="new-password">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Confirmar nueva contraseña</label>
+          <input type="password" name="confirm_password" class="form-control"
+                 placeholder="Repite la nueva contraseña" required autocomplete="new-password">
+        </div>
+
+        <div class="col-12">
+          <p class="small text-secondary mb-2">
+            La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.
+          </p>
+        </div>
+
+        <div class="col-12 d-grid">
+          <button type="submit" class="btn btn-outline-danger">Actualizar contraseña</button>
+        </div>
+      </form>
+    </article>
+  </div>
+
+  <!-- INFO DE CUENTA (solo lectura) -->
+  <div class="col-12">
+    <article class="hf-account-card rounded-4 p-4">
+      <h2 class="h5 mb-3">Información de cuenta</h2>
+      <div class="row g-3">
+        <div class="col-sm-4">
+          <p class="small text-secondary mb-0">Email</p>
+          <strong>{{ current_user.email }}</strong>
+        </div>
+        <div class="col-sm-4">
+          <p class="small text-secondary mb-0">Rol</p>
+          <strong><span class="badge text-bg-dark">Administrador</span></strong>
+        </div>
+        <div class="col-sm-4">
+          <p class="small text-secondary mb-0">Cuenta creada</p>
+          <strong>{{ current_user.created_at.strftime('%d/%m/%Y') if current_user.created_at else 'N/A' }}</strong>
+        </div>
+        <div class="col-sm-4">
+          <p class="small text-secondary mb-0">2FA</p>
+          <strong>{{ '✅ Activa' if current_user.two_factor_enabled else '⚠️ Desactivada' }}</strong>
+        </div>
+        <div class="col-sm-4">
+          <p class="small text-secondary mb-0">Estado</p>
+          <strong>{{ '✅ Activo' if current_user.is_active else '🔴 Inactivo' }}</strong>
+        </div>
+      </div>
+    </article>
+  </div>
+
+</div>
+{% endblock %}

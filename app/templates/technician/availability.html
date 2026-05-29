@@ -1,0 +1,390 @@
+{% extends 'base_tech.html' %}
+
+{% block head %}
+<style>
+/* ══ Disponibilidad ══════════════════════════════════════════════════ */
+.hf-av-stat {
+  background: #fff;
+  border: 1px solid #deedf9;
+  border-radius: 16px;
+  padding: .9rem 1.2rem;
+  display: flex; align-items: center; gap: .85rem;
+}
+.hf-av-stat-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.hf-av-stat-num  { font-size: 1.5rem; font-weight: 800; line-height: 1; color: #0a2540; }
+.hf-av-stat-label{ font-size: .72rem; color: #7a9ab2; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+
+/* ── Calendario selector ── */
+.hf-av-cal {
+  background: #fff;
+  border: 1px solid #deedf9;
+  border-radius: 16px;
+  padding: 1rem;
+  user-select: none;
+}
+.hf-av-cal-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: .65rem;
+}
+.hf-av-cal-nav-btn {
+  background: none; border: none; width: 30px; height: 30px;
+  border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: #4d6781; font-size: 1rem; transition: background .15s;
+}
+.hf-av-cal-nav-btn:hover { background: rgba(0,212,255,.1); color: #00a8c8; }
+.hf-av-cal-title { font-weight: 800; font-size: .88rem; color: #0a2540; }
+.hf-av-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; text-align: center; }
+.hf-av-dow { font-size: .6rem; font-weight: 700; text-transform: uppercase; color: #8aabb8; padding: .25rem 0; }
+.hf-av-day {
+  position: relative; font-size: .78rem; font-weight: 500; color: #1a3550;
+  border-radius: 50%; cursor: pointer; aspect-ratio: 1/1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; margin: 1px; transition: background .12s, color .12s;
+}
+.hf-av-day:hover:not(.av-other):not(.av-past) { background: rgba(0,212,255,.13); color: #006b87; }
+.hf-av-day.av-other  { color: #c5d8e8; cursor: default; pointer-events: none; }
+.hf-av-day.av-past   { color: #c5d8e8; cursor: not-allowed; opacity: .6; }
+.hf-av-day.av-today  { background: rgba(255,107,0,.12); color: #d45a00; font-weight: 800; }
+.hf-av-day.av-sel    { background: #00d4ff !important; color: #0a2540 !important; font-weight: 800; }
+.hf-av-day.av-sel .av-dot-row { display: none; }
+.av-dot-row { display: flex; gap: 2px; justify-content: center; }
+.av-dot { width: 4px; height: 4px; border-radius: 50%; }
+.av-dot.libre    { background: #059669; }
+.av-dot.reservado{ background: #ff6b00; }
+
+/* ── Panel de formulario debajo del calendario ── */
+.hf-av-form-panel {
+  background: #fff;
+  border: 1px solid #deedf9;
+  border-radius: 16px;
+  padding: 1.1rem 1rem;
+}
+.hf-av-date-display {
+  background: #f4f9ff;
+  border: 1.5px solid #00d4ff;
+  border-radius: 12px;
+  padding: .55rem 1rem;
+  font-size: .9rem; font-weight: 700; color: #0a2540;
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .85rem;
+}
+.hf-av-date-display.empty { border-color: #deedf9; color: #8aabb8; font-weight: 500; }
+
+/* ── Slots guardados ── */
+.hf-slot-card {
+  display: flex; align-items: center; gap: .85rem;
+  padding: .75rem 1rem; border-radius: 12px;
+  border: 1px solid #deedf9; background: #fff;
+  transition: box-shadow .15s;
+}
+.hf-slot-card:hover { box-shadow: 0 4px 14px rgba(10,37,64,.07); }
+.hf-slot-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.05rem; flex-shrink: 0;
+}
+.hf-slot-icon.libre    { background: #e8f8f2; color: #059669; }
+.hf-slot-icon.reservado{ background: #fff3e0; color: #c45200; }
+.hf-slot-info { flex: 1; min-width: 0; }
+.hf-slot-time-range { font-weight: 700; font-size: .88rem; color: #0a2540; }
+.hf-slot-dur  { font-size: .72rem; color: #7a9ab2; }
+.hf-slot-badge { font-size: .68rem; font-weight: 700; padding: .22rem .6rem; border-radius: 99px; white-space: nowrap; }
+.hf-slot-badge.libre    { background: #d1fae5; color: #065f46; }
+.hf-slot-badge.reservado{ background: #ffe8cc; color: #6d3200; }
+.hf-av-group-hdr {
+  font-size: .7rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .07em; color: #8aabb8; padding: .9rem 0 .35rem;
+  border-bottom: 1px solid #eef4fb; margin-bottom: .4rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+</style>
+{% endblock %}
+
+{% block page_title %}Disponibilidad{% endblock %}
+
+{% block tech_content %}
+
+{# ── Stats ── #}
+{% set total_slots = slots|length %}
+{% set libre_count = slots|selectattr('is_booked','equalto',false)|list|length %}
+{% set booked_count = total_slots - libre_count %}
+
+<div class="row g-3 mb-4" data-aos="fade-down">
+  <div class="col-4">
+    <div class="hf-av-stat">
+      <div class="hf-av-stat-icon" style="background:#f0f8ff;color:#0a2540;"><i class="bi bi-calendar3"></i></div>
+      <div>
+        <div class="hf-av-stat-num">{{ total_slots }}</div>
+        <div class="hf-av-stat-label">Total</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="hf-av-stat">
+      <div class="hf-av-stat-icon" style="background:#e8f8f2;color:#059669;"><i class="bi bi-calendar-check"></i></div>
+      <div>
+        <div class="hf-av-stat-num" style="color:#059669;">{{ libre_count }}</div>
+        <div class="hf-av-stat-label">Libres</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="hf-av-stat">
+      <div class="hf-av-stat-icon" style="background:#fff3e0;color:#c45200;"><i class="bi bi-lock"></i></div>
+      <div>
+        <div class="hf-av-stat-num" style="color:#c45200;">{{ booked_count }}</div>
+        <div class="hf-av-stat-label">Reservados</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  {# ── Columna izquierda: calendario + formulario ── #}
+  <div class="col-lg-4">
+
+    {# Calendario selector #}
+    <div class="hf-av-cal mb-3" data-aos="fade-up">
+      <div class="hf-av-cal-nav">
+        <button type="button" class="hf-av-cal-nav-btn" id="avPrev"><i class="bi bi-chevron-left"></i></button>
+        <span class="hf-av-cal-title" id="avMonthTitle">—</span>
+        <button type="button" class="hf-av-cal-nav-btn" id="avNext"><i class="bi bi-chevron-right"></i></button>
+      </div>
+      <div class="hf-av-cal-grid" id="avGrid"></div>
+    </div>
+
+    {# Formulario debajo del calendario #}
+    <div class="hf-av-form-panel" data-aos="fade-up" data-aos-delay="60">
+      <p class="fw-bold mb-2" style="font-size:.88rem;color:#0a2540;">
+        <i class="bi bi-plus-circle-fill me-2" style="color:#00d4ff;"></i>Agregar horario
+      </p>
+
+      <div class="hf-av-date-display empty" id="avDateDisplay">
+        <i class="bi bi-calendar-event"></i>
+        <span id="avDateLabel">Selecciona un día en el calendario</span>
+      </div>
+
+      <form method="post" id="avForm" class="d-grid gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div>
+          <label class="form-label small fw-semibold" for="avDateInput">Fecha</label>
+          <input type="date" id="avDateInput" name="date" class="form-control rounded-3"
+                 required min="{{ today_str }}">
+        </div>
+
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small fw-semibold" for="avail-start">Desde</label>
+            <input type="time" id="avail-start" name="start_time" class="form-control rounded-3"
+                   required min="06:00" max="21:00" step="1800">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold" for="avail-end">Hasta</label>
+            <input type="time" id="avail-end" name="end_time" class="form-control rounded-3"
+                   required min="06:00" max="21:00" step="1800">
+          </div>
+        </div>
+        <p class="form-text mt-0" style="font-size:.7rem;">Horario 6:00 am – 9:00 pm</p>
+
+        <button type="submit" class="btn hf-btn-primary rounded-3 py-2 fw-bold" id="avSubmitBtn">
+          <i class="bi bi-check2-circle me-1"></i>Guardar horario
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  {# ── Columna derecha: slots guardados ── #}
+  <div class="col-lg-8" data-aos="fade-up" data-aos-delay="80">
+    <div class="hf-card rounded-4 p-4" style="border:1px solid #deedf9;">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <h2 class="h6 fw-bold m-0" style="color:#0a2540;">
+          <i class="bi bi-clock-history me-2" style="color:#00d4ff;"></i>Horarios guardados
+        </h2>
+      </div>
+
+      {% if slots %}
+        {% set ns = namespace(cur_date=None) %}
+        {% for s in slots %}
+          {% if s.date != ns.cur_date %}
+            {% set ns.cur_date = s.date %}
+            <div class="hf-av-group-hdr">
+              <i class="bi bi-calendar-week"></i>
+              {{ s.date.strftime('%A %d de %B, %Y')|title }}
+            </div>
+          {% endif %}
+
+          {% set estado = 'reservado' if s.is_booked else 'libre' %}
+          <div class="hf-slot-card mb-2">
+            <div class="hf-slot-icon {{ estado }}">
+              <i class="bi bi-{{ 'lock-fill' if s.is_booked else 'calendar-check-fill' }}"></i>
+            </div>
+            <div class="hf-slot-info">
+              <div class="hf-slot-time-range">
+                {{ s.start_time.strftime('%I:%M %p') }} — {{ s.end_time.strftime('%I:%M %p') }}
+              </div>
+              <div class="hf-slot-dur">
+                {% set diff_m = (s.end_time.hour * 60 + s.end_time.minute) - (s.start_time.hour * 60 + s.start_time.minute) %}
+                {{ diff_m // 60 }}h{% if diff_m % 60 %} {{ diff_m % 60 }}min{% endif %} de duración
+              </div>
+            </div>
+            <span class="hf-slot-badge {{ estado }}">
+              {{ 'Reservado' if s.is_booked else 'Libre' }}
+            </span>
+            {% if not s.is_booked %}
+            <form method="post" action="{{ url_for('technician.delete_availability', slot_id=s.id) }}"
+                  onsubmit="return confirm('¿Eliminar este horario?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-light rounded-3 border text-danger" title="Eliminar">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+      {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-calendar-x" style="font-size:2.5rem;color:#b0c4d8;"></i>
+          <p class="mt-3 mb-1 fw-semibold" style="color:#4d6781;">Sin horarios aún</p>
+          <p class="small text-secondary">Usa el calendario de la izquierda para agregar tu disponibilidad.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const DAYS   = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+  const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const DAYS_FULL = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const MONTHS_FULL = ['enero','febrero','marzo','abril','mayo','junio',
+                       'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+  // Fechas con slots desde el servidor
+  const SLOT_DATA = [
+    {% for s in slots %}
+    { date: "{{ s.date.strftime('%Y-%m-%d') }}", booked: {{ 'true' if s.is_booked else 'false' }} }{{ ',' if not loop.last }}
+    {% endfor %}
+  ];
+
+  // Construir mapa: { "YYYY-MM-DD": { libre: N, reservado: N } }
+  const slotMap = {};
+  SLOT_DATA.forEach(({date, booked}) => {
+    if (!slotMap[date]) slotMap[date] = { libre: 0, reservado: 0 };
+    booked ? slotMap[date].reservado++ : slotMap[date].libre++;
+  });
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const minStr   = '{{ today_str }}';
+
+  let curYear  = today.getFullYear();
+  let curMonth = today.getMonth();
+  let selDate  = null;
+
+  const grid      = document.getElementById('avGrid');
+  const titleEl   = document.getElementById('avMonthTitle');
+  const dateInput = document.getElementById('avDateInput');
+  const dateDisp  = document.getElementById('avDateDisplay');
+  const dateLabel = document.getElementById('avDateLabel');
+
+  // Si el usuario escribe la fecha manualmente, sincronizar con el calendario
+  dateInput.addEventListener('change', function () {
+    if (this.value) selectDate(this.value);
+  });
+
+  document.getElementById('avPrev').addEventListener('click', () => {
+    curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; }
+    render();
+  });
+  document.getElementById('avNext').addEventListener('click', () => {
+    curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; }
+    render();
+  });
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function render() {
+    titleEl.textContent = MONTHS[curMonth] + ' ' + curYear;
+    grid.innerHTML = '';
+
+    DAYS.forEach(d => {
+      const h = document.createElement('div');
+      h.className = 'hf-av-dow'; h.textContent = d;
+      grid.appendChild(h);
+    });
+
+    const firstDay    = new Date(curYear, curMonth, 1).getDay();
+    const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+    const daysInPrev  = new Date(curYear, curMonth, 0).getDate();
+
+    for (let i = firstDay - 1; i >= 0; i--) {
+      addCell(daysInPrev - i, true, null);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = curYear + '-' + pad(curMonth + 1) + '-' + pad(d);
+      addCell(d, false, ds);
+    }
+    const rem = (7 - ((firstDay + daysInMonth) % 7)) % 7;
+    for (let d = 1; d <= rem; d++) addCell(d, true, null);
+  }
+
+  function addCell(day, other, dateStr) {
+    const cell = document.createElement('div');
+    const isPast = dateStr && dateStr < minStr;
+    cell.className = 'hf-av-day'
+      + (other   ? ' av-other'   : '')
+      + (isPast  ? ' av-past'    : '')
+      + (dateStr === todayStr  ? ' av-today' : '')
+      + (dateStr === selDate   ? ' av-sel'   : '');
+
+    const numSpan = document.createElement('span');
+    numSpan.textContent = day;
+    cell.appendChild(numSpan);
+
+    if (dateStr && slotMap[dateStr]) {
+      const row = document.createElement('div');
+      row.className = 'av-dot-row';
+      const info = slotMap[dateStr];
+      if (info.libre > 0)    { const d = document.createElement('span'); d.className='av-dot libre';     row.appendChild(d); }
+      if (info.reservado > 0){ const d = document.createElement('span'); d.className='av-dot reservado'; row.appendChild(d); }
+      cell.appendChild(row);
+    }
+
+    if (!other && !isPast && dateStr) {
+      cell.addEventListener('click', () => selectDate(dateStr));
+    }
+    grid.appendChild(cell);
+  }
+
+  function selectDate(ds) {
+    selDate = ds;
+    dateInput.value = ds;
+
+    const [yyyy, mm, dd] = ds.split('-').map(Number);
+    const dateObj = new Date(yyyy, mm - 1, dd);
+    const dayName = DAYS_FULL[dateObj.getDay()];
+    const readable = dayName.charAt(0).toUpperCase() + dayName.slice(1)
+      + ' ' + dd + ' de ' + MONTHS_FULL[mm - 1] + ' ' + yyyy;
+
+    if (dateLabel) dateLabel.textContent = readable;
+    if (dateDisp) dateDisp.classList.remove('empty');
+    render();
+  }
+
+  render();
+})();
+</script>
+{% endblock %}
+

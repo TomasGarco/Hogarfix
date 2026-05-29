@@ -1,0 +1,45 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Local environment secrets
+.env
+.env.local
+.env.production
+
+# Local mail outbox/logs
+app/mail_outbox.log
+*.log
+
+# Archivos subidos por usuarios (no van al repositorio)
+app/static/uploads/profile/*
+app/static/uploads/work/*
+app/static/uploads/evidence/*
+app/static/uploads/verification/*
+!app/static/uploads/profile/.gitkeep
+!app/static/uploads/work/.gitkeep
+!app/static/uploads/evidence/.gitkeep
+!app/static/uploads/verification/.gitkeep
+
+# Frontend dependencies y build
+frontend/tech-registration/node_modules/
+frontend/tech-registration/dist/
+frontend/tech-registration/.env
+
+# Flask instance folder
+instance/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/*.log
+.idea/
+*.swp
+*.swo

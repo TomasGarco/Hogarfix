@@ -1,0 +1,1611 @@
+{% extends 'base.html' %}
+{% block content %}
+{% set type = type|default('cliente') %}
+<style>
+  /* Suprimir el ojo nativo de Edge/IE en campos password */
+  input[type=password]::-ms-reveal,
+  input[type=password]::-ms-clear { display: none !important; }
+  /* Suprimir el ojo nativo de Chrome en campos password */
+  input[type=password]::-webkit-credentials-auto-fill-button { display: none !important; }
+</style>
+<div class="row g-4 justify-content-center hf-form-shell">
+  <div class="col-lg-5" data-aos="fade-right">
+    <div class="hf-form-card h-100">
+      {% if type == 'tecnico' %}
+      <span class="hf-convert-chip mb-3"><i class="bi bi-patch-check"></i> Tecnicos verificados</span>
+      <h1 class="h3 mb-2">Registro de Tecnicos Verificados</h1>
+      <p class="hf-sell-copy mb-3">Marketplace HogarFix &mdash; seguridad, identidad y cumplimiento profesional.</p>
+      <ul class="hf-proof-list mb-0">
+        <li><i class="bi bi-person-vcard"></i> Verificacion de identidad con documento</li>
+        <li><i class="bi bi-file-earmark-text"></i> Contrato digital con firma electronica</li>
+        <li><i class="bi bi-graph-up-arrow"></i> Visibilidad en toda Bogota y Cundinamarca</li>
+        <li><i class="bi bi-cash-coin"></i> Cobra directo, sin intermediarios</li>
+        <li><i class="bi bi-star-half"></i> Reputacion y resenas de clientes reales</li>
+      </ul>
+      {% else %}
+      <span class="hf-convert-chip mb-3"><i class="bi bi-stars"></i> Nuevo lanzamiento</span>
+      <h1 class="h3 mb-2">Crea tu cuenta y agenda hoy</h1>
+      <p class="hf-sell-copy mb-3">Empieza en menos de 1 minuto. Sin costo de registro y con acompanamiento desde la primera solicitud.</p>
+      <ul class="hf-proof-list mb-0">
+        <li><i class="bi bi-shield-check"></i> Tecnicos revisados en plataforma</li>
+        <li><i class="bi bi-lightning-charge"></i> Publica una solicitud en segundos</li>
+        <li><i class="bi bi-chat-heart"></i> Soporte humano cuando lo necesites</li>
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-7" data-aos="fade-up">
+    <div class="hf-card rounded-4 p-4 p-lg-5">
+      <div class="text-center mb-3 d-flex justify-content-center align-items-center gap-2">
+        <a href="{{ url_for('auth.login') }}" title="Volver al inicio">
+          <img src="{{ url_for('static', filename='img/logo-hogarfix.svg') }}" alt="HogarFix" class="hf-auth-logo">
+        </a>
+      </div>
+      <h2 class="h4 mb-1">Crear cuenta en HogarFix</h2>
+      {% if type == 'tecnico' %}
+      <div class="d-flex align-items-center mb-3 mt-2" id="stepIndicator">
+        <div class="d-flex flex-column align-items-center">
+          <div id="stepDot1" class="rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;background:#1d4b78;color:#fff;font-size:.85rem;">1</div>
+          <span class="small mt-1 fw-semibold" style="color:#1d4b78;">Tus datos</span>
+        </div>
+        <div style="flex:1;height:2px;background:#dde8f5;margin:0 8px;margin-bottom:20px;"></div>
+        <div class="d-flex flex-column align-items-center">
+          <div id="stepDot2" class="rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;background:#dde8f5;color:#8ba5c0;font-size:.85rem;">2</div>
+          <span class="small mt-1 text-secondary" id="stepLabel2">Contrato</span>
+        </div>
+      </div>
+      {% endif %}
+      <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2 p-2 px-3 rounded-3" style="background:#f7fbff;border:1px solid #deedf9;">
+        <div class="d-flex align-items-center gap-2">
+          <span class="small text-uppercase fw-bold" style="letter-spacing:.08em;color:#1d4b78;">Tipo:</span>
+          <select id="typeSwitcher" class="form-select form-select-sm" style="min-width:170px;">
+            <option value="cliente" {% if type == 'cliente' %}selected{% endif %}>&#128100; Cliente</option>
+            <option value="tecnico" {% if type == 'tecnico' %}selected{% endif %}>&#128295; Tecnico</option>
+          </select>
+        </div>
+        <span class="small text-secondary">Elige el tipo para ajustar el formulario</span>
+      </div>
+
+      <form method="post" class="row g-3" id="registerForm" novalidate enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if error %}
+        <div class="col-12 alert alert-danger d-flex align-items-center gap-2" id="formFeedback" role="alert" aria-live="polite">
+          <i class="bi bi-exclamation-triangle-fill"></i><span>{{ error }}</span>
+        </div>
+        {% else %}
+        <div class="col-12 d-none" id="formFeedback" role="alert" aria-live="polite"></div>
+        {% endif %}
+        <input type="hidden" name="account_type" id="accountType" value="{{ type }}">
+
+        {% if type != 'admin' %}
+
+        {% if type in ['cliente', 'tecnico'] %}
+        <div class="col-md-6">
+          <label class="form-label">Nombre</label>
+          <input type="text" name="first_name" id="firstName" class="form-control" placeholder="Ej: Daniel" required value="{{ form.first_name if form is defined else '' }}">
+          <div id="firstNameError" class="invalid-feedback"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Apellido</label>
+          <input type="text" name="last_name" id="lastName" class="form-control" placeholder="Ej: Lopez" required value="{{ form.last_name if form is defined else '' }}">
+          <div id="lastNameError" class="invalid-feedback"></div>
+        </div>
+
+        {% endif %}
+
+        {% if type == 'tecnico' %}
+        <div class="col-12">
+          <div class="rounded-3 p-3" style="background:#f8fbff;border:1px solid #d9e9f8;">
+            <div class="small fw-bold text-uppercase mb-2" style="letter-spacing:.05em;color:#1d4b78;">Progreso perfil tecnico</div>
+            <div class="progress" style="height:10px;">
+              <div id="techProgressBar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+            </div>
+            <div class="small text-secondary mt-1" id="techProgressText">Completa los bloques para activar tu perfil.</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Categoria principal</label>
+          <select name="specialty" id="specialty" class="form-select" required>
+            <option value="">Selecciona una categor&iacute;a</option>
+            <option value="Plomeria" {% if form.specialty == 'Plomeria' %}selected{% endif %}>Plomer&iacute;a</option>
+            <option value="Electricidad" {% if form.specialty == 'Electricidad' %}selected{% endif %}>Electricidad</option>
+            <option value="Cerrajeria" {% if form.specialty == 'Cerrajeria' %}selected{% endif %}>Cerrajer&iacute;a</option>
+            <option value="Pintura" {% if form.specialty == 'Pintura' %}selected{% endif %}>Pintura</option>
+            <option value="Fumigacion" {% if form.specialty == 'Fumigacion' %}selected{% endif %}>Fumigaci&oacute;n</option>
+            <option value="Carpinteria" {% if form.specialty == 'Carpinteria' %}selected{% endif %}>Carpinter&iacute;a</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">A&ntilde;os de experiencia</label>
+          <select name="years_experience" id="yearsExperience" class="form-select" required>
+            <option value="">Selecciona</option>
+            <option value="0-1" {% if form.years_experience == '0-1' %}selected{% endif %}>0 a 1 a&ntilde;o</option>
+            <option value="2-4" {% if form.years_experience == '2-4' %}selected{% endif %}>2 a 4 a&ntilde;os</option>
+            <option value="5-8" {% if form.years_experience == '5-8' %}selected{% endif %}>5 a 8 a&ntilde;os</option>
+            <option value="9+" {% if form.years_experience == '9+' %}selected{% endif %}>9 a&ntilde;os o m&aacute;s</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Descripci&oacute;n de servicios
+            <span class="text-secondary fw-normal small">(m&iacute;n. 50 caracteres, m&aacute;x. 300)</span>
+          </label>
+          <textarea name="service_description" id="serviceDescription" rows="3" class="form-control"
+            placeholder="Ej: Realizo instalaciones el&eacute;ctricas residenciales, reparaci&oacute;n de tomacorrientes, cambio de luminarias y tableros. Trabajo en Bogot&aacute; y municipios cercanos."
+            minlength="50" maxlength="300" required>{{ form.service_description if form is defined else '' }}</textarea>
+          <div class="d-flex justify-content-between mt-1">
+            <span class="small text-secondary">S&eacute; claro y profesional. Menciona qu&eacute; haces, d&oacute;nde y c&oacute;mo.</span>
+            <span class="small text-secondary"><span id="bioCharCount">0</span>/300</span>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Servicios (seleccion multiple)</label>
+          <div class="d-flex flex-wrap gap-2">
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="services" value="Instalaciones" id="svc1"><label class="form-check-label" for="svc1">Instalaciones</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="services" value="Mantenimiento" id="svc2"><label class="form-check-label" for="svc2">Mantenimiento</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="services" value="Reparaciones" id="svc3"><label class="form-check-label" for="svc3">Reparaciones</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="services" value="Emergencias" id="svc4"><label class="form-check-label" for="svc4">Emergencias</label></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Tipo de documento</label>
+          <select name="document_type" id="documentType" class="form-select" required>
+            <option value="">Selecciona</option>
+            <option value="cc">Cedula</option>
+            <option value="ce">Cedula de extranjeria</option>
+            <option value="pasaporte">Pasaporte</option>
+          </select>
+        </div>
+        <input type="hidden" name="identity_provider" id="identityProvider" value="mock">
+        <div class="col-md-6">
+          <label class="form-label">Numero de documento</label>
+          <input type="text" name="document_number" id="documentNumber" class="form-control" required placeholder="Ej: 1020304050" value="{{ form.document_number if form is defined else '' }}">
+        </div>
+        <!-- Documentos: carga o escaneo con camara -->
+        <div class="col-12">
+          <div class="rounded-3 p-3" style="background:#f0f7ff;border:1px solid #c6dff5;">
+            <div class="small fw-bold text-uppercase mb-2" style="letter-spacing:.05em;color:#1d4b78;">
+              <i class="bi bi-camera2"></i> Verificacion de identidad
+            </div>
+            <p class="small text-secondary mb-3">Puedes tomar la foto directamente desde la camara de tu celular o subir una imagen guardada. Formatos: JPG o PNG, maximo 5MB.</p>
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold"><i class="bi bi-credit-card-fill text-primary"></i> Documento — Frente <span class="text-danger">*</span></label>
+                <div class="hf-upload-zone" id="zoneDocFront">
+                  <div class="text-center py-3">
+                    <i class="bi bi-cloud-arrow-up fs-2 text-secondary"></i>
+                    <div class="small text-secondary mt-1">Arrastra o elige archivo</div>
+                  </div>
+                  <input type="file" name="document_front" id="documentFront" class="form-control mt-2" accept="image/png,image/jpeg" capture="environment" required>
+                  <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="document.getElementById('documentFront').click()">
+                    <i class="bi bi-camera"></i> Tomar foto / Subir
+                  </button>
+                </div>
+                <img id="previewDocumentFront" class="img-fluid rounded mt-2 d-none" style="max-height:120px;object-fit:cover;" alt="Preview frente">
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold"><i class="bi bi-credit-card text-primary"></i> Documento — Reverso <span class="text-danger">*</span></label>
+                <div class="hf-upload-zone" id="zoneDocBack">
+                  <div class="text-center py-3">
+                    <i class="bi bi-cloud-arrow-up fs-2 text-secondary"></i>
+                    <div class="small text-secondary mt-1">Arrastra o elige archivo</div>
+                  </div>
+                  <input type="file" name="document_back" id="documentBack" class="form-control mt-2" accept="image/png,image/jpeg" capture="environment" required>
+                  <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="document.getElementById('documentBack').click()">
+                    <i class="bi bi-camera"></i> Tomar foto / Subir
+                  </button>
+                </div>
+                <img id="previewDocumentBack" class="img-fluid rounded mt-2 d-none" style="max-height:120px;object-fit:cover;" alt="Preview reverso">
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label fw-semibold"><i class="bi bi-person-bounding-box text-primary"></i> Selfie con documento <span class="text-danger">*</span></label>
+                <div class="hf-upload-zone" id="zoneSelfie">
+                  <div class="text-center py-3">
+                    <i class="bi bi-cloud-arrow-up fs-2 text-secondary"></i>
+                    <div class="small text-secondary mt-1">Sostén el documento junto a tu cara</div>
+                  </div>
+                  <input type="file" name="selfie_file" id="selfieFile" class="form-control mt-2" accept="image/png,image/jpeg" capture="user" required>
+                  <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="document.getElementById('selfieFile').click()">
+                    <i class="bi bi-camera-fill"></i> Tomar selfie / Subir
+                  </button>
+                </div>
+                <img id="previewSelfieFile" class="img-fluid rounded mt-2 d-none" style="max-height:120px;object-fit:cover;" alt="Preview selfie">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Certificaciones (opcional)</label>
+          <input type="file" name="certifications_file" id="certificationsFile" class="form-control" accept="image/png,image/jpeg,application/pdf">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Portafolio (fotos de trabajos)</label>
+          <input type="file" name="portfolio_files" id="portfolioFiles" class="form-control" accept="image/png,image/jpeg" multiple>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Direccion</label>
+          <div class="input-group">
+            <input type="text" name="technician_address" id="technicianAddress" class="form-control" placeholder="Ej: Cra 45 # 120 - 25" required value="{{ form.technician_address if form is defined else '' }}">
+            <button type="button" class="btn btn-outline-secondary" id="useGeoBtn">Usar mi ubicacion</button>
+          </div>
+          <div id="geoStatus" class="d-none small mt-2 px-3 py-2 rounded-3" style="background:#f0f7ff;border:1px solid #c6dff5;line-height:1.6;"></div>
+          <input type="hidden" name="geo_lat" id="geoLat">
+          <input type="hidden" name="geo_lng" id="geoLng">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Tipo de cobro</label>
+          <select name="charge_type" id="chargeType" class="form-select" required>
+            <option value="">Selecciona</option>
+            <option value="hora">Por hora</option>
+            <option value="servicio">Por servicio</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Precio base <span class="text-secondary fw-normal small">(COP por hora)</span> <span class="text-danger">*</span>
+            <span class="ms-2 fw-bold" id="basePriceDisplay" style="color:#1d4b78;">$ 50.000</span>
+          </label>
+          <input type="range" name="base_price" id="basePrice" class="form-range"
+            min="20000" max="500000" step="5000" value="{{ form.base_price if form is defined and form.base_price else '50000' }}" required>
+          <div class="d-flex justify-content-between">
+            <span class="small text-secondary">Mín: $ 20.000</span>
+            <span class="small text-secondary">Máx: $ 500.000</span>
+          </div>
+          <div class="text-center">
+            <span class="small text-secondary" id="basePriceHint">Arrastra para ajustar</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">D&iacute;as disponibles <span class="text-secondary fw-normal small">(seg&uacute;n contrato de prestaci&oacute;n de servicios)</span></label>
+          <div class="d-flex flex-wrap gap-2">
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="availability_days" value="Lunes" id="day1"><label class="form-check-label" for="day1">Lunes</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="availability_days" value="Martes" id="day2"><label class="form-check-label" for="day2">Martes</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="availability_days" value="Miercoles" id="day3"><label class="form-check-label" for="day3">Miércoles</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="availability_days" value="Jueves" id="day4"><label class="form-check-label" for="day4">Jueves</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="availability_days" value="Viernes" id="day5"><label class="form-check-label" for="day5">Viernes</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="availability_days" value="Sabado" id="day6"><label class="form-check-label" for="day6">Sábado</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="availability_days" value="Domingo" id="day7"><label class="form-check-label" for="day7">Domingo</label></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Hora de inicio</label>
+          <select name="availability_start" id="availabilityStart" class="form-select" required>
+            <option value="">-- Desde --</option>
+            <option value="06:00">6:00 AM</option>
+            <option value="07:00">7:00 AM</option>
+            <option value="08:00">8:00 AM</option>
+            <option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="13:00">1:00 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="17:00">5:00 PM</option>
+            <option value="18:00">6:00 PM</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Hora de fin</label>
+          <select name="availability_end" id="availabilityEnd" class="form-select" required>
+            <option value="">-- Hasta --</option>
+            <option value="08:00">8:00 AM</option>
+            <option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="13:00">1:00 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="17:00">5:00 PM</option>
+            <option value="18:00">6:00 PM</option>
+            <option value="19:00">7:00 PM</option>
+            <option value="20:00">8:00 PM</option>
+          </select>
+        </div>
+        {% endif %}
+
+        <div class="col-md-6">
+          <label class="form-label">Telefono</label>
+          <div class="input-group">
+            <select name="phone_country" id="phoneCountry" class="form-select hf-phone-country" required>
+              <option value="+57" {% if form.phone_country == '+57' %}selected{% endif %}>CO +57</option>
+              <option value="+1" {% if form.phone_country == '+1' %}selected{% endif %}>US +1</option>
+              <option value="+52" {% if form.phone_country == '+52' %}selected{% endif %}>MX +52</option>
+              <option value="+51" {% if form.phone_country == '+51' %}selected{% endif %}>PE +51</option>
+              <option value="+593" {% if form.phone_country == '+593' %}selected{% endif %}>EC +593</option>
+              <option value="+54" {% if form.phone_country == '+54' %}selected{% endif %}>AR +54</option>
+              <option value="+56" {% if form.phone_country == '+56' %}selected{% endif %}>CL +56</option>
+              <option value="+34" {% if form.phone_country == '+34' %}selected{% endif %}>ES +34</option>
+            </select>
+            <input type="tel" name="phone" id="phone" class="form-control" placeholder="3001234567" inputmode="numeric" required value="{{ form.phone if form is defined else '' }}">
+          </div>
+          <div id="phoneStatus" class="hf-input-status hf-status-neutral mt-2">Escribe tu numero para validar.</div>
+          <div id="phoneFieldError" class="invalid-feedback"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Localidad</label>
+          <select name="locality" id="localityField" class="form-select" required>
+            <option value="">Selecciona una localidad</option>
+            <option value="usaquen" {% if form.locality == 'usaquen' %}selected{% endif %}>Usaquén</option>
+            <option value="chapinero" {% if form.locality == 'chapinero' %}selected{% endif %}>Chapinero</option>
+            <option value="santa fe" {% if form.locality == 'santa fe' %}selected{% endif %}>Santa Fe</option>
+            <option value="san cristobal" {% if form.locality == 'san cristobal' %}selected{% endif %}>San Cristóbal</option>
+            <option value="usme" {% if form.locality == 'usme' %}selected{% endif %}>Usme</option>
+            <option value="tunjuelito" {% if form.locality == 'tunjuelito' %}selected{% endif %}>Tunjuelito</option>
+            <option value="kennedy" {% if form.locality == 'kennedy' %}selected{% endif %}>Kennedy</option>
+            <option value="fontibon" {% if form.locality == 'fontibon' %}selected{% endif %}>Fontibón</option>
+            <option value="engativa" {% if form.locality == 'engativa' %}selected{% endif %}>Engativá</option>
+            <option value="suba" {% if form.locality == 'suba' %}selected{% endif %}>Suba</option>
+            <option value="barrios unidos" {% if form.locality == 'barrios unidos' %}selected{% endif %}>Barrios Unidos</option>
+            <option value="teusaquillo" {% if form.locality == 'teusaquillo' %}selected{% endif %}>Teusaquillo</option>
+            <option value="los martires" {% if form.locality == 'los martires' %}selected{% endif %}>Los Mártires</option>
+            <option value="antonio narino" {% if form.locality == 'antonio narino' %}selected{% endif %}>Antonio Nariño</option>
+            <option value="puente aranda" {% if form.locality == 'puente aranda' %}selected{% endif %}>Puente Aranda</option>
+            <option value="candelaria" {% if form.locality == 'candelaria' %}selected{% endif %}>La Candelaria</option>
+            <option value="rafael uribe uribe" {% if form.locality == 'rafael uribe uribe' %}selected{% endif %}>Rafael Uribe Uribe</option>
+            <option value="ciudad bolivar" {% if form.locality == 'ciudad bolivar' %}selected{% endif %}>Ciudad Bolívar</option>
+            <option value="sumapaz" {% if form.locality == 'sumapaz' %}selected{% endif %}>Sumapaz</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Barrio</label>
+          <input type="text" name="barrio" id="barrioField" class="form-control" placeholder="Escribe tu barrio" required
+            list="barrioSuggestions"
+            value="{{ form.barrio if form is defined else '' }}"
+            autocomplete="off">
+          <datalist id="barrioSuggestions"></datalist>
+          <div id="barrioFieldError" class="invalid-feedback"></div>
+        </div>
+        {% if type == 'cliente' %}
+        <div class="col-12">
+          <label class="form-label">Direccion</label>
+          <div class="input-group mb-1">
+            <input type="text" name="client_address" id="clientAddress" class="form-control" placeholder="Ej: Cra 45 # 120 - 25" autocomplete="street-address" required value="{{ form.client_address if form is defined else '' }}">
+            <button type="button" class="btn btn-outline-secondary" id="clientGeoBtn" title="Usar mi ubicacion actual">
+              <i class="bi bi-crosshair2"></i> Usar mi ubicacion
+            </button>
+          </div>
+          <div id="clientGeoStatus" class="d-none small mt-2 mb-2 px-3 py-2 rounded-3" style="background:#f0f7ff;border:1px solid #c6dff5;line-height:1.6;"></div>
+          <div class="form-text mb-2">Escríbela o mueve el pin en el mapa para autocompletar.</div>
+          <div id="clientAddressError" class="invalid-feedback"></div>
+          <div id="clientMapPicker" style="height:220px;border-radius:12px;overflow:hidden;border:1px solid #c6dff5;display:none;"></div>
+          <div id="clientMapsCredit" class="d-none text-end" style="font-size:.72rem;color:#aaa;">Datos de mapa cortesia de <strong style="color:#888;">Google Maps</strong></div>
+          <div class="mt-1 d-none" id="clientMapStatus">
+            <span class="small text-secondary"><i class="bi bi-geo-alt-fill text-primary"></i> <span id="clientMapStatusText">Mueve el pin para ajustar la direccion.</span></span>
+          </div>
+          <input type="hidden" name="client_lat" id="clientLat" value="{{ form.client_lat if form is defined else '' }}">
+          <input type="hidden" name="client_lng" id="clientLng" value="{{ form.client_lng if form is defined else '' }}">
+        </div>
+        {% endif %}
+        <div class="col-12">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" id="emailField" class="form-control" required value="{{ form.email if form is defined else '' }}">
+          <div id="emailFieldError" class="invalid-feedback"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Contrasena</label>
+          <div class="input-group">
+            <input type="password" name="password" id="password" class="form-control" minlength="8" required autocomplete="new-password">
+            <button type="button" class="btn btn-outline-secondary hf-toggle-pw" tabindex="-1" data-target="password" aria-label="Mostrar contrasena">
+              <i class="bi bi-eye" id="iconPassword"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Confirmar contrasena</label>
+          <div class="input-group">
+            <input type="password" name="confirm_password" id="confirmPassword" class="form-control" required autocomplete="new-password">
+            <button type="button" class="btn btn-outline-secondary hf-toggle-pw" tabindex="-1" data-target="confirmPassword" aria-label="Mostrar confirmacion">
+              <i class="bi bi-eye" id="iconConfirmPassword"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="hf-password-checklist hf-password-checklist--compact mt-1" id="passwordChecklist">
+            <div id="pwLen" class="hf-input-status hf-status-neutral">Minimo 8 caracteres</div>
+            <div id="pwUpper" class="hf-input-status hf-status-neutral">Al menos una mayuscula</div>
+            <div id="pwLower" class="hf-input-status hf-status-neutral">Al menos una minuscula</div>
+            <div id="pwNum" class="hf-input-status hf-status-neutral">Al menos un numero</div>
+            <div id="pwSpecial" class="hf-input-status hf-status-neutral">1 caracter especial</div>
+          </div>
+        </div>
+        {% if type == 'tecnico' %}
+        <!-- Tecnico: boton para ir al paso 2 -->
+        <div class="col-12 d-flex flex-wrap gap-2 mt-4" id="step1Buttons">
+          <button type="button" class="btn hf-btn-action" id="goToStep2Btn">
+            Continuar al contrato <i class="bi bi-arrow-right"></i>
+          </button>
+          <a href="{{ url_for('auth.login') }}" class="btn hf-btn-outline">Ya tengo cuenta</a>
+        </div>
+
+        <!-- PASO 2: Contrato + Firma (oculto inicialmente) -->
+        <div class="col-12 d-none" id="formStep2">
+          <!-- Separador visual -->
+          <div class="border-top pt-3 mt-2">
+            <div class="rounded-3 p-3 mb-3" style="background:#f0f7ff;border:1px solid #c6dff5;">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-file-earmark-text-fill" style="color:#1d4b78;font-size:1.2rem;"></i>
+                <span class="fw-bold" style="color:#1d4b78;">Contrato de prestacion de servicios</span>
+              </div>
+              <p class="small text-secondary mb-2">Lee el contrato antes de firmar. Establece tus derechos y responsabilidades como tecnico verificado en HogarFix.</p>
+              <a href="{{ url_for('auth.contrato_preview') }}" target="_blank" rel="noopener" class="btn btn-sm hf-btn-action">
+                <i class="bi bi-file-earmark-pdf"></i> Ver contrato en PDF
+              </a>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Firma digital <span class="text-danger">*</span></label>
+            <p class="small text-secondary mb-2">Firma con el dedo o el mouse para aceptar el contrato.</p>
+            <canvas id="signatureCanvas" class="w-100 rounded border" height="150" style="background:#fff;cursor:crosshair;"></canvas>
+            <input type="hidden" name="signature_data" id="signatureData">
+            <div class="d-flex gap-2 mt-2 align-items-center flex-wrap">
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSignatureBtn">
+                <i class="bi bi-eraser"></i> Limpiar firma
+              </button>
+              <label class="btn btn-sm btn-outline-secondary mb-0" title="Sube una imagen de tu firma">
+                <i class="bi bi-image"></i> Subir imagen de firma
+                <input type="file" id="signatureImageUpload" accept="image/*" class="d-none">
+              </label>
+              <span class="small text-secondary">o arrastra una imagen sobre el recuadro</span>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="accepted_terms" id="accepted_terms" required {% if form.get('accepted_terms') %}checked{% endif %}> <a href="{{ url_for('main.politicas') }}#terminos" target="_blank" class="hf-link">Terminos y Condiciones</a> y la <a href="{{ url_for('main.politicas') }}#privacidad" target="_blank" class="hf-link">Politica de Privacidad</a> de HogarFix.
+              </label>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            <button type="button" class="btn hf-btn-outline" id="backToStep1Btn">
+              <i class="bi bi-arrow-left"></i> Volver
+            </button>
+            <button type="submit" class="btn hf-btn-action" id="finalSubmitBtn">
+              <i class="bi bi-check-circle"></i> Crear cuenta
+            </button>
+          </div>
+        </div>
+        {% else %}
+        <!-- Cliente: flujo de un solo paso -->
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="accepted_terms" id="accepted_terms" required {% if form.get('accepted_terms') %}checked{% endif %}>
+            <label class="form-check-label small" for="accepted_terms">
+              Acepto los <a href="{{ url_for('main.politicas') }}#terminos" target="_blank" class="hf-link">Terminos y Condiciones</a> y la <a href="{{ url_for('main.politicas') }}#privacidad" target="_blank" class="hf-link">Politica de Privacidad</a> de HogarFix.
+            </label>
+          </div>
+        </div>
+        <div class="col-12 d-flex flex-wrap gap-2 mt-1">
+          <button class="btn hf-btn-action">Crear cuenta</button>
+          <a href="{{ url_for('auth.login') }}" class="btn hf-btn-outline">Ya tengo cuenta</a>
+        </div>
+        {% endif %}
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const typeSwitcher = document.getElementById('typeSwitcher');
+  if (typeSwitcher) {
+    typeSwitcher.addEventListener('change', function () {
+      window.location.replace('{{ url_for("auth.register") }}?account_type=' + encodeURIComponent(typeSwitcher.value));
+    });
+  }
+  const form = document.getElementById('registerForm');
+  const accountType = document.getElementById('accountType');
+  const firstName = document.getElementById('firstName');
+  const lastName = document.getElementById('lastName');
+  const phone = document.getElementById('phone');
+  const phoneCountry = document.getElementById('phoneCountry');
+  const phoneStatus = document.getElementById('phoneStatus');
+  const localityField = document.getElementById('localityField');
+  const barrioField = document.getElementById('barrioField');
+  const clientAddress = document.getElementById('clientAddress');
+  const emailField = document.getElementById('emailField');
+  const password = document.getElementById('password');
+  const confirmPassword = document.getElementById('confirmPassword');
+  const acceptedTerms = document.getElementById('accepted_terms');
+  const specialty = document.getElementById('specialty');
+  const yearsExperience = document.getElementById('yearsExperience');
+  const serviceDescription = document.getElementById('serviceDescription');
+  const formFeedback = document.getElementById('formFeedback');
+  const addressStatus = document.getElementById('addressStatus');
+
+  const documentFront = document.getElementById('documentFront');
+  const documentBack = document.getElementById('documentBack');
+  const selfieFile = document.getElementById('selfieFile');
+  const identityProvider = document.getElementById('identityProvider');
+  const identityProviderHint = document.getElementById('identityProviderHint');
+  const previewDocumentFront = document.getElementById('previewDocumentFront');
+  const previewDocumentBack = document.getElementById('previewDocumentBack');
+  const previewSelfieFile = document.getElementById('previewSelfieFile');
+  const useGeoBtn = document.getElementById('useGeoBtn');
+  const geoLat = document.getElementById('geoLat');
+  const geoLng = document.getElementById('geoLng');
+  const technicianAddress = document.getElementById('technicianAddress');
+  const signatureCanvas = document.getElementById('signatureCanvas');
+  const signatureData = document.getElementById('signatureData');
+  const clearSignatureBtn = document.getElementById('clearSignatureBtn');
+  const techProgressBar = document.getElementById('techProgressBar');
+  const techProgressText = document.getElementById('techProgressText');
+
+  // Ojo para mostrar/ocultar contraseña
+  document.querySelectorAll('.hf-toggle-pw').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const targetId = btn.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      const icon = btn.querySelector('i');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        input.style.webkitTextSecurity = 'none';
+        icon.classList.replace('bi-eye', 'bi-eye-slash');
+      } else {
+        input.type = 'password';
+        input.style.webkitTextSecurity = '';
+        icon.classList.replace('bi-eye-slash', 'bi-eye');
+      }
+    });
+  });
+
+  function updateTechProgress() {
+    if (!techProgressBar || !techProgressText || !accountType || accountType.value !== 'tecnico') return;
+    const checks = [
+      !!(document.getElementById('documentType') && document.getElementById('documentType').value),
+      !!(document.getElementById('documentNumber') && document.getElementById('documentNumber').value.trim()),
+      !!(specialty && specialty.value),
+      !!(yearsExperience && yearsExperience.value),
+      !!(serviceDescription && serviceDescription.value.trim()),
+      !!(technicianAddress && technicianAddress.value.trim()),
+      !!(document.querySelector('input[name="availability_days"]:checked')),
+      !!(signatureData && signatureData.value),
+    ];
+    const complete = checks.filter(Boolean).length;
+    const total = checks.length;
+    const pct = Math.round((complete / total) * 100);
+    techProgressBar.style.width = pct + '%';
+    techProgressText.textContent = `Progreso tecnico: ${complete}/${total} bloques completos`;
+  }
+
+  function bindImagePreview(inputEl, previewEl) {
+    if (!inputEl || !previewEl) return;
+    inputEl.addEventListener('change', function () {
+      const file = inputEl.files && inputEl.files[0];
+      if (!file) {
+        previewEl.classList.add('d-none');
+        return;
+      }
+      const validTypes = ['image/jpeg', 'image/png'];
+      const maxSize = 5 * 1024 * 1024;
+      if (!validTypes.includes(file.type) || file.size > maxSize) {
+        inputEl.value = '';
+        previewEl.classList.add('d-none');
+        showFormAlert('Los archivos deben ser JPG/PNG y no superar 5MB.');
+        return;
+      }
+      previewEl.src = URL.createObjectURL(file);
+      previewEl.classList.remove('d-none');
+      updateTechProgress();
+    });
+  }
+
+  bindImagePreview(documentFront, previewDocumentFront);
+  bindImagePreview(documentBack, previewDocumentBack);
+  bindImagePreview(selfieFile, previewSelfieFile);
+
+  // ── Contador de caracteres descripción ────────────────────────────────
+  const bioTextarea = document.getElementById('serviceDescription');
+  const bioCharCount = document.getElementById('bioCharCount');
+  if (bioTextarea && bioCharCount) {
+    const updateBioCount = () => {
+      const len = bioTextarea.value.length;
+      bioCharCount.textContent = len;
+      bioCharCount.style.color = len < 50 ? '#dc3545' : len >= 280 ? '#fd7e14' : '#6c757d';
+    };
+    bioTextarea.addEventListener('input', updateBioCount);
+    updateBioCount();
+  }
+
+  // ── Slider de precio base ──────────────────────────────────────────────
+  const basePriceSlider = document.getElementById('basePrice');
+  const basePriceDisplay = document.getElementById('basePriceDisplay');
+  const basePriceHint = document.getElementById('basePriceHint');
+  const chargeType = document.getElementById('chargeType');
+  const chargeTypeHints = {
+    hora:     'Precio típico por hora: $30.000 – $120.000',
+    servicio: 'Precio típico por servicio: $50.000 – $300.000',
+    '':       'Arrastra para ajustar',
+  };
+  function formatCOP(val) {
+    return '$ ' + Number(val).toLocaleString('es-CO');
+  }
+  if (basePriceSlider && basePriceDisplay) {
+    basePriceSlider.addEventListener('input', function () {
+      basePriceDisplay.textContent = formatCOP(this.value);
+    });
+    // Mostrar el valor correcto al cargar (incl. cuando se restaura del servidor)
+    basePriceDisplay.textContent = formatCOP(basePriceSlider.value);
+  }
+  // Restaurar selects y checkboxes del formulario al volver de un error del servidor
+  (function restoreFormData() {
+    var avStart = document.getElementById('availabilityStart');
+    var avEnd   = document.getElementById('availabilityEnd');
+    var ctEl    = document.getElementById('chargeType');
+    if (avStart) avStart.value = {{ form.get('availability_start', '') | tojson if form is defined else "''" }};
+    if (avEnd)   avEnd.value   = {{ form.get('availability_end', '') | tojson if form is defined else "''" }};
+    if (ctEl)    ctEl.value    = {{ form.get('charge_type', '') | tojson if form is defined else "''" }};
+    var savedDays = {{ form.getlist('availability_days') | tojson if form is defined else '[]' }};
+    savedDays.forEach(function(day) {
+      var cb = document.querySelector('input[name="availability_days"][value="' + day + '"]');
+      if (cb) cb.checked = true;
+    });
+  })();
+  if (chargeType && basePriceHint) {
+    chargeType.addEventListener('change', function () {
+      basePriceHint.textContent = chargeTypeHints[this.value] || chargeTypeHints[''];
+    });
+  }
+  // ──────────────────────────────────────────────────────────────────────
+
+  function updateIdentityProviderHint() {
+    if (!identityProvider || !identityProviderHint) return;
+    const provider = identityProvider.value;
+    const onfidoReady = identityProvider.dataset.onfidoConfigured === '1';
+    const veriffReady = identityProvider.dataset.veriffConfigured === '1';
+
+    if (provider === 'onfido' && !onfidoReady) {
+      identityProviderHint.className = 'form-text text-warning';
+      identityProviderHint.textContent = 'Onfido seleccionado pero no esta configurado; el estado quedara pendiente.';
+      return;
+    }
+    if (provider === 'veriff' && !veriffReady) {
+      identityProviderHint.className = 'form-text text-warning';
+      identityProviderHint.textContent = 'Veriff seleccionado pero no esta configurado; el estado quedara pendiente.';
+      return;
+    }
+    if (provider === 'mock') {
+      identityProviderHint.className = 'form-text text-secondary';
+      identityProviderHint.textContent = 'Mock de pruebas: aprueba/rechaza segun evidencias cargadas.';
+      return;
+    }
+
+    identityProviderHint.className = 'form-text text-success';
+    identityProviderHint.textContent = 'Proveedor activo: se evaluara cedula + selfie para face match.';
+  }
+
+  if (identityProvider) {
+    identityProvider.addEventListener('change', updateIdentityProviderHint);
+    updateIdentityProviderHint();
+  }
+
+  if (useGeoBtn) {
+    useGeoBtn.addEventListener('click', function () {
+      if (!navigator.geolocation) {
+        showFormAlert('Tu navegador no soporta geolocalizacion.');
+        return;
+      }
+      const geoStatus = document.getElementById('geoStatus');
+      useGeoBtn.disabled = true;
+      useGeoBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Detectando...';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (geoLat) geoLat.value = String(lat);
+        if (geoLng) geoLng.value = String(lng);
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            const parts = data.display_name ? data.display_name.split(',') : [];
+            const addr = parts.length >= 3 ? parts.slice(0, 3).join(',').trim() : `Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}`;
+            if (technicianAddress && !technicianAddress.value.trim()) technicianAddress.value = addr;
+            if (geoStatus) {
+              geoStatus.innerHTML = '<div class="fw-semibold" style="color:#1d4b78;"><i class="bi bi-geo-alt-fill me-1"></i>Tu ubicación actual</div><div class="text-secondary mt-1">' + addr + '</div><div class="text-muted mt-1" style="font-size:.72rem;">Datos de dirección: Cortesia de OpenStreetMap</div>';
+              geoStatus.classList.remove('d-none');
+            }
+          })
+          .catch(function() {
+            const fallback = `Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}`;
+            if (technicianAddress && !technicianAddress.value.trim()) technicianAddress.value = fallback;
+            if (geoStatus) {
+              geoStatus.innerHTML = '<div class="fw-semibold" style="color:#1d4b78;"><i class="bi bi-geo-alt-fill me-1"></i>Tu ubicación actual</div><div class="text-secondary mt-1">' + fallback + '</div>';
+              geoStatus.classList.remove('d-none');
+            }
+          })
+          .finally(function() {
+            useGeoBtn.disabled = false;
+            useGeoBtn.innerHTML = 'Usar mi ubicacion';
+            updateTechProgress();
+          });
+      }, function () {
+        showFormAlert('No fue posible obtener tu ubicacion.');
+        useGeoBtn.disabled = false;
+        useGeoBtn.innerHTML = 'Usar mi ubicacion';
+      });
+    });
+  }
+
+  if (signatureCanvas && signatureData) {
+    const ctx = signatureCanvas.getContext('2d');
+    let drawing = false;
+
+    function canvasPos(e) {
+      const rect = signatureCanvas.getBoundingClientRect();
+      const touch = e.touches && e.touches[0];
+      const x = (touch ? touch.clientX : e.clientX) - rect.left;
+      const y = (touch ? touch.clientY : e.clientY) - rect.top;
+      return { x, y };
+    }
+
+    function startDraw(e) {
+      drawing = true;
+      const p = canvasPos(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    }
+
+    function moveDraw(e) {
+      if (!drawing) return;
+      e.preventDefault();
+      const p = canvasPos(e);
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#1d4b78';
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+
+    function endDraw() {
+      if (!drawing) return;
+      drawing = false;
+      signatureData.value = signatureCanvas.toDataURL('image/png');
+      updateTechProgress();
+    }
+
+    signatureCanvas.addEventListener('mousedown', startDraw);
+    signatureCanvas.addEventListener('mousemove', moveDraw);
+    signatureCanvas.addEventListener('mouseup', endDraw);
+    signatureCanvas.addEventListener('mouseleave', endDraw);
+    signatureCanvas.addEventListener('touchstart', startDraw, { passive: true });
+    signatureCanvas.addEventListener('touchmove', moveDraw, { passive: false });
+    signatureCanvas.addEventListener('touchend', endDraw);
+
+    // ── Drag & drop imagen sobre canvas ───────────────────────────────
+    function drawImageOnCanvas(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const img = new Image();
+        img.onload = function () {
+          ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+          const scale = Math.min(signatureCanvas.width / img.width, signatureCanvas.height / img.height);
+          const w = img.width * scale;
+          const h = img.height * scale;
+          const x = (signatureCanvas.width - w) / 2;
+          const y = (signatureCanvas.height - h) / 2;
+          ctx.drawImage(img, x, y, w, h);
+          signatureData.value = signatureCanvas.toDataURL('image/png');
+          updateTechProgress();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    signatureCanvas.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      signatureCanvas.style.borderColor = '#1d4b78';
+      signatureCanvas.style.borderStyle = 'dashed';
+    });
+    signatureCanvas.addEventListener('dragleave', function () {
+      signatureCanvas.style.borderColor = '';
+      signatureCanvas.style.borderStyle = '';
+    });
+    signatureCanvas.addEventListener('drop', function (e) {
+      e.preventDefault();
+      signatureCanvas.style.borderColor = '';
+      signatureCanvas.style.borderStyle = '';
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      drawImageOnCanvas(file);
+    });
+
+    const signatureImageUpload = document.getElementById('signatureImageUpload');
+    if (signatureImageUpload) {
+      signatureImageUpload.addEventListener('change', function () {
+        drawImageOnCanvas(this.files[0]);
+      });
+    }
+
+    if (clearSignatureBtn) {
+      clearSignatureBtn.addEventListener('click', function () {
+        ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+        signatureData.value = '';
+        updateTechProgress();
+      });
+    }
+  }
+
+  document.querySelectorAll('#registerForm input, #registerForm select, #registerForm textarea').forEach(function (el) {
+    el.addEventListener('input', updateTechProgress);
+    el.addEventListener('change', updateTechProgress);
+  });
+  updateTechProgress();
+
+  // Mapeo de barrios por localidad
+  const barriosPorLocalidad = {
+    'usaquen': ['Santa Bárbara', 'Cedritos', 'Usaquén', 'La Calleja', 'San Patricio', 'El Country', 'Bella Suiza'],
+    'chapinero': ['Chicó', 'Chapinero Alto', 'Chapinero Central', 'El Refugio', 'La Salle', 'El Nogal'],
+    'santa fe': ['Las Aguas', 'Egipto', 'La Macarena', 'Santa Fe', 'San Diego'],
+    'san cristobal': ['San Cristóbal', 'Altamira', 'La Gloria', 'San Blas'],
+    'usme': ['Usme Centro', 'El Tuno', 'Alfonso López'],
+    'tunjuelito': ['Venecia', 'El Tunal', 'San Benito', 'Fátima'],
+    'kennedy': ['Kennedy Central', 'Timiza', 'Patio Bonito', 'Carvajal', 'Mandalay'],
+    'bosa': ['Bosa', 'La Libertad', 'El Porvenir', 'San José'],
+    'fontibon': ['Fontibón', 'Villemar', 'Capellanía', 'El Carmen'],
+    'engativa': ['Engativá', 'Normandía', 'La Estrada', 'Boyacá Real'],
+    'suba': ['Niza', 'Suba Urbano', 'La Campiña', 'San José de Bavaria'],
+    'barrios unidos': ['San Fernando', 'Los Andes', 'Concepción Norte'],
+    'teusaquillo': ['Teusaquillo', 'La Soledad', 'Palermo', 'Quinta Paredes'],
+    'los martires': ['La Favorita', 'Santa Isabel', 'Voto Nacional'],
+    'antonio narino': ['Restrepo', 'Ciudad Berna', 'Eduardo Santos'],
+    'puente aranda': ['Puente Aranda', 'Colón', 'San Rafael'],
+    'candelaria': ['La Candelaria', 'Egipto', 'Las Aguas'],
+    'rafael uribe uribe': ['Quiroga', 'Claret', 'Marruecos'],
+    'ciudad bolivar': ['Perdomo', 'El Lucero', 'El Tesoro'],
+    'sumapaz': ['Nazareth', 'San Juan', 'San Miguel']
+  };
+
+  // Sugerencias de barrio según localidad (datalist)
+  if (localityField) {
+    function updateBarrioSuggestions() {
+      const loc = localityField.value;
+      const dl = document.getElementById('barrioSuggestions');
+      if (!dl) return;
+      dl.innerHTML = '';
+      const barrios = barriosPorLocalidad[loc] || [];
+      barrios.forEach(function (b) {
+        const opt = document.createElement('option');
+        opt.value = b;
+        dl.appendChild(opt);
+      });
+    }
+    localityField.addEventListener('change', updateBarrioSuggestions);
+    updateBarrioSuggestions();
+  }
+
+  const coAddressRegex = /^(cll?|calle|cra|carrera|kr|av|avenida|dg|diagonal|tv|transv|transversal)\s+\d+[a-z]?\s*(#\s*\d+[a-z]?\s*(-\s*\d+[a-z]?)?)?$/i;
+  const localityAliases = {
+    'la candelaria': 'candelaria',
+    'rafael uribe': 'rafael uribe uribe',
+    'rafael uribe uribe': 'rafael uribe uribe',
+    'antonio narino': 'antonio narino',
+    'san cristobal': 'san cristobal',
+    'santa fe': 'santa fe',
+    'ciudad bolivar': 'ciudad bolivar',
+    'barrios unidos': 'barrios unidos',
+  };
+
+  function normalizeAddress(value) {
+    let out = (value || '').trim().replace(/\s+/g, ' ');
+    out = out.replace(/^(carrera|cra|kr)\s*(\d)/i, 'Cra $2');
+    out = out.replace(/^(calle|cl|cll)\s*(\d)/i, 'Cll $2');
+    out = out.replace(/^(avenida|av)\s*(\d)/i, 'Av $2');
+    out = out.replace(/^(diagonal|dg)\s*(\d)/i, 'Dg $2');
+    out = out.replace(/^(transversal|transv|tv)\s*(\d)/i, 'Tv $2');
+    out = out.replace(/(\d)(#)/g, '$1 #');
+    out = out.replace(/(#)(\d)/g, '# $2');
+    out = out.replace(/(\d)(-)(\d)/g, '$1 - $3');
+    out = out.replace(/\s*#\s*/g, ' # ').replace(/\s*-\s*/g, ' - ');
+    out = out.replace(/(\d)([a-z])/gi, function (_, digits, letter) {
+      return digits + letter.toUpperCase();
+    });
+    return out.replace(/\s+/g, ' ').trim();
+  }
+  window.normalizeAddress = normalizeAddress;
+
+  function normalizeText(value) {
+    return (value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function updateAddressStatus() {
+    if (!clientAddress || !addressStatus) {
+      return true;
+    }
+
+    const value = clientAddress.value.trim();
+    if (!value) {
+      setNeutral(addressStatus, 'Puedes escribir la direccion normal. Nosotros la acomodamos.');
+      return false;
+    }
+
+    if (coAddressRegex.test(value)) {
+      setStatus(addressStatus, true, 'Perfecto. La direccion quedo clara para ubicar el servicio.');
+      return true;
+    }
+
+    setNeutral(addressStatus, 'La recibimos asi. Si quieres, agrega # y numero para que quede mas precisa.');
+    return true;
+  }
+
+  function fillAddressFieldsFromPlace(place) {
+    if (!place || !place.address_components) {
+      return;
+    }
+
+    let detectedLocality = '';
+    let detectedBarrio = '';
+
+    place.address_components.forEach(function (component) {
+      const types = component.types || [];
+      const value = component.long_name || '';
+
+      if (!detectedBarrio && (types.includes('neighborhood') || types.includes('sublocality_level_2'))) {
+        detectedBarrio = value;
+      }
+
+      if (!detectedLocality && (types.includes('sublocality_level_1') || types.includes('administrative_area_level_3'))) {
+        detectedLocality = value;
+      }
+    });
+
+    if (localityField && detectedLocality) {
+      const normalizedLocality = localityAliases[normalizeText(detectedLocality)] || normalizeText(detectedLocality);
+      const optionExists = Array.from(localityField.options).some(function (option) {
+        return normalizeText(option.value) === normalizedLocality;
+      });
+      if (optionExists) {
+        localityField.value = normalizedLocality;
+      }
+    }
+
+    if (barrioField && detectedBarrio && !barrioField.value.trim()) {
+      barrioField.value = detectedBarrio;
+    }
+  }
+  window.fillAddressFieldsFromPlace = fillAddressFieldsFromPlace;
+  window.updateAddressStatus = updateAddressStatus;
+
+  const pwLen = document.getElementById('pwLen');
+  const pwUpper = document.getElementById('pwUpper');
+  const pwLower = document.getElementById('pwLower');
+  const pwNum = document.getElementById('pwNum');
+  const pwSpecial = document.getElementById('pwSpecial');
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+  const countryLengths = {
+    '+57': 10,
+    '+1': 10,
+    '+52': 10,
+    '+51': 9,
+    '+593': 9,
+    '+54': 10,
+    '+56': 9,
+    '+34': 9,
+  };
+
+  function setStatus(el, ok, msg) {
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove('hf-status-neutral', 'hf-status-ok', 'hf-status-error');
+    el.classList.add(ok ? 'hf-status-ok' : 'hf-status-error');
+  }
+
+  function setNeutral(el, msg) {
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove('hf-status-ok', 'hf-status-error');
+    el.classList.add('hf-status-neutral');
+  }
+
+  function showFormAlert(msg) {
+    if (!formFeedback) {
+      return;
+    }
+    formFeedback.className = 'col-12 alert hf-inline-alert alert-danger d-flex align-items-center gap-2';
+    formFeedback.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i><span>' + msg + '</span>';
+    formFeedback.classList.remove('d-none');
+    formFeedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function clearFormAlert() {
+    if (!formFeedback) {
+      return;
+    }
+    formFeedback.className = 'col-12 d-none';
+    formFeedback.innerHTML = '';
+  }
+
+  function validatePhoneLive() {
+    const prefix = phoneCountry.value || '+57';
+    const requiredLength = countryLengths[prefix] || 10;
+    const rawDigits = phone.value.replace(/\D/g, '');
+    phone.value = rawDigits;
+
+    if (!rawDigits.length) {
+      setNeutral(phoneStatus, 'Escribe tu numero para validar.');
+      return false;
+    }
+
+    if (rawDigits.length > requiredLength) {
+      setStatus(phoneStatus, false, `Numero invalido: para ${prefix} debes usar ${requiredLength} digitos.`);
+      return false;
+    }
+
+    if (rawDigits.length < requiredLength) {
+      setStatus(phoneStatus, false, `Te faltan ${requiredLength - rawDigits.length} digitos.`);
+      return false;
+    }
+
+    // No permitir todos los dígitos iguales (ej: 1111111111, 2222222222) exactamente la longitud requerida
+    if (rawDigits.length === requiredLength && /^([0-9])\1+$/.test(rawDigits)) {
+      setStatus(phoneStatus, false, 'El teléfono ingresado no es válido (no puede ser todos los dígitos iguales).');
+      return false;
+    }
+
+    setStatus(phoneStatus, true, `Perfecto. Numero valido para ${prefix}.`);
+    return true;
+  }
+
+  // Enhanced password validation: block repeated digits/letters and common weak patterns
+  function isWeakPassword(val) {
+    const weakPatterns = [
+      '11111111', '22222222', '33333333', '44444444', '55555555', '66666666', '77777777', '88888888', '99999999', '00000000',
+      '12345678', '87654321', 'password', 'contraseña', 'qwerty', 'asdfgh', 'hogarfix', 'abcdefgh', 'abc12345', '00000000',
+    ];
+    const clean = (val || '').toLowerCase();
+    if (weakPatterns.includes(clean)) return true;
+    // All digits or all letters repeated
+    if (/^([0-9])\1{7,}$/.test(val)) return true;
+    if (/^([a-zA-Z])\1{7,}$/.test(val)) return true;
+    // Only numbers
+    if (/^\d{8,}$/.test(val)) return true;
+    // Only one character repeated
+    if (/^([a-zA-Z0-9])\1+$/.test(val)) return true;
+    return false;
+  }
+
+  function validatePasswordLive() {
+    const value = password.value || '';
+    const checks = {
+      len: value.length >= 8,
+      upper: /[A-Z]/.test(value),
+      lower: /[a-z]/.test(value),
+      num: /\d/.test(value),
+      special: /[^A-Za-z0-9]/.test(value),
+      notWeak: !isWeakPassword(value),
+    };
+
+    // Si el campo está vacío, todo neutral
+    if (value.length === 0) {
+      setNeutral(pwLen, 'Minimo 8 caracteres');
+      setNeutral(pwUpper, 'Al menos una mayuscula');
+      setNeutral(pwLower, 'Al menos una minuscula');
+      setNeutral(pwNum, 'Al menos un numero');
+      setNeutral(pwSpecial, 'Al menos un caracter especial');
+      return false;
+    }
+
+    setStatus(pwLen, checks.len, 'Minimo 8 caracteres');
+    setStatus(pwUpper, checks.upper, 'Al menos una mayuscula');
+    setStatus(pwLower, checks.lower, 'Al menos una minuscula');
+    setStatus(pwNum, checks.num, 'Al menos un numero');
+    setStatus(pwSpecial, checks.special, 'Al menos un caracter especial');
+    if (!checks.notWeak) {
+      setStatus(pwLen, false, 'No uses contrasenas faciles o repetidas');
+    }
+
+    return checks.len && checks.upper && checks.lower && checks.num && checks.special && checks.notWeak;
+  }
+
+  if (phone) {
+    phone.addEventListener('input', function () {
+      validatePhoneLive();
+    });
+  }
+
+  if (phoneCountry) {
+    phoneCountry.addEventListener('change', validatePhoneLive);
+  }
+
+  if (password) {
+    password.addEventListener('input', validatePasswordLive);
+  }
+
+
+  // --- Validacion personalizada para evitar valores invalidos ---
+  function showFieldError(fieldId, message) {
+    const el = document.getElementById(fieldId);
+    if (el) {
+      el.textContent = message;
+      el.style.display = 'block';
+    }
+  }
+
+  function clearFieldError(fieldId) {
+    const el = document.getElementById(fieldId);
+    if (el) {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+  }
+
+  function getRepetitiveOrNumericMsg(val) {
+    if (/^([0-9])\1{5,}$/.test(val)) return 'No se aceptan datos repetitivos.';
+    if (/^\d+$/.test(val)) return 'No se aceptan datos solo numericos.';
+    return 'No se permiten valores invalidos.';
+  }
+
+  function isInvalidValue(val) {
+    const invalids = [
+      '111111', '1111111', '11111111', '222222', '2222222', '22222222', '000000', '0000000', '00000000',
+      '123456', '1234567', '12345678', '987654', '9876543', '98765432', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+      'como', 'y', 'nombre', 'apellido', 'test', 'prueba'
+    ];
+    const clean = (val || '').replace(/\s+/g, '').toLowerCase();
+    // Solo números o solo letras repetidas
+    if (/^([0-9])\1{5,}$/.test(clean) || /^([a-zA-Z])\1{5,}$/.test(clean)) return true;
+    // Solo números
+    if (/^\d+$/.test(clean)) return true;
+    // Solo una letra repetida
+    if (/^([a-zA-Z])\1+$/.test(clean)) return true;
+    // Secuencias simples
+    if (invalids.includes(clean)) return true;
+    return false;
+  }
+
+  function attachLiveValidation(fieldId, errorId, validator) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    field.addEventListener('input', function () {
+      clearFieldError(errorId);
+      if (validator(field.value)) {
+        showFieldError(errorId, getRepetitiveOrNumericMsg(field.value));
+      }
+    });
+  }
+
+  // Teléfono: solo rechaza dígitos todos iguales (1111111111, 2222222222, etc.)
+  const phoneInputEl = document.getElementById('phone');
+  const phoneFieldErrorEl = document.getElementById('phoneFieldError');
+  if (phoneInputEl && phoneFieldErrorEl) {
+    phoneInputEl.addEventListener('input', function () {
+      const digits = phoneInputEl.value.replace(/\D/g, '');
+      if (digits.length >= 6 && /^([0-9])\1+$/.test(digits)) {
+        showFieldError('phoneFieldError', 'Este número no es válido (dígitos repetidos).');
+      } else {
+        clearFieldError('phoneFieldError');
+      }
+    });
+  }
+
+  attachLiveValidation('firstName', 'firstNameError', isInvalidName);
+  attachLiveValidation('lastName', 'lastNameError', isInvalidName);
+  attachLiveValidation('emailField', 'emailFieldError', isInvalidValue);  attachLiveValidation('barrioField', 'barrioFieldError', isInvalidValue);
+  attachLiveValidation('clientAddress', 'clientAddressError', isInvalidAddress);
+
+  function isInvalidName(val) {
+    // No solo números, no solo letras repetidas, no secuencias, no vacío
+    if (!val || isInvalidValue(val)) return true;
+    // No solo números ni solo caracteres especiales
+    if (/^\d+$/.test(val.trim())) return true;
+    if (/^[^a-zA-Z]+$/.test(val.trim())) return true;
+    return false;
+  }
+
+  function isInvalidAddress(val) {
+    // No solo números, no solo caracteres repetidos, no vacío
+    if (!val || isInvalidValue(val)) return true;
+    if (/^\d+$/.test(val.trim())) return true;
+    if (/^([a-zA-Z0-9])\1+$/.test(val.trim())) return true;
+    return false;
+  }
+
+  if (form) {
+    form.addEventListener('submit', function (event) {
+      clearFormAlert();
+      clearFieldError('emailFieldError');
+      clearFieldError('barrioFieldError');
+      clearFieldError('clientAddressError');
+      clearFieldError('phoneFieldError');
+      clearFieldError('firstNameError');
+      clearFieldError('lastNameError');
+      const type = (accountType && accountType.value) || 'cliente';
+
+      if (type === 'cliente' || type === 'tecnico') {
+        if (!firstName || !lastName || !firstName.value.trim() || !lastName.value.trim()) {
+          event.preventDefault();
+          showFormAlert('Debes completar nombre y apellido.');
+          if (firstName) firstName.focus();
+          return;
+        }
+        if (isInvalidName(firstName.value)) {
+          event.preventDefault();
+          let msg = getRepetitiveOrNumericMsg(firstName.value);
+          showFormAlert('El nombre ingresado no es válido. ' + msg);
+          showFieldError('firstNameError', msg);
+          firstName.focus();
+          return;
+        }
+        if (isInvalidName(lastName.value)) {
+          event.preventDefault();
+          let msg = getRepetitiveOrNumericMsg(lastName.value);
+          showFormAlert('El apellido ingresado no es válido. ' + msg);
+          showFieldError('lastNameError', msg);
+          lastName.focus();
+          return;
+        }
+      }
+      // Email
+      if (emailField && isInvalidValue(emailField.value)) {
+        event.preventDefault();
+        showFormAlert('El email ingresado no es válido.');
+        showFieldError('emailFieldError', 'No se permiten valores como 111111, solo números o caracteres repetidos.');
+        emailField.focus();
+        return;
+      }
+      // Barrio
+      if (barrioField && isInvalidValue(barrioField.value)) {
+        event.preventDefault();
+        showFormAlert('El barrio ingresado no es válido.');
+        showFieldError('barrioFieldError', 'No se permiten valores como 111111, solo números o caracteres repetidos.');
+        barrioField.focus();
+        return;
+      }
+      // Dirección
+      if (type === 'cliente' && clientAddress && isInvalidAddress(clientAddress.value)) {
+        event.preventDefault();
+        showFormAlert('La dirección ingresada no es válida. No se permiten solo números o caracteres repetidos.');
+        showFieldError('clientAddressError', 'No se permiten valores como 111111, solo números o caracteres repetidos.');
+        clientAddress.focus();
+        return;
+      }
+      // Teléfono
+      const phoneDigits = phone.value.replace(/\D/g, '');
+      const prefix = phoneCountry.value || '+57';
+      const requiredLength = countryLengths[prefix] || 10;
+      if (
+        phoneDigits.length === requiredLength &&
+        /^([0-9])\1+$/.test(phoneDigits)
+      ) {
+        event.preventDefault();
+        setStatus(phoneStatus, false, 'El teléfono ingresado no es válido (no puede ser todos los dígitos iguales).');
+        showFieldError('phoneFieldError', 'No se permiten valores como 111111, solo números o caracteres repetidos.');
+        phone.focus();
+        return;
+      }
+      // ...existing code...
+
+      if (type === 'cliente' && (!clientAddress || !clientAddress.value.trim())) {
+        event.preventDefault();
+        showFormAlert('Como cliente debes completar tu direccion o carrera.');
+        if (clientAddress) clientAddress.focus();
+        return;
+      }
+
+      if (type === 'cliente' && clientAddress) {
+        clientAddress.value = normalizeAddress(clientAddress.value);
+        updateAddressStatus();
+      }
+
+      if (type === 'tecnico' && (!specialty || !specialty.value.trim())) {
+        event.preventDefault();
+        showFormAlert('Como tecnico debes indicar tu categoria principal.');
+        if (specialty) specialty.focus();
+        return;
+      }
+
+      if (type === 'tecnico' && (!yearsExperience || !yearsExperience.value)) {
+        event.preventDefault();
+        showFormAlert('Como tecnico debes indicar años de experiencia.');
+        if (yearsExperience) yearsExperience.focus();
+        return;
+      }
+
+      if (type === 'tecnico' && (!serviceDescription || !serviceDescription.value.trim())) {
+        event.preventDefault();
+        showFormAlert('Como tecnico debes escribir una descripcion de servicios.');
+        if (serviceDescription) serviceDescription.focus();
+        return;
+      }
+
+      const phoneOk = validatePhoneLive();
+      const passwordOk = validatePasswordLive() && passwordRegex.test(password.value);
+      // Extra: block weak passwords (repeated digits/letters, common patterns)
+      if (isWeakPassword(password.value)) {
+        event.preventDefault();
+        setStatus(pwLen, false, 'No uses contrasenas faciles o repetidas');
+        password.focus();
+        return;
+      }
+      const matchOk = password.value === confirmPassword.value;
+
+      if (!phoneOk) {
+        event.preventDefault();
+        setStatus(phoneStatus, false, 'Corrige tu telefono antes de continuar.');
+        phone.focus();
+        return;
+      }
+
+      if (!passwordOk) {
+        event.preventDefault();
+        setStatus(pwLen, false, 'La contrasena aun no cumple todos los requisitos.');
+        password.focus();
+        return;
+      }
+
+      if (!matchOk) {
+        event.preventDefault();
+        showFormAlert('Las contrasenas no coinciden.');
+        confirmPassword.focus();
+        return;
+      }
+
+      if (!acceptedTerms || !acceptedTerms.checked) {
+        // Para técnicos, accepted_terms está en el paso 2; si llegó al submit, el checkbox ya está visible
+        if (accountType && accountType.value === 'tecnico' && document.getElementById('formStep2') && document.getElementById('formStep2').classList.contains('d-none')) {
+          // Está en paso 1 todavía — no validar terms aquí
+          return;
+        }
+        event.preventDefault();
+        showFormAlert('Debes aceptar terminos de uso y politica de datos para crear la cuenta.');
+        if (acceptedTerms) {
+          acceptedTerms.focus();
+        }
+      }
+    });
+  }
+
+  // ── Navegación de 2 pasos para técnicos ──────────────────────────────────
+  const goToStep2Btn = document.getElementById('goToStep2Btn');
+  const backToStep1Btn = document.getElementById('backToStep1Btn');
+  const step1Buttons = document.getElementById('step1Buttons');
+  const formStep2 = document.getElementById('formStep2');
+  const stepDot1 = document.getElementById('stepDot1');
+  const stepDot2 = document.getElementById('stepDot2');
+  const stepLabel2 = document.getElementById('stepLabel2');
+
+  function activateStep2() {
+    // Validar campos de paso 1 primero
+    const type = (accountType && accountType.value) || 'cliente';
+    if (type !== 'tecnico') return;
+
+    // Campos mínimos requeridos para avanzar
+    const requiredStep1 = [];
+    if (firstName && !firstName.value.trim()) requiredStep1.push(firstName);
+    if (lastName && !lastName.value.trim()) requiredStep1.push(lastName);
+    if (emailField && !emailField.value.trim()) requiredStep1.push(emailField);
+    const pwOk = validatePasswordLive() && !isWeakPassword(password.value);
+    if (!pwOk) { password.focus(); showFormAlert('Corrige tu contrasena antes de continuar.'); return; }
+    if (password.value !== confirmPassword.value) { showFormAlert('Las contrasenas no coinciden.'); confirmPassword.focus(); return; }
+    if (!validatePhoneLive()) { phone.focus(); return; }
+    if (requiredStep1.length > 0) { requiredStep1[0].focus(); showFormAlert('Completa todos los campos antes de continuar.'); return; }
+
+    clearFormAlert();
+    // Mostrar paso 2
+    if (step1Buttons) step1Buttons.classList.add('d-none');
+    if (formStep2) formStep2.classList.remove('d-none');
+    // Actualizar indicador
+    if (stepDot1) { stepDot1.style.background = '#2ea04f'; stepDot1.innerHTML = '<i class="bi bi-check"></i>'; }
+    if (stepDot2) { stepDot2.style.background = '#1d4b78'; stepDot2.style.color = '#fff'; }
+    if (stepLabel2) { stepLabel2.style.color = '#1d4b78'; stepLabel2.style.fontWeight = '600'; }
+    // Scroll suave al inicio del paso 2
+    if (formStep2) formStep2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function backToStep1() {
+    if (step1Buttons) step1Buttons.classList.remove('d-none');
+    if (formStep2) formStep2.classList.add('d-none');
+    if (stepDot1) { stepDot1.style.background = '#1d4b78'; stepDot1.innerHTML = '1'; }
+    if (stepDot2) { stepDot2.style.background = '#dde8f5'; stepDot2.style.color = '#8ba5c0'; }
+    if (stepLabel2) { stepLabel2.style.color = ''; stepLabel2.style.fontWeight = ''; }
+  }
+
+  if (goToStep2Btn) goToStep2Btn.addEventListener('click', activateStep2);
+  if (backToStep1Btn) backToStep1Btn.addEventListener('click', backToStep1);
+
+  // Si hay error del servidor (form vuelve con error), y es técnico, forzar paso 1 visible
+  {% if error and type == 'tecnico' %}
+  backToStep1();
+  {% endif %}
+
+  if (clientAddress) {
+    clientAddress.addEventListener('input', function () {
+      clearFormAlert();
+      updateAddressStatus();
+    });
+
+    clientAddress.addEventListener('blur', function () {
+      clientAddress.value = normalizeAddress(clientAddress.value);
+      updateAddressStatus();
+    });
+
+    updateAddressStatus();
+  }
+
+  // Fallback geo para cliente cuando Google Maps no esta disponible
+  const clientGeoBtnFallback = document.getElementById('clientGeoBtn');
+  if (clientGeoBtnFallback) {
+    clientGeoBtnFallback.addEventListener('click', function () {
+      if (window.google && window.google.maps) return; // Google Maps ya lo maneja
+      if (!navigator.geolocation) { showFormAlert('Tu navegador no soporta geolocalizacion.'); return; }
+      const clientAddressEl = document.getElementById('clientAddress');
+      const clientLatEl = document.getElementById('clientLat');
+      const clientLngEl = document.getElementById('clientLng');
+      const clientGeoStatusEl = document.getElementById('clientGeoStatus');
+      clientGeoBtnFallback.disabled = true;
+      clientGeoBtnFallback.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Detectando...';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        if (clientLatEl) clientLatEl.value = String(lat);
+        if (clientLngEl) clientLngEl.value = String(lng);
+        fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json&accept-language=es')
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            const parts = data.display_name ? data.display_name.split(',') : [];
+            const addr = parts.length >= 3 ? parts.slice(0, 3).join(',').trim() : ('Lat ' + lat.toFixed(5) + ', Lng ' + lng.toFixed(5));
+            if (clientAddressEl && !clientAddressEl.value.trim()) clientAddressEl.value = addr;
+            if (clientGeoStatusEl) {
+              clientGeoStatusEl.innerHTML = '<div class="fw-semibold" style="color:#1d4b78;"><i class="bi bi-geo-alt-fill me-1"></i>Tu ubicación actual</div><div class="text-secondary mt-1">' + addr + '</div><div class="text-muted mt-1" style="font-size:.72rem;">Datos de dirección: Cortesia de OpenStreetMap</div>';
+              clientGeoStatusEl.classList.remove('d-none');
+            }
+          })
+          .catch(function () {
+            const fallback = 'Lat ' + lat.toFixed(5) + ', Lng ' + lng.toFixed(5);
+            if (clientAddressEl && !clientAddressEl.value.trim()) clientAddressEl.value = fallback;
+            if (clientGeoStatusEl) {
+              clientGeoStatusEl.innerHTML = '<div class="fw-semibold" style="color:#1d4b78;"><i class="bi bi-geo-alt-fill me-1"></i>Tu ubicación actual</div><div class="text-secondary mt-1">' + fallback + '</div>';
+              clientGeoStatusEl.classList.remove('d-none');
+            }
+          })
+          .finally(function () {
+            clientGeoBtnFallback.disabled = false;
+            clientGeoBtnFallback.innerHTML = '<i class="bi bi-crosshair2"></i> Usar mi ubicacion';
+          });
+      }, function () {
+        showFormAlert('No fue posible obtener tu ubicacion.');
+        clientGeoBtnFallback.disabled = false;
+        clientGeoBtnFallback.innerHTML = '<i class="bi bi-crosshair2"></i> Usar mi ubicacion';
+      });
+    });
+  }
+
+  validatePhoneLive();
+});
+
+function initAddressAutocomplete() {
+  const input = document.getElementById('clientAddress');
+  if (!input || !window.google || !google.maps || !google.maps.places) {
+    return;
+  }
+
+  const bogotaBounds = {
+    north: 4.84,
+    south: 4.45,
+    east: -73.95,
+    west: -74.25,
+  };
+
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    fields: ['formatted_address', 'address_components', 'geometry'],
+    componentRestrictions: { country: ['co'] },
+    bounds: bogotaBounds,
+    strictBounds: false,
+    types: ['address'],
+  });
+
+  // ─── MAPA INTERACTIVO ───
+  const mapContainer = document.getElementById('clientMapPicker');
+  const clientLat = document.getElementById('clientLat');
+  const clientLng = document.getElementById('clientLng');
+  const mapStatus = document.getElementById('clientMapStatus');
+  const mapStatusText = document.getElementById('clientMapStatusText');
+  const clientGeoBtn = document.getElementById('clientGeoBtn');
+  const geocoder = new google.maps.Geocoder();
+
+  const bogotaCenter = { lat: 4.7110, lng: -74.0721 };
+
+  const map = new google.maps.Map(mapContainer, {
+    center: bogotaCenter,
+    zoom: 13,
+    disableDefaultUI: true,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    gestureHandling: 'cooperative',
+    styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }],
+  });
+
+  const marker = new google.maps.Marker({
+    position: bogotaCenter,
+    map: map,
+    draggable: true,
+    title: 'Mueve este pin a tu direccion',
+    animation: google.maps.Animation.DROP,
+    icon: {
+      url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+    },
+  });
+
+  if (mapContainer) mapContainer.style.display = 'block';
+  if (mapStatus) mapStatus.classList.remove('d-none');
+  const clientMapsCredit = document.getElementById('clientMapsCredit');
+  if (clientMapsCredit) clientMapsCredit.classList.remove('d-none');
+
+  function reverseGeocode(latLng) {
+    geocoder.geocode({ location: latLng, region: 'co' }, function (results, status) {
+      if (status === 'OK' && results[0]) {
+        const addr = results[0].formatted_address.split(',')[0];
+        input.value = window.normalizeAddress ? window.normalizeAddress(addr) : addr;
+        if (mapStatusText) mapStatusText.textContent = addr;
+        if (clientLat) clientLat.value = latLng.lat();
+        if (clientLng) clientLng.value = latLng.lng();
+        if (window.fillAddressFieldsFromPlace) window.fillAddressFieldsFromPlace(results[0]);
+        if (window.updateAddressStatus) window.updateAddressStatus();
+        const clientGeoStatus = document.getElementById('clientGeoStatus');
+        if (clientGeoStatus) {
+          clientGeoStatus.innerHTML = '<div class="fw-semibold" style="color:#1d4b78;"><i class="bi bi-geo-alt-fill me-1"></i>Tu ubicación actual</div><div class="text-secondary mt-1">' + addr + '</div><div class="text-muted mt-1" style="font-size:.72rem;">Datos de dirección: Cortesia de Google Maps</div>';
+          clientGeoStatus.classList.remove('d-none');
+        }
+      }
+    });
+  }
+
+  marker.addListener('dragend', function () {
+    reverseGeocode(marker.getPosition());
+  });
+
+  map.addListener('click', function (e) {
+    marker.setPosition(e.latLng);
+    reverseGeocode(e.latLng);
+  });
+
+  // Botón "Usar mi ubicación"
+  if (clientGeoBtn) {
+    clientGeoBtn.addEventListener('click', function () {
+      if (!navigator.geolocation) return;
+      clientGeoBtn.disabled = true;
+      clientGeoBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        const latLng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        map.setCenter(latLng);
+        map.setZoom(16);
+        marker.setPosition(latLng);
+        reverseGeocode(latLng);
+        clientGeoBtn.disabled = false;
+        clientGeoBtn.innerHTML = '<i class="bi bi-crosshair2"></i> Usar mi ubicacion';
+      }, function () {
+        clientGeoBtn.disabled = false;
+        clientGeoBtn.innerHTML = '<i class="bi bi-crosshair2"></i> Usar mi ubicacion';
+      });
+    });
+  }
+
+  // Cuando autocomplete selecciona un lugar, mover también el pin
+  autocomplete.addListener('place_changed', function () {
+    const place = autocomplete.getPlace();
+    if (place && place.formatted_address) {
+      input.value = window.normalizeAddress
+        ? window.normalizeAddress(place.formatted_address.split(',')[0] || place.formatted_address)
+        : place.formatted_address.split(',')[0];
+      if (window.fillAddressFieldsFromPlace) window.fillAddressFieldsFromPlace(place);
+      if (window.updateAddressStatus) window.updateAddressStatus();
+      if (place.geometry && place.geometry.location) {
+        map.setCenter(place.geometry.location);
+        map.setZoom(16);
+        marker.setPosition(place.geometry.location);
+        if (clientLat) clientLat.value = place.geometry.location.lat();
+        if (clientLng) clientLng.value = place.geometry.location.lng();
+      }
+    }
+  });
+}
+</script>
+{% if type == 'cliente' and config.get('GOOGLE_MAPS_API_KEY', '') %}
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config.get('GOOGLE_MAPS_API_KEY') }}&libraries=places,geocoding&callback=initAddressAutocomplete"></script>
+{% endif %}
+{% endblock %}

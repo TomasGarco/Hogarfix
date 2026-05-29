@@ -1,0 +1,324 @@
+{% extends 'base_tech.html' %}
+
+{% block page_title %}Configuración{% endblock %}
+
+{% block tech_content %}
+
+{# ── Hero ── #}
+<section class="hf-dash-hero hf-dash-hero-dark rounded-4 p-4 p-lg-5 mb-4" data-aos="fade-up">
+  <p class="hf-dash-overline mb-1" data-i18n="cfg.hero.overline">Seguridad y preferencias</p>
+  <h1 class="h3 mb-1" data-i18n="cfg.hero.title">Configuración</h1>
+  <p class="mb-0 hf-dash-subline" data-i18n="cfg.hero.sub">Gestiona tu contraseña, verificación en dos pasos, notificaciones y sesiones activas.</p>
+</section>
+
+{# Flash messages ya los renderiza base_tech, no duplicar #}
+
+<div class="row g-3 mb-4">
+
+  {# ── Cambiar contraseña ── #}
+  <div class="col-lg-6">
+    <div class="hf-card rounded-4 p-3 p-lg-4 h-100">
+      <h2 class="h5 mb-1"><i class="bi bi-key-fill me-2" style="color:#FF6B00"></i><span data-i18n="cfg.password.title">Cambiar contraseña</span></h2>
+      <p class="small text-secondary mb-3">Usa una contraseña fuerte: mayúscula, minúscula, número y símbolo.</p>
+      <form method="post" action="{{ url_for('technician.tech_settings') }}" class="row g-3" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="form_type" value="password">
+        <div class="col-12">
+          <label class="form-label">Contraseña actual</label>
+          <input type="password" name="current_password" class="form-control" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Nueva contraseña</label>
+          <input type="password" name="new_password" class="form-control" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Confirmar contraseña</label>
+          <input type="password" name="confirm_password" class="form-control" required>
+        </div>
+        <div class="col-12 d-grid">
+          <button class="btn hf-btn-primary" type="submit">Actualizar contraseña</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# ── 2FA + Notificaciones ── #}
+  <div class="col-lg-6 d-flex flex-column gap-3">
+
+    <div class="hf-card rounded-4 p-3 p-lg-4">
+      <h2 class="h5 mb-1"><i class="bi bi-shield-check me-2" style="color:#16a34a"></i><span data-i18n="cfg.2fa.title">Verificación en dos pasos</span></h2>
+      <p class="small text-secondary mb-3">Añade una capa extra de seguridad al iniciar sesión.</p>
+      <form method="post" action="{{ url_for('technician.tech_settings') }}" class="d-flex align-items-center justify-content-between gap-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="form_type" value="2fa">
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="twoFaSwitch" name="two_factor_enabled"
+                 {{ 'checked' if current_user.two_factor_enabled }}>
+          <label class="form-check-label" for="twoFaSwitch">
+            {{ 'Activa' if current_user.two_factor_enabled else 'Inactiva' }}
+          </label>
+        </div>
+        <button class="btn btn-sm hf-btn-outline" type="submit">Guardar</button>
+      </form>
+    </div>
+
+    <div class="hf-card rounded-4 p-3 p-lg-4">
+      <h2 class="h5 mb-1"><i class="bi bi-bell me-2" style="color:#3b82f6"></i><span data-i18n="cfg.notif.title">Notificaciones</span></h2>
+      <p class="small text-secondary mb-3">Controla qué avisos quieres recibir.</p>
+      <form method="post" action="{{ url_for('technician.tech_settings') }}" class="d-grid gap-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="form_type" value="settings">
+        <label class="form-check border rounded-3 px-3 py-2 bg-white">
+          <input class="form-check-input" type="checkbox" name="notifications_enabled"
+                 {{ 'checked' if current_user.notifications_enabled }}>
+          <span class="form-check-label ms-2">Notificaciones de reservas</span>
+        </label>
+        <label class="form-check border rounded-3 px-3 py-2 bg-white">
+          <input class="form-check-input" type="checkbox" name="marketing_notifications"
+                 {{ 'checked' if current_user.marketing_notifications }}>
+          <span class="form-check-label ms-2">Novedades y promociones</span>
+        </label>
+        <button class="btn btn-sm hf-btn-primary" type="submit">Guardar preferencias</button>
+      </form>
+    </div>
+
+  </div>
+
+  {# ── Sesiones activas ── #}
+  <div class="col-12">
+    <div class="hf-card rounded-4 p-3 p-lg-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+        <div>
+          <h2 class="h5 mb-1"><i class="bi bi-shield-lock-fill me-2" style="color:#0a2540"></i><span data-i18n="cfg.sessions.title">Sesiones activas</span></h2>
+          <p class="small text-secondary mb-0">Dispositivos donde tu cuenta está abierta. Cierra las que no reconoces.</p>
+        </div>
+        <form method="post" action="{{ url_for('technician.tech_settings') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="form_type" value="close_sessions">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Cerrar otras sesiones</button>
+        </form>
+      </div>
+
+      {% if active_sessions %}
+        <div class="d-grid gap-2">
+          {% for s in active_sessions %}
+            <article class="hf-account-session" {% if s.session_token == current_session_token %}data-current="1"{% endif %}>
+              <div>
+                <strong>{{ 'Sesión actual' if s.session_token == current_session_token else 'Sesión abierta' }}</strong>
+                <p class="small text-secondary mb-0">
+                  {{ s.ip_address or 'IP local' }} ·
+                  <span class="hf-timeago" data-ts="{{ s.last_seen_at.isoformat() }}Z">
+                    {{ s.last_seen_at.strftime('%d/%m/%Y %H:%M') }}
+                  </span>
+                </p>
+                <p class="small text-secondary mb-0">{{ (s.user_agent or 'Navegador desconocido')[:70] }}</p>
+              </div>
+              <span class="badge {% if s.session_token == current_session_token %}text-bg-success{% else %}text-bg-light border{% endif %}">
+                {{ 'En línea' if s.session_token == current_session_token else 'Activa' }}
+              </span>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="small text-secondary mb-0">No hay sesiones adicionales registradas.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+{# ── Métodos de pago ── #}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="hf-card rounded-4 p-3 p-lg-4">
+      <h2 class="h5 mb-1"><i class="bi bi-credit-card-2-front me-2" style="color:#16a34a"></i>Métodos de pago</h2>
+      <p class="small text-secondary mb-3">Selecciona cómo recibes tus pagos. El cliente sube el comprobante al completar cada servicio.</p>
+      <form method="post" action="{{ url_for('technician.tech_settings') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="form_type" value="payment">
+        <div class="d-grid gap-2 mb-3">
+          {% set pm = current_user.preferred_payment_method or 'efectivo' %}
+          <label class="form-check border rounded-3 px-3 py-2 bg-white d-flex align-items-center gap-2">
+            <input class="form-check-input" type="radio" name="preferred_payment_method" value="efectivo" {{ 'checked' if pm == 'efectivo' }}>
+            <span class="form-check-label ms-1">💵 Efectivo</span>
+          </label>
+          <label class="form-check border rounded-3 px-3 py-2 bg-white d-flex align-items-center gap-2">
+            <input class="form-check-input" type="radio" name="preferred_payment_method" value="nequi" {{ 'checked' if pm == 'nequi' }}>
+            <span class="form-check-label ms-1">📱 Nequi</span>
+          </label>
+          <label class="form-check border rounded-3 px-3 py-2 bg-white d-flex align-items-center gap-2">
+            <input class="form-check-input" type="radio" name="preferred_payment_method" value="daviplata" {{ 'checked' if pm == 'daviplata' }}>
+            <span class="form-check-label ms-1">📱 Daviplata</span>
+          </label>
+          <label class="form-check border rounded-3 px-3 py-2 bg-white d-flex align-items-center gap-2">
+            <input class="form-check-input" type="radio" name="preferred_payment_method" value="transferencia" {{ 'checked' if pm == 'transferencia' }}>
+            <span class="form-check-label ms-1">🏦 Transferencia bancaria</span>
+          </label>
+          <label class="form-check border rounded-3 px-3 py-2 bg-white d-flex align-items-center gap-2">
+            <input class="form-check-input" type="radio" name="preferred_payment_method" value="pse" {{ 'checked' if pm == 'pse' }}>
+            <span class="form-check-label ms-1">💳 PSE</span>
+          </label>
+        </div>
+        <p class="small text-secondary mb-3"><i class="bi bi-info-circle me-1"></i>No almacenamos datos de tarjetas. El comprobante de pago se sube como foto al completar cada servicio.</p>
+        <div class="d-grid">
+          <button class="btn hf-btn-primary" type="submit">Guardar método preferido</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# ── Apariencia ── #}
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="hf-card rounded-4 p-3 p-lg-4 h-100">
+      <h2 class="h5 mb-1"><i class="bi bi-palette me-2" style="color:#FF6B00"></i><span data-i18n="cfg.appearance.title">Apariencia</span></h2>
+      <p class="small text-secondary mb-3">Personaliza el aspecto visual de HogarFix.</p>
+      <p class="small fw-semibold mb-2">Tema</p>
+      <div class="d-flex gap-2 mb-4" id="hf-theme-btns">
+        <button type="button" class="btn btn-sm hf-btn-outline flex-fill" data-theme-val="light"><i class="bi bi-sun me-1"></i>Claro</button>
+        <button type="button" class="btn btn-sm hf-btn-outline flex-fill" data-theme-val="dark"><i class="bi bi-moon me-1"></i>Oscuro</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="col-lg-6 d-flex flex-column gap-3">
+    <div class="hf-card rounded-4 p-3 p-lg-4">
+      <h2 class="h5 mb-1"><i class="bi bi-translate me-2" style="color:#3b82f6"></i><span data-i18n="cfg.lang.title">Idioma y región</span></h2>
+      <p class="small text-secondary mb-3">Ajusta el idioma y formato de fechas y horas.</p>
+      <div class="d-grid gap-3">
+        <div>
+          <label class="form-label small fw-semibold">Idioma de la plataforma</label>
+          <select class="form-select" id="hf-lang-select">
+            <option value="es-CO">🇨🇴 Español (Colombia)</option>
+            <option value="es">🌎 Español (Global)</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="hi">🇮🇳 हिंदी</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="pt-BR">🇧🇷 Português (Brasil)</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ja">🇯🇵 日本語</option>
+          </select>
+          <p class="small text-secondary mt-1 mb-0" data-i18n="cfg.lang.note">Solo cambia la interfaz visual.</p>
+          <button type="button" id="hf-lang-apply" class="btn btn-sm hf-btn-primary w-100 mt-2" data-i18n="cfg.lang.btn">Aplicar idioma</button>
+        </div>
+        <div>
+          <label class="form-label small fw-semibold">Zona horaria</label>
+          <div class="border rounded-3 px-3 py-2 bg-white d-flex justify-content-between align-items-center">
+            <span class="small" id="hf-tz-display">Detectando...</span>
+            <span class="badge text-bg-light border">Auto</span>
+          </div>
+        </div>
+        <div>
+          <label class="form-label small fw-semibold mb-2">Formato de hora</label>
+          <div class="d-flex gap-2" id="hf-timefmt-btns">
+            <button type="button" class="btn btn-sm hf-btn-outline flex-fill" data-timefmt="12">12 h (AM/PM)</button>
+            <button type="button" class="btn btn-sm hf-btn-outline flex-fill" data-timefmt="24">24 h</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hf-card rounded-4 p-3 p-lg-4">
+      <h2 class="h5 mb-1"><i class="bi bi-universal-access me-2" style="color:#7c3aed"></i><span data-i18n="cfg.access.title">Accesibilidad</span></h2>
+      <p class="small text-secondary mb-3">Ajusta la experiencia según tus necesidades.</p>
+      <div class="d-grid gap-2">
+        <div>
+          <label class="form-label small fw-semibold mb-2">Tamaño de texto</label>
+          <div class="d-flex gap-2" id="hf-fontsize-btns">
+            <button type="button" class="btn btn-sm hf-btn-outline flex-fill" data-fs="small" style="font-size:.8rem">A−</button>
+            <button type="button" class="btn btn-sm hf-btn-outline flex-fill" data-fs="normal">A</button>
+            <button type="button" class="btn btn-sm hf-btn-outline flex-fill" data-fs="large" style="font-size:1.1rem">A+</button>
+          </div>
+        </div>
+        <label class="form-check border rounded-3 px-3 py-2 bg-white">
+          <input class="form-check-input" type="checkbox" id="hf-reduce-motion">
+          <span class="form-check-label ms-2">Reducir animaciones</span>
+        </label>
+        <label class="form-check border rounded-3 px-3 py-2 bg-white">
+          <input class="form-check-input" type="checkbox" id="hf-high-contrast">
+          <span class="form-check-label ms-2">Alto contraste</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  function timeAgo(isoDate) {
+    var diff = Math.floor((Date.now() - new Date(isoDate)) / 1000);
+    if (diff < 60)    return 'Activo ahora';
+    if (diff < 3600)  return 'hace ' + Math.floor(diff / 60) + ' min';
+    if (diff < 86400) return 'hace ' + Math.floor(diff / 3600) + ' h';
+    return 'hace ' + Math.floor(diff / 86400) + ' días';
+  }
+  function updateAll() {
+    document.querySelectorAll('.hf-timeago').forEach(function (el) {
+      if (el.dataset.ts) el.textContent = timeAgo(el.dataset.ts);
+    });
+  }
+  updateAll();
+  setInterval(updateAll, 60000);
+})();
+
+/* ── Preferencias de usuario ── */
+(function () {
+  var KEY = 'hf_prefs';
+  var ACCENTS = { orange:'#FF6B00', blue:'#3b82f6', green:'#16a34a', violet:'#7c3aed', cyan:'#0891b2', rose:'#e11d48' };
+  var defaults = { theme:'system', accent:'orange', lang:'es-CO', timefmt:'12', fontsize:'normal', reduceMotion:false, highContrast:false };
+  function load() { try { return Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) { return Object.assign({}, defaults); } }
+  function save(p) { localStorage.setItem(KEY, JSON.stringify(p)); }
+  function applyTheme(v) { var t = v === 'system' ? (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light') : v; document.documentElement.setAttribute('data-bs-theme', t); }
+  function applyAccent(v) { if (ACCENTS[v]) document.documentElement.style.setProperty('--hf-accent', ACCENTS[v]); }
+  function applyFs(v) { document.documentElement.style.fontSize = v === 'small' ? '14px' : v === 'large' ? '17px' : ''; }
+  function applyMotion(v) { document.documentElement.classList.toggle('hf-reduce-motion', !!v); }
+  function applyContrast(v) { document.documentElement.classList.toggle('hf-high-contrast', !!v); }
+  function setActive(gid, attr, val) {
+    var g = document.getElementById(gid); if (!g) return;
+    g.querySelectorAll('[' + attr + ']').forEach(function(b) { var m = b.getAttribute(attr) === val; b.classList.toggle('hf-btn-primary', m); b.classList.toggle('hf-btn-outline', !m); });
+  }
+  function init(p) {
+    applyTheme(p.theme); applyAccent(p.accent); applyFs(p.fontsize); applyMotion(p.reduceMotion); applyContrast(p.highContrast);
+    setActive('hf-theme-btns','data-theme-val',p.theme);
+    setActive('hf-timefmt-btns','data-timefmt',p.timefmt);
+    setActive('hf-fontsize-btns','data-fs',p.fontsize);
+    var ab = document.getElementById('hf-accent-btns');
+    if (ab) ab.querySelectorAll('.hf-color-swatch').forEach(function(b){ b.classList.toggle('hf-swatch-active', b.dataset.accent === p.accent); });
+    var ls = document.getElementById('hf-lang-select'); if (ls) ls.value = p.lang;
+    var tz = document.getElementById('hf-tz-display');
+    if (tz) { try { var o = new Date().getTimezoneOffset(); tz.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone + ' (UTC' + (o > 0 ? '\u22125' : '+' + Math.abs(o/60)) + ')'; } catch(e) { tz.textContent = 'América/Bogotá (UTC−5)'; } }
+    var rmck = document.getElementById('hf-reduce-motion'); if (rmck) rmck.checked = !!p.reduceMotion;
+    var hcck = document.getElementById('hf-high-contrast'); if (hcck) hcck.checked = !!p.highContrast;
+  }
+  var p = load(); init(p);
+  function on(gid, attr, fn) { var g = document.getElementById(gid); if (!g) return; g.addEventListener('click', function(e){ var b = e.target.closest('['+attr+']'); if(b) fn(b.getAttribute(attr)); }); }
+  on('hf-theme-btns','data-theme-val', function(v){ p.theme=v; applyTheme(v); setActive('hf-theme-btns','data-theme-val',v); save(p); });
+  on('hf-timefmt-btns','data-timefmt', function(v){ p.timefmt=v; setActive('hf-timefmt-btns','data-timefmt',v); save(p); });
+  on('hf-fontsize-btns','data-fs', function(v){ p.fontsize=v; applyFs(v); setActive('hf-fontsize-btns','data-fs',v); save(p); });
+  var ab = document.getElementById('hf-accent-btns');
+  if (ab) ab.addEventListener('click', function(e){ var b = e.target.closest('[data-accent]'); if(!b) return; p.accent=b.dataset.accent; applyAccent(p.accent); ab.querySelectorAll('.hf-color-swatch').forEach(function(x){ x.classList.toggle('hf-swatch-active', x.dataset.accent===p.accent); }); save(p); });
+  var ls = document.getElementById('hf-lang-select');
+  if (ls) ls.addEventListener('change', function(){ p.lang = this.value; });
+  var applyBtn = document.getElementById('hf-lang-apply');
+  if (applyBtn) applyBtn.addEventListener('click', function(){
+    p.lang = ls ? ls.value : (p.lang || 'es-CO');
+    save(p);
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = '✓ Guardado';
+    setTimeout(function() { window.location.reload(); }, 800);
+  });
+  var rmck = document.getElementById('hf-reduce-motion');
+  if (rmck) rmck.addEventListener('change', function(){ p.reduceMotion=this.checked; applyMotion(p.reduceMotion); save(p); });
+  var hcck = document.getElementById('hf-high-contrast');
+  if (hcck) hcck.addEventListener('change', function(){ p.highContrast=this.checked; applyContrast(p.highContrast); save(p); });
+})();
+</script>
+{% endblock %}
