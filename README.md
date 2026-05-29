@@ -12,10 +12,6 @@
 
 ---
 
-## Capturas de pantalla
-
-> Las capturas se guardan en la carpeta `screenshots/` en la raíz del proyecto.
-
 ### Página principal
 
 ![Página principal de HogarFix](screenshots/01-home.png)
