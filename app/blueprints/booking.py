@@ -7,6 +7,7 @@ from flask_login import current_user, login_required
 
 from app.extensions import db
 from app.models import Availability, Booking, Review, TechnicianProfile, User
+from app.services.email import send_new_booking_to_technician
 from app.utils import create_notification, role_required, save_upload
 
 
@@ -84,6 +85,7 @@ def create_booking(technician_id):
         db.session.add(booking)
         db.session.commit()
 
+        # Notificacion interna al cliente
         create_notification(
             current_user.id,
             "booking_confirmed",
@@ -91,6 +93,21 @@ def create_booking(technician_id):
             f"Tu solicitud de {service_type.title()} fue registrada para {booking_date} a las {booking_time.strftime('%H:%M')}.",
             url_for("main.account_profile", _anchor="historial"),
         )
+
+        # Notificacion interna al tecnico
+        create_notification(
+            technician_id,
+            "new_booking",
+            "Nueva reserva recibida",
+            f"{current_user.name} solicitó {service_type.title()} para el {booking_date} a las {booking_time.strftime('%H:%M')}.",
+            url_for("technician.dashboard"),
+        )
+
+        # Email al tecnico
+        try:
+            send_new_booking_to_technician(technician, booking, current_user)
+        except Exception as exc:
+            current_app.logger.error("[booking] Error enviando email al tecnico %s: %s", technician.email, exc)
 
         flash("Reserva creada correctamente.", "success")
         return redirect(url_for("main.client_dashboard"))
