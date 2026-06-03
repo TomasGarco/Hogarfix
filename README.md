@@ -404,7 +404,31 @@ Para activar en producción: definir `IDENTITY_PROVIDER=onfido` y `ONFIDO_API_KE
 
 ## Roadmap — qué falta para producción
 
-> Este MVP de portafolio tiene todas las funcionalidades core implementadas. Lo siguiente es lo que falta para un lanzamiento real.
+> Este MVP de portafolio ya tiene las funciones principales, pero aún no es una plataforma lista para un lanzamiento productivo.
+>
+> A continuación se muestra todo lo que falta implementar o pulir antes de guardar y desplegar el proyecto.
+
+---
+
+### ❗ Qué falta en este proyecto
+
+- Filtros de búsqueda más avanzados: precio, calificación, día disponible y tipo de servicio.
+- Perfil público del técnico con URL compartible y vista sin necesidad de login.
+- Panel de ingresos y historial financiero para técnicos.
+- Chat directo cliente ↔ técnico asociado a cada reserva.
+- Reportes administrativos con exportación (CSV / Excel) y gráficos.
+- Administración de comprobantes de pago desde el panel admin.
+- Pago real integrado (Wompi / PayU / pasarela de pago local).
+- Verificación de identidad real para técnicos (MetaMap, Onfido, etc.).
+- Notificaciones en tiempo real (WebSocket push) en todo el panel.
+- Almacenamiento de archivos en la nube en lugar de disco local.
+- Geolocalización de técnicos y búsqueda por distancia.
+- Fotos en reseñas y portafolio del técnico con más de 3 imágenes.
+- Sistema de descuentos/cupones y referidos.
+- SEO básico y Open Graph para compartir en redes.
+- Despliegue en servidor con Gunicorn/Nginx y HTTPS.
+- Migración a PostgreSQL en producción.
+- Tareas asíncronas con Celery/Redis para emails y procesos largos.
 
 ---
 
@@ -424,34 +448,6 @@ Para activar en producción: definir `IDENTITY_PROVIDER=onfido` y `ONFIDO_API_KE
 | Emails | Bienvenida, OTP, alerta login, recuperar contraseña |
 | Anuncios modales | CRUD admin, localStorage "no mostrar hoy" |
 | Seguridad básica | CSRF, rate limiting, bcrypt, headers, auditoría |
-
----
-
-### 🔴 Crítico — bloqueadores de producción
-
-#### 1. Pasarela de pago real
-Los métodos de pago son solo UI. No hay cobro real.
-- **Solución:** Integrar **Wompi** (Bancolombia), PayU Colombia o ePlacetoPay.
-- **Archivos:** `booking.py`, `technician.py` (activate_subscription), nuevo `payments.py`.
-
-#### 2. Email al técnico al crear reserva
-El técnico recibe badge interno pero no email. Si no tiene la app abierta, no se entera.
-- **Solución:** En `booking.py → create_booking()`, llamar `send_email()` al técnico.
-- **Archivos:** `booking.py`, `services/email.py`.
-
-#### 3. Notificaciones push en tiempo real
-El badge de notificaciones solo se actualiza al recargar la página.
-- **Solución:** Emitir eventos Socket.IO en los puntos clave (nueva reserva, pago, cambio estado).
-- **Archivos:** `__init__.py`, `extensions.py`, `booking.py`, templates base.
-
-#### 4. Verificación de identidad real
-El provider actual es `mock` — aprueba todo automáticamente sin verificar nada.
-- **Solución:** Integrar **MetaMap**, Onfido o Veriff (MetaMap opera bien en Colombia).
-- **Archivos:** `services/identity_verification.py`, variables en `.env`.
-
-#### 5. Firma del representante legal en PDF
-El archivo `app/static/img/firma-representante-legal.png` no existe. Los PDFs se generan sin firma.
-- **Solución:** Guardar la firma como PNG en esa ruta.
 
 ---
 
@@ -565,7 +561,40 @@ git log --oneline
 
 ## Manual de usuario
 
-> Guía de uso de HogarFix para los tres tipos de usuario: **cliente**, **técnico** y **administrador**.
+> Guía de uso de HogarFix para los tres tipos de usuario: **cliente**
+>
+> ---
+
+### Página principal
+
+![Página principal de HogarFix](screenshots/Pagina%20%20Principal.png)
+
+---
+
+### Inicio de sesión
+
+![Pantalla de inicio de sesión](screenshots/Inicio%20de%20sesion.png)
+
+---
+
+### Registro de usuario
+
+![Formulario de registro](screenshots/Registo%20cliente.png)
+
+---
+
+### Panel del cliente
+
+![Panel del cliente — Captura Cliente](screenshots/Panel%20de%20usuario.png)
+
+---
+
+### Panel del técnico (captura pendiente)
+
+_No hay una captura del panel técnico en `screenshots/` aún. Añade `Panel tecnico.png` si la tienes._
+
+---
+
 
 ---
 
