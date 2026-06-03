@@ -593,11 +593,7 @@ git log --oneline
 
 ---
 
-### Panel del técnico (captura pendiente)
 
-_No hay una captura del panel técnico en `screenshots/` aún. Añade `Panel tecnico.png` si la tienes._
-
----
 
 
 ### Conceptos básicos
