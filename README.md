@@ -561,7 +561,7 @@ git log --oneline
 
 ## Manual de usuario
 
-> Guía de uso de HogarFix para los tres tipos de usuario: **cliente**
+> Guía de uso de HogarFix para: **cliente**
 >
 > ---
 
