@@ -32,7 +32,13 @@
 
 ### Panel del cliente
 
-![Panel del cliente — Mi panel](screenshots/Panel%20de%20usuario.png)
+![Panel del cliente — Captura Cliente](screenshots/Panel%20de%20usuario.png)
+
+---
+
+### Panel del técnico (captura pendiente)
+
+_No hay una captura del panel técnico en `screenshots/` aún. Añade `Panel tecnico.png` si la tienes._
 
 ---
 

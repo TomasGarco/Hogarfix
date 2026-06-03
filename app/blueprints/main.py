@@ -14,6 +14,17 @@ from app.utils import create_notification, role_required, save_upload
 main_bp = Blueprint("main", __name__)
 
 
+def _get_base_template():
+    try:
+        if current_user and getattr(current_user, "is_authenticated", False):
+            if getattr(current_user, "role", "") == "tecnico":
+                return "base_tech.html"
+            if getattr(current_user, "role", "") == "cliente":
+                return "base_client.html"
+    except Exception:
+        pass
+    return "base.html"
+
 def _normalize_address(value: str) -> str:
     out = re.sub(r"\s+", " ", (value or "").strip())
     replacements = (
@@ -438,17 +449,17 @@ def repeat_service(booking_id):
 
 @main_bp.route("/terminos-y-condiciones")
 def legal_terms():
-    return render_template("main/legal_terms.html")
+    return render_template("main/legal_terms.html", base_tpl=_get_base_template())
 
 
 @main_bp.route("/politica-de-privacidad")
 def legal_privacy():
-    return render_template("main/legal_privacy.html")
+    return render_template("main/legal_privacy.html", base_tpl=_get_base_template())
 
 
 @main_bp.route("/politica-de-cancelacion")
 def legal_cancellation():
-    return render_template("main/legal_cancellation.html")
+    return render_template("main/legal_cancellation.html", base_tpl=_get_base_template())
 
 
 POLICIES_VERSION = "1.0"
@@ -461,6 +472,7 @@ def politicas():
         "main/politicas.html",
         policies_version=POLICIES_VERSION,
         policies_updated=POLICIES_UPDATED,
+        base_tpl=_get_base_template(),
     )
 
 
