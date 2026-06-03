@@ -10,37 +10,6 @@
 >
 > **Este repositorio es una versión MVP de prueba/portafolio. No está en producción ni conectado a pagos reales.** Ver [Roadmap](#roadmap--qué-falta-para-producción) para saber qué falta.
 
----
-
-### Página principal
-
-![Página principal de HogarFix](screenshots/Pagina%20%20Principal.png)
-
----
-
-### Inicio de sesión
-
-![Pantalla de inicio de sesión](screenshots/Inicio%20de%20sesion.png)
-
----
-
-### Registro de usuario
-
-![Formulario de registro](screenshots/Registo%20cliente.png)
-
----
-
-### Panel del cliente
-
-![Panel del cliente — Captura Cliente](screenshots/Panel%20de%20usuario.png)
-
----
-
-### Panel del técnico (captura pendiente)
-
-_No hay una captura del panel técnico en `screenshots/` aún. Añade `Panel tecnico.png` si la tienes._
-
----
 
 ## Tabla de contenidos
 
@@ -599,6 +568,37 @@ git log --oneline
 > Guía de uso de HogarFix para los tres tipos de usuario: **cliente**, **técnico** y **administrador**.
 
 ---
+
+### Página principal
+
+![Página principal de HogarFix](screenshots/Pagina%20%20Principal.png)
+
+---
+
+### Inicio de sesión
+
+![Pantalla de inicio de sesión](screenshots/Inicio%20de%20sesion.png)
+
+---
+
+### Registro de usuario
+
+![Formulario de registro](screenshots/Registo%20cliente.png)
+
+---
+
+### Panel del cliente
+
+![Panel del cliente — Captura Cliente](screenshots/Panel%20de%20usuario.png)
+
+---
+
+### Panel del técnico (captura pendiente)
+
+_No hay una captura del panel técnico en `screenshots/` aún. Añade `Panel tecnico.png` si la tienes._
+
+---
+
 
 ### Conceptos básicos
 
